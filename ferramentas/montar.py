@@ -24,6 +24,29 @@ TROCAS = [
      "Entre com a sua conta Google para usar o Drive.", 2),
     ("A lista aparece depois que o Google Drive for liberado para esta página.",
      "Clique em Atualizar lista.", 1),
+    # ---- contas criadas pela gestão (usuário e senha) ----
+    # menu do usuário: trocar a própria senha e sair
+    ("""${p==='gestao'?'<button type="button" role="menuitem" data-go="equipe"><i class="fa-solid fa-user-shield"></i> Equipe e permissões</button>':''}</div>`;""",
+     """${p==='gestao'?'<button type="button" role="menuitem" data-go="equipe"><i class="fa-solid fa-user-shield"></i> Equipe e permissões</button>':''}<button type="button" role="menuitem" data-a="trocar-senha"><i class="fa-solid fa-key"></i> Trocar minha senha</button><hr><button type="button" role="menuitem" class="sair" data-a="sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</button></div>`;""", 1),
+    # aba Equipe: botão para cadastrar funcionário
+    ('<p class="sub">Funcionários, logins e o que cada perfil pode fazer</p></div></div>',
+     '<p class="sub">Funcionários, logins e o que cada perfil pode fazer</p></div>${adm?\'<div class="tools"><button class="btn pri" data-a="funcionario"><i class="fa-solid fa-user-plus"></i> Cadastrar funcionário</button></div>\':\'\'}</div>', 1),
+    ('Ninguém aguardando. Compartilhe o link desta página com a pessoa (botão Compartilhar do claude.ai, com permissão de Contribuidor ou Editor). Assim que ela abrir, aparece aqui para você escolher o perfil.',
+     'Ninguém aguardando. Para dar acesso a alguém, clique em Cadastrar funcionário e envie o usuário e a senha para a pessoa.', 1),
+    ("case'nova-senha':trocarSenha(id);break;",
+     "case'nova-senha':trocarSenha(id);break;case'funcionario':formFuncionario();break;case'desativar-conta':desativarConta(id);break;", 1),
+    # membros: Remover também desativa o login da pessoa
+    ("case'rem-membro':if(await confirmar(`Remover o acesso de ${pessoa(id)}?`,'Remover'))definirPapel(id,'');break;",
+     "case'rem-membro':if(S.contas?.[id])desativarConta(id);else if(await confirmar(`Remover o acesso de ${pessoa(id)}?`,'Remover'))definirPapel(id,'');break;", 1),
+    ("async function trocarSenha(id){",
+     "async function desativarConta(id){const c=S.contas?.[id];if(!await confirmar(`Remover o acesso de ${c?.name||pessoa(id)}? O login dela é desativado: a pessoa sai do sistema em todos os aparelhos e não consegue mais entrar. Os registros feitos por ela continuam.`,'Remover'))return;try{await waApi('/api/contas/desativar',{id});try{await S.db.doc('equipe/'+id).delete()}catch(e){}carregarContas(true);toast('Acesso removido')}catch(e){toast(e.message||'Não foi possível remover o acesso.')}}\nasync function trocarSenha(id){", 1),
+    # login é um usuário, não precisa ser e-mail
+    ('E-mail (será o login) *<input class="inp" id="fu-email" name="email" type="email" required>',
+     'Usuário (login) *<input class="inp" id="fu-email" name="email" required autocapitalize="none" spellcheck="false" placeholder="ex.: joao.vendas">', 1),
+    ('A gestão cria a conta com e-mail e senha.', 'A gestão cria a conta com usuário e senha.', 1),
+    ("const link=location.origin+'/';", "const link=location.origin+location.pathname;", 1),
+    ('E-mail: ${email}', 'Usuário: ${email}', 1),
+    ('<small>E-mail</small>', '<small>Usuário</small>', 1),
 ]
 for velho, novo, vezes in TROCAS:
     n = app.count(velho)
@@ -46,8 +69,7 @@ CABECA = """<!doctype html>
 <meta name="apple-mobile-web-app-title" content="DRAVEN">
 <!-- Gerado por ferramentas/montar.py a partir de versao-claude-ai/sistema-draven.html. Não edite à mão. -->
 <script src="config.js"></script>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="drive-db.js"></script>
+<script src="servidor-db.js"></script>
 </head>
 <body>
 """
