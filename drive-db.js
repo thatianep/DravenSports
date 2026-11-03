@@ -182,8 +182,8 @@
     return fs[0] ? fs[0].id : null;
   }
   async function meta(id) {
-    const m = await gj(`${API}/files/${id}?fields=id,version,owners(emailAddress),capabilities(canEdit)${ALL}`);
-    return { id: m.id, version: String(m.version), canEdit: !!(m.capabilities && m.capabilities.canEdit), owner: (((m.owners || [])[0] || {}).emailAddress || '').toLowerCase() };
+    const m = await gj(`${API}/files/${id}?fields=id,version,parents,owners(emailAddress),capabilities(canEdit)${ALL}`);
+    return { id: m.id, version: String(m.version), canEdit: !!(m.capabilities && m.capabilities.canEdit), owner: (((m.owners || [])[0] || {}).emailAddress || '').toLowerCase(), pasta: (m.parents || [])[0] || null };
   }
   async function baixar() {
     const t = await (await g(`${API}/files/${arq.id}?alt=media${ALL}`)).text();
@@ -421,7 +421,27 @@
     if (trocar) gravar('dv-gh-hint', '');
     token = null; location.reload();
   }
-  window.DRAVEN_GH = { sair: () => sair(true), sincronizar };
+  // ---------------- e-mails com acesso (pasta da base compartilhada no Drive) ----------------
+  function pastaBase() { if (!arq || !arq.pasta) throw new Error('A pasta da base de dados não foi encontrada no Drive.'); return arq.pasta }
+  const equipe = {
+    async listar() {
+      const r = await gj(`${API}/files/${pastaBase()}/permissions?fields=permissions(id,emailAddress,role,type,displayName)${ALL}`);
+      return (r.permissions || []).filter(p => p.type === 'user' && p.emailAddress)
+        .map(p => ({ id: p.id, email: p.emailAddress.toLowerCase(), nome: p.displayName || '', dono: p.role === 'owner', papelDrive: p.role }));
+    },
+    async liberar(email) {
+      const msg = `Você recebeu acesso ao sistema DRAVEN | Plataforma Comercial. Entre em ${location.origin + location.pathname} com esta conta Google.`;
+      await gj(`${API}/files/${pastaBase()}/permissions?sendNotificationEmail=true&emailMessage=${enc(msg)}&fields=id${ALL}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'user', role: 'writer', emailAddress: email }) });
+    },
+    async remover(email) {
+      const p = (await equipe.listar()).find(x => x.email === email);
+      if (!p) return;
+      if (p.dono) throw new Error('O dono da pasta não pode ser removido.');
+      await g(`${API}/files/${pastaBase()}/permissions/${p.id}?supportsAllDrives=true`, { method: 'DELETE' });
+    }
+  };
+  window.DRAVEN_GH = { sair: () => sair(true), sincronizar, equipe };
 
   // o sistema pede as peças por aqui, como no claude.ai
   const PECAS = { db, user, downloads, mcp, permissions, sample: null };

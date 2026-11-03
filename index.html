@@ -1932,6 +1932,54 @@ function formTrocarSenha(){
 }
 
 // ---------- EQUIPE ----------
+let LIB_EM=0;
+function carregarLiberados(forcar){
+  if(!window.DRAVEN_GH||!DRAVEN_GH.equipe||papel()!=='gestao'||(!forcar&&Date.now()-LIB_EM<30000))return;LIB_EM=Date.now();
+  DRAVEN_GH.equipe.listar().then(l=>{S.liberados=l;S.liberadosErro='';if(S.view==='equipe')render()})
+    .catch(e=>{S.liberados=S.liberados||[];S.liberadosErro='Não foi possível ler quem tem acesso à pasta do Drive: '+(e.message||'erro');if(S.view==='equipe')render()});
+}
+function painelEmails(){
+  if(papel()!=='gestao'||!window.DRAVEN_GH||!DRAVEN_GH.equipe)return'';
+  carregarLiberados();const l=S.liberados,adm=!S.ro;
+  return`<section class="panel"><div class="panel-h"><h2>E-mails com acesso</h2>${adm?'<button class="btn sm" data-a="lib-email"><i class="fa-solid fa-plus"></i> Adicionar e-mail</button>':''}</div>
+   <p class="ro" style="margin:0">Quem está nesta lista entra no sistema com a própria conta Google. Ao adicionar, o sistema compartilha a pasta de dados do Google Drive com o e-mail e já define o perfil.</p>
+   ${S.liberadosErro?`<div class="notice warn">${esc(S.liberadosErro)}</div>`:''}
+   ${!l?'<p class="ro">Carregando…</p>':l.length?`<div class="list">${l.map(p=>{const eq=S.equipe[p.email];return`<div class="li"><div class="grow"><div class="t">${esc(p.nome||p.email)}</div><div class="d">${esc(p.email)} · ${p.dono?'Dono da pasta · sempre Gestão':(eq?esc(PAPEIS[eq.papel]||'Sem perfil'):'Perfil ainda não definido')}</div></div>${p.dono?'<span class="pill acc">Dono</span>':(adm?`<button class="btn sm danger" data-a="lib-remover" data-id="${esc(p.email)}">Remover</button>`:'')}</div>`}).join('')}</div>`:'<p class="ro">Nenhum e-mail com acesso ainda.</p>'}
+  </section>`;
+}
+function formLiberarEmail(){
+  abrir('Adicionar e-mail com acesso',`
+  <p class="sub" style="margin:0">A pessoa recebe um aviso do Google Drive e entra no sistema com essa conta Google.</p>
+  <div class="fg">
+   <label class="f full">E-mail da conta Google *<input class="inp" id="le-email" name="email" type="email" required autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="nome@gmail.com"></label>
+   <label class="f">Perfil de acesso *<select class="inp" id="le-papel" name="papel">${Object.entries(PAPEIS).map(([k,v])=>`<option value="${k}" ${k==='vendedor'?'selected':''}>${v}</option>`).join('')}</select></label>
+   <label class="f">Cargo / função<input class="inp" id="le-cargo" name="cargo" placeholder="Vendedor externo, Expedição…"></label>
+   <label class="f full">Telefone / WhatsApp<input class="inp" id="le-tel" name="telefone" inputmode="tel"></label>
+  </div>
+  <p class="ro" style="margin:0">Enquanto o login do Google estiver em modo de teste, este e-mail também precisa estar em Usuários de teste no Google Cloud.</p>
+  <p class="err" id="v-err" hidden></p>`,
+  async fd=>{
+    const email=String(fd.get('email')||'').trim().toLowerCase();
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){erro('#v-err','Digite um e-mail válido.');return false}
+    try{
+      await DRAVEN_GH.equipe.liberar(email);
+      await S.db.doc('equipe/'+email).set({...(S.equipe[email]||{}),papel:fd.get('papel'),cargo:fd.get('cargo')||'',telefone:fd.get('telefone')||'',em:S.equipe[email]?.em||Date.now()});
+      carregarLiberados(true);setTimeout(()=>mostrarLinkAcesso(email,fd.get('telefone')),50);return true;
+    }catch(e){erro('#v-err',e.message||'Não foi possível liberar o acesso.');return false}
+  },{submitLabel:'Liberar acesso'});
+}
+function mostrarLinkAcesso(email,tel){
+  const link=location.origin+location.pathname;
+  const txt=`Olá! Seu acesso ao sistema da Draven Sports está liberado.\nEndereço: ${link}\nEntre com a conta Google ${email}.`;
+  abrir('Acesso liberado',`<p class="sub" style="margin:0">O Google Drive já mandou um aviso para ${esc(email)}. Se quiser, envie também o endereço do sistema:</p>
+  <div class="mini"><div><small>Endereço</small><b class="sm">${esc(link)}</b></div><div><small>Conta Google</small><b class="sm">${esc(email)}</b></div></div>
+  <div class="tools"><button type="button" class="btn" data-a="copiar" data-txt="${esc(txt)}"><i class="fa-regular fa-copy"></i> Copiar mensagem</button>${waBtn(tel,txt,'Enviar no WhatsApp')}</div>`,null,{});
+}
+async function removerEmail(email){
+  if(!await confirmar(`Remover o acesso de ${email}? A pasta de dados deixa de ser compartilhada com esse e-mail e a pessoa não consegue mais abrir o sistema. O que ela registrou continua.`,'Remover'))return;
+  try{await DRAVEN_GH.equipe.remover(email);try{await S.db.doc('equipe/'+email).delete()}catch(e){}carregarLiberados(true);toast('Acesso removido')}
+  catch(e){toast(e.message||'Não foi possível remover o acesso.')}
+}
 function vEquipe(){
   const pend=S.acessos.filter(a=>!S.equipe[a.id]&&a.id!==S.myId);
   const membros=Object.entries(S.equipe);
@@ -1939,11 +1987,11 @@ function vEquipe(){
   const sel=(id,cur)=>`<select class="inp" id="papel-${esc(id)}" data-papel="${esc(id)}" ${adm?'':'disabled'} style="width:auto"><option value="">Escolha o perfil</option>${Object.entries(PAPEIS).map(([k,v])=>`<option value="${k}" ${cur===k?'selected':''}>${v}</option>`).join('')}</select>`;
   const temEx=[...S.clientes,...S.produtos,...S.vendas,...S.producao,...S.campanhas,...S.nps].some(x=>x.exemplo);
   carregarContas();const ct=S.contas||{};
-  return`<div class="head"><div><h1>Equipe</h1><p class="sub">Funcionários, logins e o que cada perfil pode fazer</p></div></div>
+  return`<div class="head"><div><h1>Equipe</h1><p class="sub">Funcionários, logins e o que cada perfil pode fazer</p></div>${adm&&papel()==='gestao'?'<div class="tools"><button class="btn pri" data-a="lib-email"><i class="fa-solid fa-envelope-circle-check"></i> Adicionar e-mail</button></div>':''}</div>
   ${adm?'':'<div class="notice warn">Somente quem tem perfil de Gestão libera acessos e muda perfis.</div>'}
   <div class="grid2">
    <section class="panel"><div class="panel-h"><h2>Pedidos de acesso</h2><span class="ro">${pend.length}</span></div>
-    ${pend.length?`<div class="list">${pend.map(a=>`<div class="li"><img src="${esc(S.profiles[a.id]?.avatarUrl||'')}" alt="" width="28" height="28" style="border-radius:50%"><div class="grow"><div class="t">${esc(pessoa(a.id))}</div><div class="d">Abriu o sistema em ${fmtD(a.em)}</div></div>${sel(a.id,'')}</div>`).join('')}</div>`:'<p class="ro">Ninguém aguardando. Compartilhe o link desta página com a pessoa (botão Compartilhar do claude.ai, com permissão de Contribuidor ou Editor). Assim que ela abrir, aparece aqui para você escolher o perfil.</p>'}
+    ${pend.length?`<div class="list">${pend.map(a=>`<div class="li"><img src="${esc(S.profiles[a.id]?.avatarUrl||'')}" alt="" width="28" height="28" style="border-radius:50%"><div class="grow"><div class="t">${esc(pessoa(a.id))}</div><div class="d">Abriu o sistema em ${fmtD(a.em)}</div></div>${sel(a.id,'')}</div>`).join('')}</div>`:'<p class="ro">Ninguém aguardando. Para dar acesso a alguém, clique em Adicionar e-mail.</p>'}
    </section>
    <section class="panel"><div class="panel-h"><h2>Perfis</h2></div>
     <div class="list"><div class="li"><div class="grow"><div class="t">Gestão</div><div class="d">Tudo: CRM, campanhas, NPS, vendas, produção, estoque, relatórios, custos, exclusões e equipe</div></div></div>
@@ -1951,7 +1999,7 @@ function vEquipe(){
     <div class="li"><div class="grow"><div class="t">Estoque</div><div class="d">Produtos, ajustes, lotes de produção e entrega de pedidos</div></div></div></div>
    </section>
   </div>
-  <section class="panel"><div class="panel-h"><h2>Membros</h2><span class="ro">${membros.length+1}</span></div>
+  ${painelEmails()}<section class="panel"><div class="panel-h"><h2>Membros</h2><span class="ro">${membros.length+1}</span></div>
    <div class="list"><div class="li"><div class="grow"><div class="t">Dono do sistema${Object.values(ct).find(u=>u.dono)?' · '+esc(Object.values(ct).find(u=>u.dono).name):''}</div><div class="d">${esc(Object.values(ct).find(u=>u.dono)?.email||'')}${Object.values(ct).find(u=>u.dono)?' · ':''}Sempre com perfil de Gestão</div></div><span class="pill acc">Gestão</span></div>
    ${membros.map(([id,m])=>`<div class="li"><img src="${esc(S.profiles[id]?.avatarUrl||'')}" alt="" width="28" height="28" style="border-radius:50%"><div class="grow"><div class="t">${esc(pessoa(id))}</div><div class="d">${esc([ct[id]?.email,m.cargo,m.telefone].filter(Boolean).join(' · '))}${ct[id]?.email||m.cargo||m.telefone?' · ':''}Liberado em ${fmtD(m.em)}</div></div>${sel(id,m.papel)}${adm&&ct[id]?`<button class="btn sm" data-a="nova-senha" data-id="${esc(id)}">Nova senha</button>`:''}${adm?`<button class="btn sm danger" data-a="rem-membro" data-id="${esc(id)}">Remover</button>`:''}</div>`).join('')}</div>
   </section>
@@ -2123,7 +2171,7 @@ document.addEventListener('click',async e=>{
         historico:[{txt:'Adicionado ao funil a partir de uma conversa do WhatsApp iniciada pela equipe',em:agora,por:S.myId}]});
         await col('conversas').doc(id).update({clienteId:cid});toast('Contato adicionado ao funil como Novo lead')}catch(err){el.disabled=false}break}
     case'novo-func':formFuncionario();break;
-    case'nova-senha':trocarSenha(id);break;
+    case'nova-senha':trocarSenha(id);break;case'lib-email':formLiberarEmail();break;case'lib-remover':removerEmail(id);break;
     case'fechar-conv':S.convSel=null;if(MSGS_UNSUB){MSGS_UNSUB();MSGS_UNSUB=null}render();break;
     case'cv-enviar':enviarConversa(id,el);break;
     case'wa-msg':formWaMsg(id);break;

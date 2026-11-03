@@ -24,6 +24,62 @@ TROCAS = [
      "Entre com a sua conta Google para usar o Drive.", 2),
     ("A lista aparece depois que o Google Drive for liberado para esta página.",
      "Clique em Atualizar lista.", 1),
+    # ---- Equipe: e-mails com acesso (compartilha a pasta da base no Drive) ----
+    ('<p class="sub">Funcionários, logins e o que cada perfil pode fazer</p></div></div>',
+     """<p class="sub">Funcionários, logins e o que cada perfil pode fazer</p></div>${adm&&papel()==='gestao'?'<div class="tools"><button class="btn pri" data-a="lib-email"><i class="fa-solid fa-envelope-circle-check"></i> Adicionar e-mail</button></div>':''}</div>""", 1),
+    ('<section class="panel"><div class="panel-h"><h2>Membros</h2>', '${painelEmails()}<section class="panel"><div class="panel-h"><h2>Membros</h2>', 1),
+    ('Ninguém aguardando. Compartilhe o link desta página com a pessoa (botão Compartilhar do claude.ai, com permissão de Contribuidor ou Editor). Assim que ela abrir, aparece aqui para você escolher o perfil.',
+     'Ninguém aguardando. Para dar acesso a alguém, clique em Adicionar e-mail.', 1),
+    ("case'nova-senha':trocarSenha(id);break;", "case'nova-senha':trocarSenha(id);break;case'lib-email':formLiberarEmail();break;case'lib-remover':removerEmail(id);break;", 1),
+    ("function vEquipe(){", """let LIB_EM=0;
+function carregarLiberados(forcar){
+  if(!window.DRAVEN_GH||!DRAVEN_GH.equipe||papel()!=='gestao'||(!forcar&&Date.now()-LIB_EM<30000))return;LIB_EM=Date.now();
+  DRAVEN_GH.equipe.listar().then(l=>{S.liberados=l;S.liberadosErro='';if(S.view==='equipe')render()})
+    .catch(e=>{S.liberados=S.liberados||[];S.liberadosErro='Não foi possível ler quem tem acesso à pasta do Drive: '+(e.message||'erro');if(S.view==='equipe')render()});
+}
+function painelEmails(){
+  if(papel()!=='gestao'||!window.DRAVEN_GH||!DRAVEN_GH.equipe)return'';
+  carregarLiberados();const l=S.liberados,adm=!S.ro;
+  return`<section class="panel"><div class="panel-h"><h2>E-mails com acesso</h2>${adm?'<button class="btn sm" data-a="lib-email"><i class="fa-solid fa-plus"></i> Adicionar e-mail</button>':''}</div>
+   <p class="ro" style="margin:0">Quem está nesta lista entra no sistema com a própria conta Google. Ao adicionar, o sistema compartilha a pasta de dados do Google Drive com o e-mail e já define o perfil.</p>
+   ${S.liberadosErro?`<div class="notice warn">${esc(S.liberadosErro)}</div>`:''}
+   ${!l?'<p class="ro">Carregando…</p>':l.length?`<div class="list">${l.map(p=>{const eq=S.equipe[p.email];return`<div class="li"><div class="grow"><div class="t">${esc(p.nome||p.email)}</div><div class="d">${esc(p.email)} · ${p.dono?'Dono da pasta · sempre Gestão':(eq?esc(PAPEIS[eq.papel]||'Sem perfil'):'Perfil ainda não definido')}</div></div>${p.dono?'<span class="pill acc">Dono</span>':(adm?`<button class="btn sm danger" data-a="lib-remover" data-id="${esc(p.email)}">Remover</button>`:'')}</div>`}).join('')}</div>`:'<p class="ro">Nenhum e-mail com acesso ainda.</p>'}
+  </section>`;
+}
+function formLiberarEmail(){
+  abrir('Adicionar e-mail com acesso',`
+  <p class="sub" style="margin:0">A pessoa recebe um aviso do Google Drive e entra no sistema com essa conta Google.</p>
+  <div class="fg">
+   <label class="f full">E-mail da conta Google *<input class="inp" id="le-email" name="email" type="email" required autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="nome@gmail.com"></label>
+   <label class="f">Perfil de acesso *<select class="inp" id="le-papel" name="papel">${Object.entries(PAPEIS).map(([k,v])=>`<option value="${k}" ${k==='vendedor'?'selected':''}>${v}</option>`).join('')}</select></label>
+   <label class="f">Cargo / função<input class="inp" id="le-cargo" name="cargo" placeholder="Vendedor externo, Expedição…"></label>
+   <label class="f full">Telefone / WhatsApp<input class="inp" id="le-tel" name="telefone" inputmode="tel"></label>
+  </div>
+  <p class="ro" style="margin:0">Enquanto o login do Google estiver em modo de teste, este e-mail também precisa estar em Usuários de teste no Google Cloud.</p>
+  <p class="err" id="v-err" hidden></p>`,
+  async fd=>{
+    const email=String(fd.get('email')||'').trim().toLowerCase();
+    if(!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(email)){erro('#v-err','Digite um e-mail válido.');return false}
+    try{
+      await DRAVEN_GH.equipe.liberar(email);
+      await S.db.doc('equipe/'+email).set({...(S.equipe[email]||{}),papel:fd.get('papel'),cargo:fd.get('cargo')||'',telefone:fd.get('telefone')||'',em:S.equipe[email]?.em||Date.now()});
+      carregarLiberados(true);setTimeout(()=>mostrarLinkAcesso(email,fd.get('telefone')),50);return true;
+    }catch(e){erro('#v-err',e.message||'Não foi possível liberar o acesso.');return false}
+  },{submitLabel:'Liberar acesso'});
+}
+function mostrarLinkAcesso(email,tel){
+  const link=location.origin+location.pathname;
+  const txt=`Olá! Seu acesso ao sistema da Draven Sports está liberado.\\nEndereço: ${link}\\nEntre com a conta Google ${email}.`;
+  abrir('Acesso liberado',`<p class="sub" style="margin:0">O Google Drive já mandou um aviso para ${esc(email)}. Se quiser, envie também o endereço do sistema:</p>
+  <div class="mini"><div><small>Endereço</small><b class="sm">${esc(link)}</b></div><div><small>Conta Google</small><b class="sm">${esc(email)}</b></div></div>
+  <div class="tools"><button type="button" class="btn" data-a="copiar" data-txt="${esc(txt)}"><i class="fa-regular fa-copy"></i> Copiar mensagem</button>${waBtn(tel,txt,'Enviar no WhatsApp')}</div>`,null,{});
+}
+async function removerEmail(email){
+  if(!await confirmar(`Remover o acesso de ${email}? A pasta de dados deixa de ser compartilhada com esse e-mail e a pessoa não consegue mais abrir o sistema. O que ela registrou continua.`,'Remover'))return;
+  try{await DRAVEN_GH.equipe.remover(email);try{await S.db.doc('equipe/'+email).delete()}catch(e){}carregarLiberados(true);toast('Acesso removido')}
+  catch(e){toast(e.message||'Não foi possível remover o acesso.')}
+}
+function vEquipe(){""", 1),
     # ---- WhatsApp Web ao lado do sistema ----
     # no computador as conversas abrem no WhatsApp Web; no celular, no aplicativo
     ("return`https://wa.me/${d}${msg?'?text='+encodeURIComponent(msg):''}`}",

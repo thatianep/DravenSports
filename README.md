@@ -37,11 +37,11 @@ No mesmo arquivo, em `dono`, coloque o Gmail da gestão.
 1. Abra o site e clique em **Entrar com Google**. Na janela do Google, permita o acesso ao Drive.
    Enquanto o app estiver em modo de teste, o Google mostra o aviso "app não verificado": clique em **Continuar**.
 2. Clique em **Criar a base no meu Drive**. É criada a pasta **DRAVEN | Plataforma Comercial** com o arquivo `draven-dados.json`.
-3. No Google Drive, compartilhe essa pasta com cada pessoa da equipe como **Editor**.
+3. Na aba **Equipe e permissões**, clique em **Adicionar e-mail** para cada pessoa da equipe: digite o Gmail dela e escolha o perfil (Gestão, Vendas ou Estoque). O sistema compartilha a pasta com ela no Drive, já define o perfil e o Google manda um aviso por e-mail. Para tirar o acesso, use **Remover** na lista **E-mails com acesso**.
 
 ### 5. Equipe
-1. Cada pessoa abre o site, entra com o Gmail que foi compartilhado e aparece em **Equipe e permissões**.
-2. A gestão define o perfil: Gestão, Vendas ou Estoque.
+Cada pessoa abre o site e entra com o Gmail que foi adicionado. Ela já cai no perfil escolhido.
+Enquanto o login do Google estiver em modo de teste, o e-mail também precisa estar em **Usuários de teste** no Google Cloud.
 
 **Computador e celular:** o mesmo endereço funciona nos dois. No celular, o menu fica numa barra embaixo (Painel, Funil, Tarefas, Vendas e **Mais** com todas as telas), as tabelas viram cartões, os quadros rolam uma coluna por vez e as fichas abrem em tela cheia.
 
