@@ -28,6 +28,24 @@ TROCAS = [
     # no computador as conversas abrem no WhatsApp Web; no celular, no aplicativo
     ("return`https://wa.me/${d}${msg?'?text='+encodeURIComponent(msg):''}`}",
      "return window.DRAVEN_WA&&DRAVEN_WA.computador()?`https://web.whatsapp.com/send?phone=${d}${msg?'&text='+encodeURIComponent(msg):''}`:`https://wa.me/${d}${msg?'?text='+encodeURIComponent(msg):''}`}", 1),
+    # ---- botão de WhatsApp em cada cliente do CRM ----
+    ("""function waBtn(tel,msg,label){const u=waLink(tel,msg);return u?`<a class="btn sm wa" href="${esc(u)}" target="_blank" rel="noopener">${label||'WhatsApp'}</a>`:''}""",
+     """function waBtn(tel,msg,label){const u=waLink(tel,msg);return u?`<a class="btn sm wa" href="${esc(u)}" target="_blank" rel="noopener">${label||'WhatsApp'}</a>`:''}
+function waSaudacao(c){const n=String(c.contato||'').trim().split(' ')[0];return`Olá${n?' '+n:''}, tudo bem? Aqui é da Draven Sports.`}
+function waCli(c){const u=waLink(c.telefone,waSaudacao(c));return u?`<a class="btn sm wa wa-cli" href="${esc(u)}" target="_blank" rel="noopener" aria-label="WhatsApp de ${esc(c.nome)}" title="Conversar no WhatsApp: ${esc(c.telefone)}"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>`:''}""", 1),
+    # funil: botão no card
+    ('''<div class="row"><span class="ro">${c.valorEstimado?money(c.valorEstimado):''}</span>${pode('crm')?`<select aria-label="Mover etapa"''',
+     '''<div class="row"><span class="ro">${c.valorEstimado?money(c.valorEstimado):''}</span>${waCli(c)}${pode('crm')?`<select aria-label="Mover etapa"''', 1),
+    # funil em lista: coluna WhatsApp
+    ('<th>Responsável</th></tr></thead>', '<th>Responsável</th><th>WhatsApp</th></tr></thead>', 1),
+    ('<td>${esc(pessoa(c.responsavel))}</td></tr>', """<td>${esc(pessoa(c.responsavel))}</td><td>${waCli(c)||'<span class="ro">Sem telefone</span>'}</td></tr>""", 1),
+    ('<tr><td colspan="7" class="ro">Nenhum contato encontrado com esse filtro.</td></tr>', '<tr><td colspan="8" class="ro">Nenhum contato encontrado com esse filtro.</td></tr>', 1),
+    # Clientes 360°: coluna WhatsApp
+    ('<th>Consentimento</th></tr>', '<th>Consentimento</th><th>WhatsApp</th></tr>', 1),
+    ("""'<span class="ro">Sem registro</span>':''}</td></tr>""", """'<span class="ro">Sem registro</span>':''}</td><td>${waCli(c)||'<span class="ro">Sem telefone</span>'}</td></tr>""", 1),
+    ('<tr><td colspan="8" class="ro">Nenhum cliente neste filtro.</td></tr>', '<tr><td colspan="9" class="ro">Nenhum cliente neste filtro.</td></tr>', 1),
+    # ficha do cliente: já abre com a saudação
+    ("(c.id?waBtn(c.telefone,'','Abrir WhatsApp'):'')", "(c.id?waBtn(c.telefone,waSaudacao(c),'Abrir WhatsApp'):'')", 1),
     # botão WhatsApp no topo
     ('<div class="hact"><button class="btn" id="topLead"',
      '<div class="hact"><button class="btn wa" type="button" data-whatsapp-web title="Abrir o WhatsApp Web ao lado do sistema"><i class="fa-brands fa-whatsapp"></i><span class="lbl">WhatsApp</span></button><button class="btn" id="topLead"', 1),
@@ -48,7 +66,10 @@ window.DRAVEN_WA=(function(){
     jan=window.open(url||'https://web.whatsapp.com/',NOME,pos);
     if(!jan){window.open(url||'https://web.whatsapp.com/','_blank')}
   }
+  const noBotao=e=>e.target.closest&&e.target.closest('.wa-cli');
+  ['pointerdown','mousedown','touchstart'].forEach(t=>document.addEventListener(t,e=>{if(noBotao(e))e.stopPropagation()},{capture:true,passive:true}));
   document.addEventListener('click',e=>{
+    if(noBotao(e))e.stopPropagation();
     const b=e.target.closest&&e.target.closest('[data-whatsapp-web]');
     if(b){e.preventDefault();abrir();return}
     const a=e.target.closest&&e.target.closest('a[href^="https://web.whatsapp.com/"]');

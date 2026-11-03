@@ -30,7 +30,10 @@ window.DRAVEN_WA=(function(){
     jan=window.open(url||'https://web.whatsapp.com/',NOME,pos);
     if(!jan){window.open(url||'https://web.whatsapp.com/','_blank')}
   }
+  const noBotao=e=>e.target.closest&&e.target.closest('.wa-cli');
+  ['pointerdown','mousedown','touchstart'].forEach(t=>document.addEventListener(t,e=>{if(noBotao(e))e.stopPropagation()},{capture:true,passive:true}));
   document.addEventListener('click',e=>{
+    if(noBotao(e))e.stopPropagation();
     const b=e.target.closest&&e.target.closest('[data-whatsapp-web]');
     if(b){e.preventDefault();abrir();return}
     const a=e.target.closest&&e.target.closest('a[href^="https://web.whatsapp.com/"]');
@@ -540,6 +543,8 @@ const pessoa=id=>!id?'—':(S.profiles[id]?.name||(id===S.myId?'Você':'Membro d
 const prodNome=p=>p?`${p.nome}${p.variacao?' · '+p.variacao:''}`:'Produto removido';
 function waLink(tel,msg){let d=String(tel||'').replace(/\D/g,'');if(!d)return'';if(d.length<=11)d='55'+d;return window.DRAVEN_WA&&DRAVEN_WA.computador()?`https://web.whatsapp.com/send?phone=${d}${msg?'&text='+encodeURIComponent(msg):''}`:`https://wa.me/${d}${msg?'?text='+encodeURIComponent(msg):''}`}
 function waBtn(tel,msg,label){const u=waLink(tel,msg);return u?`<a class="btn sm wa" href="${esc(u)}" target="_blank" rel="noopener">${label||'WhatsApp'}</a>`:''}
+function waSaudacao(c){const n=String(c.contato||'').trim().split(' ')[0];return`Olá${n?' '+n:''}, tudo bem? Aqui é da Draven Sports.`}
+function waCli(c){const u=waLink(c.telefone,waSaudacao(c));return u?`<a class="btn sm wa wa-cli" href="${esc(u)}" target="_blank" rel="noopener" aria-label="WhatsApp de ${esc(c.nome)}" title="Conversar no WhatsApp: ${esc(c.telefone)}"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>`:''}
 function textoPedido(v){const c=cli(v.clienteId);return`Olá${c?.contato?' '+c.contato:''}! Segue o ${v.status==='orcamento'?'orçamento':'pedido'} ${v.numero} da Draven Sports:\n`+(v.itens||[]).map(i=>`• ${i.qtd}x ${prodNome(prod(i.produtoId))} — ${money(i.valor)}`).join('\n')+`${v.desconto?'\nDesconto: −'+money(v.desconto):''}${v.frete?'\nFrete: '+money(v.frete):''}\nTotal: ${money(v.total)}${v.pagamento?'\nPagamento: '+v.pagamento:''}${v.prazo?'\nPrevisão de entrega: '+fmtD(v.prazo):''}`}
 function pill(map,st){const m=map[st]||[st,''];return`<span class="pill ${m[1]}">${esc(m[0])}</span>`}
 
@@ -723,8 +728,8 @@ function crmBody(){
   if(!S.clientes.length)return`<div class="empty"><strong>Nenhum contato no CRM</strong><span>Cadastre academias, equipes, escolinhas e lojas que você está prospectando. Cada contato percorre as etapas do funil até virar cliente ativo.</span>${pode('crm')?'<button class="btn pri" data-a="novo-cliente">Cadastrar primeiro contato</button>':''}</div>`;
   const now=new Date();const fim=new Date(now.getFullYear(),now.getMonth(),now.getDate(),23,59,59).getTime();const ini=fim-86399000;
   if(S.crmModo==='lista'){
-    return`<div class="tbl-wrap"><table><thead><tr><th>Nome</th><th>Tipo</th><th>Cidade</th><th>Etapa</th><th class="num">Potencial</th><th>Próxima ação</th><th>Responsável</th></tr></thead><tbody>
-    ${lista.sort((a,b)=>(a.nome||'').localeCompare(b.nome||'')).map(c=>`<tr class="click" data-a="edit-cliente" data-id="${c.id}"><td><b>${esc(c.nome)}</b><div class="ro">${esc(c.contato||'')}</div></td><td>${esc(c.tipo||'')}</td><td>${esc(c.cidade||'')}</td><td>${etapaPill(c.etapa)}</td><td class="num">${c.valorEstimado?money(c.valorEstimado):'—'}</td><td>${esc(c.proximaAcao||'')} ${due(c.dataProxima,ini,fim)}</td><td>${esc(pessoa(c.responsavel))}</td></tr>`).join('')||'<tr><td colspan="7" class="ro">Nenhum contato encontrado com esse filtro.</td></tr>'}
+    return`<div class="tbl-wrap"><table><thead><tr><th>Nome</th><th>Tipo</th><th>Cidade</th><th>Etapa</th><th class="num">Potencial</th><th>Próxima ação</th><th>Responsável</th><th>WhatsApp</th></tr></thead><tbody>
+    ${lista.sort((a,b)=>(a.nome||'').localeCompare(b.nome||'')).map(c=>`<tr class="click" data-a="edit-cliente" data-id="${c.id}"><td><b>${esc(c.nome)}</b><div class="ro">${esc(c.contato||'')}</div></td><td>${esc(c.tipo||'')}</td><td>${esc(c.cidade||'')}</td><td>${etapaPill(c.etapa)}</td><td class="num">${c.valorEstimado?money(c.valorEstimado):'—'}</td><td>${esc(c.proximaAcao||'')} ${due(c.dataProxima,ini,fim)}</td><td>${esc(pessoa(c.responsavel))}</td><td>${waCli(c)||'<span class="ro">Sem telefone</span>'}</td></tr>`).join('')||'<tr><td colspan="8" class="ro">Nenhum contato encontrado com esse filtro.</td></tr>'}
     </tbody></table></div>`;
   }
   return`${pode('crm')?KB_DICA:''}<div class="board-wrap"><div class="board">${ETAPAS.map(e=>{const cs=lista.filter(c=>(c.etapa||'lead')===e.id);
@@ -732,7 +737,7 @@ function crmBody(){
     ${cs.length?'':`<div class="col-vazia">${pode('crm')?'Arraste um contato para cá':'Nenhum contato nesta etapa'}</div>`}
     ${cs.map(c=>`<div class="card" data-a="edit-cliente" data-id="${c.id}" tabindex="0"${pode('crm')?` data-drag="lead" data-from="${c.etapa||'lead'}"`:''}><div class="t">${esc(c.nome)}</div>${c.origem?`<div><span class="pill">${esc(c.origem)}</span></div>`:''}<div class="d">${esc([c.tipo,c.cidade].filter(Boolean).join(' · '))}</div>
      ${c.proximaAcao||c.dataProxima?`<div class="d">${esc(c.proximaAcao||'')} ${due(c.dataProxima,ini,fim)}</div>`:''}
-     <div class="row"><span class="ro">${c.valorEstimado?money(c.valorEstimado):''}</span>${pode('crm')?`<select aria-label="Mover etapa" data-etapa="${c.id}">${ETAPAS.map(x=>`<option value="${x.id}" ${x.id===(c.etapa||'lead')?'selected':''}>${x.nome}</option>`).join('')}</select>`:''}</div></div>`).join('')}
+     <div class="row"><span class="ro">${c.valorEstimado?money(c.valorEstimado):''}</span>${waCli(c)}${pode('crm')?`<select aria-label="Mover etapa" data-etapa="${c.id}">${ETAPAS.map(x=>`<option value="${x.id}" ${x.id===(c.etapa||'lead')?'selected':''}>${x.nome}</option>`).join('')}</select>`:''}</div></div>`).join('')}
     </div>`}).join('')}</div></div>`;
 }
 function etapaPill(id){const e=ETAPAS.find(x=>x.id===id)||ETAPAS[0];const cls={ganho:'ok',perdido:'',negociacao:'warn',proposta:'info'}[e.id]||'acc';return`<span class="pill ${cls}">${e.nome}</span>`}
@@ -1061,7 +1066,7 @@ function formCliente(c={}){
     await salvar('clientes',c.id,dados);toast(c.id?'Contato atualizado':'Contato cadastrado');return true;
   }:null,
   {excluir:c.id&&pode('excluir')?async()=>{if(await confirmar(`Excluir ${c.nome}? Os pedidos dele continuam registrados.`,'Excluir')){await remover('clientes',c.id);toast('Contato excluído');return true}}:null,
-   extra:(c.id&&c.telefone&&pode('crm')&&S.whatsapp.some(w=>w.status==='conectado')?`<button type="button" class="btn wa" data-a="wa-msg" data-id="${c.id}"><i class="fa-brands fa-whatsapp"></i> ${S.conversas.some(x=>x.clienteId===c.id)?'Ver conversa':'Mensagem pelo CRM'}</button>`:(c.id?waBtn(c.telefone,'','Abrir WhatsApp'):''))+(c.id&&pode('nps')?`<button type="button" class="btn" data-a="novo-nps" data-cli="${c.id}">Registrar NPS</button>`:'')+(c.id&&pode('vendas')?`<button type="button" class="btn" data-a="nova-venda" data-cli="${c.id}">Criar pedido</button>`:'')});
+   extra:(c.id&&c.telefone&&pode('crm')&&S.whatsapp.some(w=>w.status==='conectado')?`<button type="button" class="btn wa" data-a="wa-msg" data-id="${c.id}"><i class="fa-brands fa-whatsapp"></i> ${S.conversas.some(x=>x.clienteId===c.id)?'Ver conversa':'Mensagem pelo CRM'}</button>`:(c.id?waBtn(c.telefone,waSaudacao(c),'Abrir WhatsApp'):''))+(c.id&&pode('nps')?`<button type="button" class="btn" data-a="novo-nps" data-cli="${c.id}">Registrar NPS</button>`:'')+(c.id&&pode('vendas')?`<button type="button" class="btn" data-a="nova-venda" data-cli="${c.id}">Criar pedido</button>`:'')});
 }
 function vendasDoCliente(id){const vs=S.vendas.filter(v=>v.clienteId===id);if(!vs.length)return'';
   return`<div><h2 style="font-size:15px">Pedidos (${vs.length})</h2><div class="list">${vs.slice(0,8).map(v=>`<div class="li"><span class="mono">${esc(v.numero)}</span><span class="grow d">${fmtD(v.data)}</span>${pill(ST_V,v.status)}<span class="num">${money(v.total)}</span></div>`).join('')}</div></div>`}
@@ -1096,8 +1101,8 @@ function clientesFiltro(){const f=S.f;const q=norm(f.qcl);return publico({segs:f
 function clientesBody(){
   if(!S.clientes.length)return`<div class="empty"><strong>Nenhum cliente cadastrado</strong><span>Os contatos do CRM aparecem aqui com segmento, ticket médio e consentimento LGPD.</span>${pode('crm')?'<button class="btn pri" data-a="novo-cliente">Cadastrar contato</button>':''}</div>`;
   const l=clientesFiltro().map(c=>({c,s:statsDe(c.id)})).sort((a,b)=>b.s.total-a.s.total);
-  return`<div class="tbl-wrap"><table><thead><tr><th>Cliente</th><th>Segmento</th><th class="num">Pedidos</th><th class="num">Total</th><th class="num">Ticket médio</th><th class="num">Última compra</th><th class="num">NPS</th><th>Consentimento</th></tr></thead><tbody>
-  ${l.map(({c,s})=>`<tr class="click" data-a="edit-cliente" data-id="${c.id}"><td><b>${esc(c.nome)}</b><div class="ro">${esc([c.tipo,c.cidade].filter(Boolean).join(' · '))}</div></td><td>${segPill(s.seg)}</td><td class="num">${s.n}</td><td class="num">${money(s.total)}</td><td class="num">${s.n?money(s.ticket):'—'}</td><td class="num">${s.dias==null?'—':'há '+s.dias+' d'}</td><td class="num"><b class="${npsCls(s.nps)}">${s.nps??'—'}</b></td><td>${c.consentWhats?'<span class="pill ok">WhatsApp</span> ':''}${c.consentEmail?'<span class="pill ok">E-mail</span>':''}${!c.consentWhats&&!c.consentEmail?'<span class="ro">Sem registro</span>':''}</td></tr>`).join('')||'<tr><td colspan="8" class="ro">Nenhum cliente neste filtro.</td></tr>'}
+  return`<div class="tbl-wrap"><table><thead><tr><th>Cliente</th><th>Segmento</th><th class="num">Pedidos</th><th class="num">Total</th><th class="num">Ticket médio</th><th class="num">Última compra</th><th class="num">NPS</th><th>Consentimento</th><th>WhatsApp</th></tr></thead><tbody>
+  ${l.map(({c,s})=>`<tr class="click" data-a="edit-cliente" data-id="${c.id}"><td><b>${esc(c.nome)}</b><div class="ro">${esc([c.tipo,c.cidade].filter(Boolean).join(' · '))}</div></td><td>${segPill(s.seg)}</td><td class="num">${s.n}</td><td class="num">${money(s.total)}</td><td class="num">${s.n?money(s.ticket):'—'}</td><td class="num">${s.dias==null?'—':'há '+s.dias+' d'}</td><td class="num"><b class="${npsCls(s.nps)}">${s.nps??'—'}</b></td><td>${c.consentWhats?'<span class="pill ok">WhatsApp</span> ':''}${c.consentEmail?'<span class="pill ok">E-mail</span>':''}${!c.consentWhats&&!c.consentEmail?'<span class="ro">Sem registro</span>':''}</td><td>${waCli(c)||'<span class="ro">Sem telefone</span>'}</td></tr>`).join('')||'<tr><td colspan="9" class="ro">Nenhum cliente neste filtro.</td></tr>'}
   </tbody></table></div>`;
 }
 
