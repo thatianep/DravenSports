@@ -2,7 +2,8 @@
 // Edite só o que está entre aspas.
 window.DRAVEN_CONFIG = {
   // ID do cliente OAuth do Google (Google Cloud > Credenciais). Termina em .apps.googleusercontent.com
-  googleClientId: 'draven-plataforma-comercial',
+  googleClientId: '558791814415-4crcc218f9fnhm43qp9u4bvkf3ptfqpv.apps.googleusercontent.com',
+
 
   // Opcional: Gmail da gestão, dono da base de dados. Se a pessoa enxergar mais de uma base, vale a deste dono.
   dono: '',
