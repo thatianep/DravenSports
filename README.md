@@ -2,38 +2,66 @@
 
 CRM comercial da DRAVEN Sports: funil de vendas, tarefas e pedidos em quadros Kanban de arrastar, clientes 360°, produção e lotes, estoque e custos, campanhas, NPS, relatórios e controle da equipe.
 
-Versão de 03/11/2026.
+**Endereço público:** https://thatianep.github.io/DravenSports/
 
-## Como está organizado
+## Como funciona
 
 | O quê | Onde |
 |---|---|
-| Código do sistema | Este repositório no GitHub (`versao-claude-ai/sistema-draven.html`) |
-| Sistema em uso | https://claude.ai/artifact/RyFZXgtX155XdP5UCsvHaD |
-| Dados (clientes, pedidos, tarefas…) | Banco do claude.ai, ligado ao sistema acima |
-| Planilhas exportadas | Google Drive, pasta `DRAVEN \| Plataforma Comercial` (aba **Planilhas no Drive**) |
+| Sistema (site) | GitHub Pages, a partir deste repositório |
+| Login | Conta Google de cada pessoa |
+| Dados (clientes, pedidos, tarefas…) | Arquivo `draven-dados.json` na pasta **DRAVEN \| Plataforma Comercial** do Google Drive da gestão |
+| Planilhas exportadas | Mesma pasta do Drive (aba **Planilhas no Drive**) |
 
-Não usa Firebase nem Netlify.
+Não usa Firebase nem Netlify. O repositório é público, mas os dados não ficam nele: só quem tem acesso à pasta do Drive vê os dados.
 
-> O repositório é público. Nunca coloque aqui dados de clientes, senhas ou planilhas exportadas: eles ficam no claude.ai e no Google Drive.
+## Colocar no ar (uma vez só)
 
-## Acesso da equipe
+### 1. Ligar o GitHub Pages
+No GitHub: **Settings → Pages → Build and deployment → Source: Deploy from a branch → Branch: `main` / `(root)` → Save.**
+Em um ou dois minutos o site abre em https://thatianep.github.io/DravenSports/
 
-- Cada pessoa entra com a própria conta do claude.ai pelo link acima.
-- A gestão define o perfil de cada pessoa (Gestão, Vendas ou Estoque) dentro do sistema.
-- Na primeira vez que usar a aba **Planilhas no Drive**, cada pessoa autoriza o acesso ao Google Drive.
+### 2. Criar o login do Google (Google Cloud)
+1. Em https://console.cloud.google.com crie um projeto (ex.: `DRAVEN CRM`).
+2. **APIs e serviços → Biblioteca →** ative a **Google Drive API**.
+3. **Tela de consentimento OAuth:** tipo **Externo**, nome `DRAVEN Plataforma Comercial`, seu e-mail de suporte. Em **Usuários de teste**, adicione o Gmail de cada pessoa da equipe (até 100).
+4. **Credenciais → Criar credenciais → ID do cliente OAuth → Aplicativo da Web.**
+   Em **Origens JavaScript autorizadas** coloque `https://thatianep.github.io`.
+5. Copie o **ID do cliente** (termina em `.apps.googleusercontent.com`).
 
-## Novidades desta versão
+### 3. Colar o ID no sistema
+Edite o [`config.js`](config.js) aqui no GitHub (ícone de lápis), troque `COLE_AQUI_O_ID_DO_CLIENTE` pelo ID copiado e salve (Commit changes).
+No mesmo arquivo, em `dono`, coloque o Gmail da gestão.
 
-1. **Tarefas (aba nova):** quadro A fazer → Em andamento → Aguardando cliente → Concluído, com tipo, cliente, responsável, prazo e prioridade. Concluir uma tarefa ligada a um cliente registra o fato na linha do tempo dele; tarefas vencidas ou do dia aparecem no Painel.
-2. **Pedidos em quadro**, em Vendas e pedidos: Orçamento → Confirmado → Em produção → Entregue → Cancelado. Arrastar segue as regras dos botões do pedido (confirmar dá baixa no estoque, produção abre o lote, entrega e cancelamento pedem confirmação).
-3. **Funil CRM com arraste:** toda troca de etapa fica registrada na linha do tempo do cliente.
+### 4. Primeiro acesso da gestão
+1. Abra o site e clique em **Entrar com Google**. Na janela do Google, permita o acesso ao Drive.
+   Enquanto o app estiver em modo de teste, o Google mostra o aviso "app não verificado": clique em **Continuar**.
+2. Clique em **Criar a base no meu Drive**. É criada a pasta **DRAVEN | Plataforma Comercial** com o arquivo `draven-dados.json`.
+3. No Google Drive, compartilhe essa pasta com cada pessoa da equipe como **Editor**.
 
-**Como arrastar:** no computador, clique e arraste. No celular, toque e segure o card por meio segundo e depois arraste.
+### 5. Equipe
+1. Cada pessoa abre o site, entra com o Gmail que foi compartilhado e aparece em **Equipe e permissões**.
+2. A gestão define o perfil: Gestão, Vendas ou Estoque.
 
-## Atualizar o sistema
+**Instalar como app:** no computador (Chrome/Edge) use o ícone de instalar na barra de endereço; no Android, menu ⋮ → **Instalar app**; no iPhone, Safari → Compartilhar → **Adicionar à Tela de Início**.
 
-1. Altere `versao-claude-ai/sistema-draven.html` aqui no GitHub.
-2. Republique o mesmo arquivo no artefato do claude.ai (o link acima). Os dados continuam no lugar.
+## Trazer os dados do claude.ai
+Na versão do claude.ai, aba **Planilhas no Drive**, clique em **Salvar tudo em planilha agora**. Ela vai para a mesma pasta do Drive.
+No site do GitHub, aba **Planilhas no Drive → Atualizar lista → Restaurar** nessa planilha.
 
-O WhatsApp por QR Code, a IA e a integração com o discador Callix precisam de um servidor ligado 24 horas e não fazem parte deste sistema.
+## Bom saber
+- A sessão do Google dura cerca de 1 hora. Quando expira, aparece uma faixa amarela no canto: clique em **Continuar**. O que foi feito nesse tempo fica guardado e é enviado ao continuar.
+- Quando duas pessoas mexem ao mesmo tempo, as alterações se juntam a cada 15 segundos. Se as duas mudarem **o mesmo registro**, vale a última gravação.
+- Os perfis (Gestão, Vendas, Estoque) organizam as telas, mas quem tem a pasta como Editor no Drive consegue, tecnicamente, alterar o arquivo de dados. Compartilhe a pasta só com quem é da equipe.
+- A IA (textos de campanha e análise de NPS) só existe na versão do claude.ai.
+- WhatsApp por QR Code e discador Callix precisam de um servidor ligado 24 horas e não fazem parte deste sistema.
+
+## Arquivos
+| Arquivo | Para quê |
+|---|---|
+| `index.html` | O sistema publicado. **Gerado**, não edite à mão |
+| `drive-db.js` | Login Google e banco de dados no Drive |
+| `config.js` | ID do login do Google e e-mail da gestão |
+| `versao-claude-ai/sistema-draven.html` | Fonte do sistema (a mesma versão publicada no claude.ai) |
+| `ferramentas/montar.py` | Gera o `index.html` a partir da fonte: `python3 ferramentas/montar.py` |
+| `manifest.webmanifest`, `*.png` | Nome e ícones do app instalado |
