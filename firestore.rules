@@ -1,0 +1,84 @@
+rules_version = '2';
+// Regras de segurança do banco da Draven. Cole este texto em Firebase > Firestore Database > Regras > Publicar.
+// Espelham os perfis do sistema: Gestão, Vendas e Estoque. Quem não tem perfil liberado não lê nenhum dado.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ATENÇÃO: este e-mail precisa ser igual ao donoEmail do config.js
+    function dono() { return logado() && request.auth.token.email == 'dravenadmin@draven.app'; }
+
+    function logado() { return request.auth != null; }
+    function eu(uid) { return logado() && request.auth.uid == uid; }
+    function papel() {
+      return dono() ? 'gestao'
+        : (exists(/databases/$(database)/documents/equipe/$(request.auth.uid))
+            ? get(/databases/$(database)/documents/equipe/$(request.auth.uid)).data.papel
+            : 'nenhum');
+    }
+    function tem(lista) { return logado() && papel() in lista; }
+    function equipe() { return tem(['gestao', 'vendedor', 'estoque']); }
+    function gestao() { return tem(['gestao']); }
+    function soMudou(campos) { return request.resource.data.diff(resource.data).affectedKeys().hasOnly(campos); }
+
+    // nome e e-mail de cada pessoa (para mostrar quem fez o quê)
+    match /usuarios/{uid} {
+      allow read: if equipe() || eu(uid);
+      allow write: if eu(uid) || gestao();
+    }
+    // perfil de cada pessoa: só a gestão define
+    match /equipe/{uid} {
+      allow read: if equipe() || eu(uid);
+      allow write: if gestao();
+    }
+    // pedidos de acesso: cada pessoa registra o seu, a gestão vê e limpa
+    match /acessos/{uid} {
+      allow read: if gestao() || eu(uid);
+      allow create, update: if eu(uid);
+      allow delete: if gestao();
+    }
+
+    match /clientes/{id} {
+      allow read: if equipe();
+      allow create, update: if tem(['gestao', 'vendedor']);
+      allow delete: if gestao();
+    }
+    match /campanhas/{id} {
+      allow read: if equipe();
+      allow create, update: if tem(['gestao', 'vendedor']);
+      allow delete: if gestao();
+    }
+    match /nps/{id} {
+      allow read: if equipe();
+      allow create, update: if tem(['gestao', 'vendedor']);
+      allow delete: if gestao();
+    }
+    // vendas: o Estoque só pode marcar o pedido como entregue
+    match /vendas/{id} {
+      allow read: if equipe();
+      allow create: if tem(['gestao', 'vendedor']);
+      allow update: if tem(['gestao', 'vendedor'])
+        || (tem(['estoque']) && soMudou(['status', 'entregueEm']) && request.resource.data.status == 'entregue');
+      allow delete: if gestao();
+    }
+    match /producao/{id} {
+      allow read, create, update: if tem(['gestao', 'estoque']);
+      allow delete: if gestao();
+    }
+    // produtos: Vendas só mexe no saldo (baixa automática ao confirmar pedido)
+    match /produtos/{id} {
+      allow read: if equipe();
+      allow create: if tem(['gestao', 'estoque']);
+      allow update: if tem(['gestao', 'estoque']) || (tem(['vendedor']) && soMudou(['estoque']));
+      allow delete: if gestao();
+    }
+    // tarefas: toda a equipe lê, cria e move; excluir só a gestão ou quem criou
+    match /tarefas/{id} {
+      allow read, create, update: if equipe();
+      allow delete: if gestao() || (equipe() && resource.data.criadoPor == request.auth.uid);
+    }
+    match /movimentos/{id} {
+      allow read, create: if equipe();
+      allow delete: if gestao();
+    }
+  }
+}
