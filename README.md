@@ -49,6 +49,12 @@ No mesmo arquivo, em `dono`, coloque o Gmail da gestão.
 Na versão do claude.ai, aba **Planilhas no Drive**, clique em **Salvar tudo em planilha agora**. Ela vai para a mesma pasta do Drive.
 No site do GitHub, aba **Planilhas no Drive → Atualizar lista → Restaurar** nessa planilha.
 
+## WhatsApp
+- O botão **WhatsApp**, no topo do sistema, abre o WhatsApp Web numa janela ao lado. Na primeira vez, leia o QR Code com o celular (WhatsApp → Aparelhos conectados → Conectar aparelho). Depois ele continua conectado nesse navegador.
+- Os botões de WhatsApp de clientes, pedidos e campanhas abrem a conversa com a mensagem pronta **nessa mesma janela**, sem abrir abas novas. É só conferir e apertar Enviar.
+- No celular, esses botões abrem o aplicativo do WhatsApp.
+- O WhatsApp Web não pode ficar dentro da página do sistema: o próprio WhatsApp bloqueia ser aberto dentro de outro site.
+
 ## Bom saber
 - A sessão do Google dura cerca de 1 hora. Quando expira, aparece uma faixa amarela no canto: clique em **Continuar**. O que foi feito nesse tempo fica guardado e é enviado ao continuar.
 - Quando duas pessoas mexem ao mesmo tempo, as alterações se juntam a cada 15 segundos. Se as duas mudarem **o mesmo registro**, vale a última gravação.
