@@ -13,7 +13,8 @@
 <meta name="apple-mobile-web-app-title" content="DRAVEN">
 <!-- Gerado por ferramentas/montar.py a partir de versao-claude-ai/sistema-draven.html. Não edite à mão. -->
 <script src="config.js"></script>
-<script src="servidor-db.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="drive-db.js"></script>
 </head>
 <body>
 <title>DRAVEN | Plataforma Comercial</title>
@@ -623,7 +624,7 @@ function renderNav(){
   if(S.me){const um0=$('#umenu');const aberto=um0?!um0.hidden:false;
     me.innerHTML=`<button type="button" class="ubtn" data-a="umenu" aria-haspopup="true" aria-expanded="${aberto}"><img src="${esc(S.me.avatarUrl)}" alt=""><span class="mt"><strong></strong><span>${p?esc(PAPEIS[p]):'Sem perfil'}${S.ro?' · somente leitura':''}</span></span><i class="fa-solid fa-chevron-down"></i></button>
     <div class="umenu" id="umenu" role="menu" ${aberto?'':'hidden'}><div class="uhead"><img src="${esc(S.me.avatarUrl)}" alt=""><div><b></b><small></small><span class="pill acc">${p?esc(PAPEIS[p]):'Sem perfil'}</span></div></div>
-    ${p==='gestao'?'<button type="button" role="menuitem" data-go="equipe"><i class="fa-solid fa-user-shield"></i> Equipe e permissões</button>':''}<button type="button" role="menuitem" data-a="trocar-senha"><i class="fa-solid fa-key"></i> Trocar minha senha</button><hr><button type="button" role="menuitem" class="sair" data-a="sair"><i class="fa-solid fa-right-from-bracket"></i> Sair</button></div>`;
+    ${p==='gestao'?'<button type="button" role="menuitem" data-go="equipe"><i class="fa-solid fa-user-shield"></i> Equipe e permissões</button>':''}</div>`;
     $('.ubtn strong',me).textContent=S.me.name||'Você';$('.uhead b',me).textContent=S.me.name||'Você';$('.uhead small',me).textContent=S.me.email||''}
 }
 
@@ -1907,11 +1908,11 @@ function vEquipe(){
   const sel=(id,cur)=>`<select class="inp" id="papel-${esc(id)}" data-papel="${esc(id)}" ${adm?'':'disabled'} style="width:auto"><option value="">Escolha o perfil</option>${Object.entries(PAPEIS).map(([k,v])=>`<option value="${k}" ${cur===k?'selected':''}>${v}</option>`).join('')}</select>`;
   const temEx=[...S.clientes,...S.produtos,...S.vendas,...S.producao,...S.campanhas,...S.nps].some(x=>x.exemplo);
   carregarContas();const ct=S.contas||{};
-  return`<div class="head"><div><h1>Equipe</h1><p class="sub">Funcionários, logins e o que cada perfil pode fazer</p></div>${adm?'<div class="tools"><button class="btn pri" data-a="funcionario"><i class="fa-solid fa-user-plus"></i> Cadastrar funcionário</button></div>':''}</div>
+  return`<div class="head"><div><h1>Equipe</h1><p class="sub">Funcionários, logins e o que cada perfil pode fazer</p></div></div>
   ${adm?'':'<div class="notice warn">Somente quem tem perfil de Gestão libera acessos e muda perfis.</div>'}
   <div class="grid2">
    <section class="panel"><div class="panel-h"><h2>Pedidos de acesso</h2><span class="ro">${pend.length}</span></div>
-    ${pend.length?`<div class="list">${pend.map(a=>`<div class="li"><img src="${esc(S.profiles[a.id]?.avatarUrl||'')}" alt="" width="28" height="28" style="border-radius:50%"><div class="grow"><div class="t">${esc(pessoa(a.id))}</div><div class="d">Abriu o sistema em ${fmtD(a.em)}</div></div>${sel(a.id,'')}</div>`).join('')}</div>`:'<p class="ro">Ninguém aguardando. Para dar acesso a alguém, clique em Cadastrar funcionário e envie o usuário e a senha para a pessoa.</p>'}
+    ${pend.length?`<div class="list">${pend.map(a=>`<div class="li"><img src="${esc(S.profiles[a.id]?.avatarUrl||'')}" alt="" width="28" height="28" style="border-radius:50%"><div class="grow"><div class="t">${esc(pessoa(a.id))}</div><div class="d">Abriu o sistema em ${fmtD(a.em)}</div></div>${sel(a.id,'')}</div>`).join('')}</div>`:'<p class="ro">Ninguém aguardando. Compartilhe o link desta página com a pessoa (botão Compartilhar do claude.ai, com permissão de Contribuidor ou Editor). Assim que ela abrir, aparece aqui para você escolher o perfil.</p>'}
    </section>
    <section class="panel"><div class="panel-h"><h2>Perfis</h2></div>
     <div class="list"><div class="li"><div class="grow"><div class="t">Gestão</div><div class="d">Tudo: CRM, campanhas, NPS, vendas, produção, estoque, relatórios, custos, exclusões e equipe</div></div></div>
@@ -1931,18 +1932,18 @@ function carregarContas(forcar){
   waApi('/api/contas').then(l=>{S.contas=Object.fromEntries(l.map(u=>[u.id,u]));if(S.view==='equipe')render()}).catch(()=>{});
 }
 function mostrarAcesso(titulo,nome,email,senha,tel){
-  const link=location.origin+location.pathname;
-  const txt=`Olá${nome?' '+nome.split(' ')[0]:''}! Seu acesso ao sistema da Draven Sports:\nEndereço: ${link}\nUsuário: ${email}\nSenha: ${senha}\nTroque a senha com a gestão se precisar.`;
+  const link=location.origin+'/';
+  const txt=`Olá${nome?' '+nome.split(' ')[0]:''}! Seu acesso ao sistema da Draven Sports:\nEndereço: ${link}\nE-mail: ${email}\nSenha: ${senha}\nTroque a senha com a gestão se precisar.`;
   abrir(titulo,`<p class="sub" style="margin:0">Anote ou envie agora: por segurança, a senha não aparece de novo depois que esta janela fechar.</p>
-  <div class="mini"><div><small>Endereço</small><b class="sm">${esc(link)}</b></div><div><small>Usuário</small><b class="sm">${esc(email)}</b></div><div><small>Senha</small><b class="sm mono">${esc(senha)}</b></div></div>
+  <div class="mini"><div><small>Endereço</small><b class="sm">${esc(link)}</b></div><div><small>E-mail</small><b class="sm">${esc(email)}</b></div><div><small>Senha</small><b class="sm mono">${esc(senha)}</b></div></div>
   <div class="tools"><button type="button" class="btn" data-a="copiar" data-txt="${esc(txt)}"><i class="fa-regular fa-copy"></i> Copiar dados de acesso</button>${waBtn(tel,txt,'Enviar no WhatsApp')}</div>`,null,{});
 }
 function formFuncionario(){
   abrir('Cadastrar funcionário',`
-  <p class="sub" style="margin:0">A gestão cria a conta com usuário e senha. O funcionário entra com esses dados e já cai no perfil escolhido.</p>
+  <p class="sub" style="margin:0">A gestão cria a conta com e-mail e senha. O funcionário entra com esses dados e já cai no perfil escolhido.</p>
   <div class="fg">
    <label class="f">Nome *<input class="inp" id="fu-nome" name="nome" required></label>
-   <label class="f">Usuário (login) *<input class="inp" id="fu-email" name="email" required autocapitalize="none" spellcheck="false" placeholder="ex.: joao.vendas"></label>
+   <label class="f">E-mail (será o login) *<input class="inp" id="fu-email" name="email" type="email" required></label>
    <label class="f">Perfil de acesso *<select class="inp" id="fu-papel" name="papel">${Object.entries(PAPEIS).map(([k,v])=>`<option value="${k}" ${k==='vendedor'?'selected':''}>${v}</option>`).join('')}</select></label>
    <label class="f">Cargo / função<input class="inp" id="fu-cargo" name="cargo" placeholder="Vendedor externo, Costura, Expedição…"></label>
    <label class="f">Telefone / WhatsApp<input class="inp" id="fu-tel" name="telefone" inputmode="tel"></label>
@@ -1954,7 +1955,6 @@ function formFuncionario(){
     catch(e){erro('#v-err',e.message||'Não foi possível cadastrar.');return false}
   },{submitLabel:'Cadastrar'});
 }
-async function desativarConta(id){const c=S.contas?.[id];if(!await confirmar(`Remover o acesso de ${c?.name||pessoa(id)}? O login dela é desativado: a pessoa sai do sistema em todos os aparelhos e não consegue mais entrar. Os registros feitos por ela continuam.`,'Remover'))return;try{await waApi('/api/contas/desativar',{id});try{await S.db.doc('equipe/'+id).delete()}catch(e){}carregarContas(true);toast('Acesso removido')}catch(e){toast(e.message||'Não foi possível remover o acesso.')}}
 async function trocarSenha(id){
   const c=S.contas?.[id];if(!await confirmar(`Gerar uma senha nova para ${c?.name||pessoa(id)}? A senha atual deixa de funcionar e a pessoa sai do sistema em todos os aparelhos.`,'Gerar senha nova'))return;
   try{const r=await waApi('/api/contas/senha',{id});mostrarAcesso('Senha nova gerada',c?.name||pessoa(id),r.email,r.senha,S.equipe[id]?.telefone)}catch(e){toast(e.message||'Não foi possível trocar a senha.')}
@@ -2092,7 +2092,7 @@ document.addEventListener('click',async e=>{
         historico:[{txt:'Adicionado ao funil a partir de uma conversa do WhatsApp iniciada pela equipe',em:agora,por:S.myId}]});
         await col('conversas').doc(id).update({clienteId:cid});toast('Contato adicionado ao funil como Novo lead')}catch(err){el.disabled=false}break}
     case'novo-func':formFuncionario();break;
-    case'nova-senha':trocarSenha(id);break;case'funcionario':formFuncionario();break;case'desativar-conta':desativarConta(id);break;
+    case'nova-senha':trocarSenha(id);break;
     case'fechar-conv':S.convSel=null;if(MSGS_UNSUB){MSGS_UNSUB();MSGS_UNSUB=null}render();break;
     case'cv-enviar':enviarConversa(id,el);break;
     case'wa-msg':formWaMsg(id);break;
@@ -2122,7 +2122,7 @@ document.addEventListener('click',async e=>{
     case'novo-produto':formProduto();break;
     case'edit-produto':if(e.target.closest('[data-a=ajustar]'))break;{const p=prod(id);if(p)formProduto(p);break}
     case'ajustar':{const p=prod(id);if(p)formAjuste(p);break}
-    case'rem-membro':if(S.contas?.[id])desativarConta(id);else if(await confirmar(`Remover o acesso de ${pessoa(id)}?`,'Remover'))definirPapel(id,'');break;
+    case'rem-membro':if(await confirmar(`Remover o acesso de ${pessoa(id)}?`,'Remover'))definirPapel(id,'');break;
     case'exemplos':el.disabled=true;try{await carregarExemplos()}catch(err){}break;
     case'limpar-ex':try{await limparExemplos()}catch(err){}break;
     case'csv-vendas':baixarCsv('draven-vendas.csv',[['Numero','Data','Cliente','Status','Itens','Subtotal','Desconto','Frete','Total','Pagamento','Personalizado'],

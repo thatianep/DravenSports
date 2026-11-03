@@ -9,55 +9,50 @@ CRM comercial da DRAVEN Sports: funil de vendas, tarefas e pedidos em quadros Ka
 | O quê | Onde |
 |---|---|
 | Sistema (site) | GitHub Pages, a partir deste repositório |
-| Login | **Usuário e senha criados pela gestão** na aba Equipe. A equipe não precisa de conta Google |
-| Servidor | Google Apps Script na conta Google da gestão (`servidor/Codigo.gs`) |
-| Dados | Arquivo `draven-dados.json` na pasta **DRAVEN \| Plataforma Comercial** do Google Drive da gestão |
+| Login | Conta Google de cada pessoa |
+| Dados (clientes, pedidos, tarefas…) | Arquivo `draven-dados.json` na pasta **DRAVEN \| Plataforma Comercial** do Google Drive da gestão |
 | Planilhas exportadas | Mesma pasta do Drive (aba **Planilhas no Drive**) |
 
-A conta Google da gestão serve só como nuvem de dados. O repositório é público, mas os dados e as senhas não ficam nele.
-As senhas ficam guardadas de forma cifrada no servidor, nunca no arquivo de dados.
+Não usa Firebase nem Netlify. O repositório é público, mas os dados não ficam nele: só quem tem acesso à pasta do Drive vê os dados.
 
 ## Colocar no ar (uma vez só)
 
 ### 1. Ligar o GitHub Pages
 No GitHub: **Settings → Pages → Build and deployment → Source: Deploy from a branch → Branch: `main` / `(root)` → Save.**
+Em um ou dois minutos o site abre em https://thatianep.github.io/DravenSports/
 
-### 2. Publicar o servidor (Google Apps Script), com a conta Google da gestão
-1. Abra https://script.google.com e clique em **Novo projeto**. Dê o nome `DRAVEN servidor`.
-2. Apague o que estiver no editor e cole todo o conteúdo de [`servidor/Codigo.gs`](servidor/Codigo.gs).
-3. Na linha `const CODIGO_INSTALACAO = 'TROQUE-ESTE-CODIGO';` troque o texto por uma frase só sua (ex.: `draven-2026-minha-frase`). Salve (ícone de disquete).
-4. No topo, escolha a função **autorizar** e clique em **Executar**. Permita o acesso ao Google Drive (se aparecer "app não verificado": **Avançado → Acessar DRAVEN servidor**).
-5. Clique em **Implantar → Nova implantação →** ícone de engrenagem **→ App da Web**:
-   - Executar como: **Eu**
-   - Quem pode acessar: **Qualquer pessoa**
-   - Clique em **Implantar** e copie o **URL do app da Web** (termina em `/exec`).
+### 2. Criar o login do Google (Google Cloud)
+1. Em https://console.cloud.google.com crie um projeto (ex.: `DRAVEN CRM`).
+2. **APIs e serviços → Biblioteca →** ative a **Google Drive API**.
+3. **Tela de consentimento OAuth:** tipo **Externo**, nome `DRAVEN Plataforma Comercial`, seu e-mail de suporte. Em **Usuários de teste**, adicione o Gmail de cada pessoa da equipe (até 100).
+4. **Credenciais → Criar credenciais → ID do cliente OAuth → Aplicativo da Web.**
+   Em **Origens JavaScript autorizadas** coloque `https://thatianep.github.io`.
+5. Copie o **ID do cliente** (termina em `.apps.googleusercontent.com`).
 
-### 3. Colar o endereço no sistema
-Edite o [`config.js`](config.js) aqui no GitHub (ícone de lápis), troque `COLE_AQUI_O_ENDERECO_DO_SERVIDOR` pelo URL copiado e salve (Commit changes).
+### 3. Colar o ID no sistema
+Edite o [`config.js`](config.js) aqui no GitHub (ícone de lápis), troque `COLE_AQUI_O_ID_DO_CLIENTE` pelo ID copiado e salve (Commit changes).
+No mesmo arquivo, em `dono`, coloque o Gmail da gestão.
 
 ### 4. Primeiro acesso da gestão
-Abra https://thatianep.github.io/DravenSports/ — aparece **Primeiro acesso**. Digite o código de instalação (a frase do passo 2.3), seu nome, um usuário e uma senha. Essa é a conta dona do sistema.
+1. Abra o site e clique em **Entrar com Google**. Na janela do Google, permita o acesso ao Drive.
+   Enquanto o app estiver em modo de teste, o Google mostra o aviso "app não verificado": clique em **Continuar**.
+2. Clique em **Criar a base no meu Drive**. É criada a pasta **DRAVEN | Plataforma Comercial** com o arquivo `draven-dados.json`.
+3. No Google Drive, compartilhe essa pasta com cada pessoa da equipe como **Editor**.
 
-### 5. Cadastrar a equipe
-Na aba **Equipe e permissões → Cadastrar funcionário**: nome, usuário, perfil (Gestão, Vendas ou Estoque) e senha (ou deixe vazio para gerar uma). Copie ou envie pelo WhatsApp os dados de acesso que aparecem.
-- **Nova senha:** gera outra senha e desconecta a pessoa de todos os aparelhos.
-- **Remover:** desativa o login da pessoa. O que ela registrou continua no sistema.
-- Cada pessoa troca a própria senha no menu com o nome dela, no canto superior direito.
+### 5. Equipe
+1. Cada pessoa abre o site, entra com o Gmail que foi compartilhado e aparece em **Equipe e permissões**.
+2. A gestão define o perfil: Gestão, Vendas ou Estoque.
 
 **Instalar como app:** no computador (Chrome/Edge) use o ícone de instalar na barra de endereço; no Android, menu ⋮ → **Instalar app**; no iPhone, Safari → Compartilhar → **Adicionar à Tela de Início**.
 
-## Atualizar o servidor
-Se o `servidor/Codigo.gs` mudar: cole o novo conteúdo no Apps Script (mantendo a sua frase em `CODIGO_INSTALACAO`), salve e vá em **Implantar → Gerenciar implantações →** lápis **→ Versão: Nova versão → Implantar**. O endereço continua o mesmo.
-
 ## Trazer os dados do claude.ai
-Na versão do claude.ai, aba **Planilhas no Drive**, clique em **Salvar tudo em planilha agora**. Se o Google Drive ligado ao claude.ai for o mesmo da gestão, a planilha já cai na pasta certa; se não for, baixe a planilha e coloque-a na pasta **DRAVEN | Plataforma Comercial** do Drive da gestão.
-No site, aba **Planilhas no Drive → Atualizar lista → Restaurar** nessa planilha.
+Na versão do claude.ai, aba **Planilhas no Drive**, clique em **Salvar tudo em planilha agora**. Ela vai para a mesma pasta do Drive.
+No site do GitHub, aba **Planilhas no Drive → Atualizar lista → Restaurar** nessa planilha.
 
 ## Bom saber
-- O login fica salvo no aparelho por 30 dias. Depois disso, ou ao clicar em **Sair**, a pessoa entra de novo.
-- As alterações de várias pessoas se juntam a cada 8 segundos. Se duas pessoas mudarem **o mesmo registro**, vale a última gravação.
-- O servidor também confere os perfis: só a Gestão exclui registros, mexe em perfis, cria contas e usa as planilhas do Drive; quem não tem perfil não vê nenhum dado.
-- Os links "Abrir" das planilhas só abrem para a conta Google da gestão (os arquivos ficam no Drive dela).
+- A sessão do Google dura cerca de 1 hora. Quando expira, aparece uma faixa amarela no canto: clique em **Continuar**. O que foi feito nesse tempo fica guardado e é enviado ao continuar.
+- Quando duas pessoas mexem ao mesmo tempo, as alterações se juntam a cada 15 segundos. Se as duas mudarem **o mesmo registro**, vale a última gravação.
+- Os perfis (Gestão, Vendas, Estoque) organizam as telas, mas quem tem a pasta como Editor no Drive consegue, tecnicamente, alterar o arquivo de dados. Compartilhe a pasta só com quem é da equipe.
 - A IA (textos de campanha e análise de NPS) só existe na versão do claude.ai.
 - WhatsApp por QR Code e discador Callix precisam de um servidor ligado 24 horas e não fazem parte deste sistema.
 
@@ -65,9 +60,8 @@ No site, aba **Planilhas no Drive → Atualizar lista → Restaurar** nessa plan
 | Arquivo | Para quê |
 |---|---|
 | `index.html` | O sistema publicado. **Gerado**, não edite à mão |
-| `servidor-db.js` | Tela de login e conversa com o servidor (banco, contas, planilhas) |
-| `servidor/Codigo.gs` | O servidor: cole no Google Apps Script da gestão |
-| `config.js` | Endereço do servidor |
+| `drive-db.js` | Login Google e banco de dados no Drive |
+| `config.js` | ID do login do Google e e-mail da gestão |
 | `versao-claude-ai/sistema-draven.html` | Fonte do sistema (a mesma versão publicada no claude.ai) |
 | `ferramentas/montar.py` | Gera o `index.html` a partir da fonte: `python3 ferramentas/montar.py` |
 | `manifest.webmanifest`, `*.png` | Nome e ícones do app instalado |
