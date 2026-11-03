@@ -124,7 +124,7 @@
     syncEl.innerHTML = esc(txt) + (acao ? ' <button type="button">' + esc(acao.rotulo) + '</button>' : '');
     if (acao) syncEl.querySelector('button').onclick = acao.fn;
   }
-  const statusSalvo = () => sync('', arq && !arq.canEdit ? 'Somente leitura · Google Drive' : 'Salvo no Google Drive');
+  const statusSalvo = () => sync(arq && !arq.canEdit ? 'ro' : 'ok', arq && !arq.canEdit ? 'Somente leitura · Google Drive' : 'Salvo no Google Drive');
 
   // ---------------- login Google ----------------
   function esperarGIS() {

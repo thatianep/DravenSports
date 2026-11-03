@@ -112,5 +112,6 @@ CABECA = """<!doctype html>
 </head>
 <body>
 """
-(RAIZ / 'index.html').write_text(CABECA + WHATSAPP + app.strip() + '\n</body>\n</html>\n', encoding='utf-8')
+CELULAR = (RAIZ / 'ferramentas' / 'celular.html').read_text(encoding='utf-8')
+(RAIZ / 'index.html').write_text(CABECA + WHATSAPP + app.strip() + '\n' + CELULAR + '</body>\n</html>\n', encoding='utf-8')
 print('index.html gerado')

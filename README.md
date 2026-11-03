@@ -43,6 +43,8 @@ No mesmo arquivo, em `dono`, coloque o Gmail da gestão.
 1. Cada pessoa abre o site, entra com o Gmail que foi compartilhado e aparece em **Equipe e permissões**.
 2. A gestão define o perfil: Gestão, Vendas ou Estoque.
 
+**Computador e celular:** o mesmo endereço funciona nos dois. No celular, o menu fica numa barra embaixo (Painel, Funil, Tarefas, Vendas e **Mais** com todas as telas), as tabelas viram cartões, os quadros rolam uma coluna por vez e as fichas abrem em tela cheia.
+
 **Instalar como app:** no computador (Chrome/Edge) use o ícone de instalar na barra de endereço; no Android, menu ⋮ → **Instalar app**; no iPhone, Safari → Compartilhar → **Adicionar à Tela de Início**.
 
 ## Trazer os dados do claude.ai
@@ -71,5 +73,6 @@ No site do GitHub, aba **Planilhas no Drive → Atualizar lista → Restaurar** 
 | `drive-db.js` | Login Google e banco de dados no Drive |
 | `config.js` | ID do login do Google e e-mail da gestão |
 | `versao-claude-ai/sistema-draven.html` | Fonte do sistema (a mesma versão publicada no claude.ai) |
+| `ferramentas/celular.html` | Ajustes de celular e tablet (barra de menu embaixo, tabelas em cartões) |
 | `ferramentas/montar.py` | Gera o `index.html` a partir da fonte: `python3 ferramentas/montar.py` |
 | `manifest.webmanifest`, `*.png` | Nome e ícones do app instalado |

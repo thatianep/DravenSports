@@ -1,0 +1,148 @@
+<!-- Ajustes de celular e tablet. Entra no index.html pelo ferramentas/montar.py, depois do sistema.
+     No computador (tela larga) nada daqui muda o layout. -->
+<style>
+/* barra de menu embaixo, no jeito de aplicativo (só em tela estreita) */
+#mnav{display:none}
+#mmais[hidden]{display:none!important}
+@media (max-width:900px){
+  .ann{display:none}
+  .navband{display:none}
+  body{padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))}
+  #mnav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(255,255,255,.97);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:4px max(6px,env(safe-area-inset-left,0px)) calc(4px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-right,0px))}
+  #mnav button{all:unset;cursor:pointer;flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px 5px;border-radius:12px;font:600 11px var(--f-body);color:var(--muted);position:relative;-webkit-tap-highlight-color:transparent}
+  #mnav button svg,#mnav button i{width:20px;height:20px;font-size:19px}
+  #mnav button span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #mnav button[aria-current="page"]{color:var(--ink)}
+  #mnav button[aria-current="page"] svg,#mnav button[aria-current="page"] i{color:var(--accent-2)}
+  #mnav button[aria-current="page"]::after{content:"";position:absolute;top:0;left:30%;right:30%;height:3px;border-radius:0 0 3px 3px;background:var(--accent)}
+  #mnav button:focus-visible{outline:2px solid var(--accent)}
+  #mnav b,#mmais b{position:absolute;top:2px;left:calc(50% + 6px);background:var(--red);color:#fff;font-size:10px;border-radius:999px;padding:0 5px;line-height:16px}
+  #mmais{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;justify-content:flex-end}
+  #mmais .mm-bg{position:absolute;inset:0;background:rgba(0,0,0,.45)}
+  #mmais .mm-box{position:relative;background:var(--surface);border-radius:20px 20px 0 0;padding:8px 12px calc(14px + env(safe-area-inset-bottom,0px));max-height:80dvh;overflow-y:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;box-shadow:0 -10px 30px rgba(0,0,0,.2)}
+  #mmais .mm-h{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;padding:6px 4px 4px}
+  #mmais .mm-h b{all:unset;font:700 18px var(--f-display);text-transform:uppercase;letter-spacing:.03em}
+  #mmais .mm-h button{all:unset;cursor:pointer;width:36px;height:36px;display:grid;place-items:center;border-radius:10px;font-size:18px;color:var(--muted)}
+  #mmais .mm-box>button[data-go]{all:unset;cursor:pointer;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;min-height:78px;padding:8px 4px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line);font:600 12px/1.25 var(--f-body);color:var(--fg)}
+  #mmais .mm-box>button[data-go] svg,#mmais .mm-box>button[data-go] i{width:20px;height:20px;font-size:19px;color:var(--accent-text)}
+  #mmais .mm-box>button[aria-current="page"]{background:var(--accent);border-color:var(--accent);color:#000}
+  #mmais .mm-box>button[aria-current="page"] i,#mmais .mm-box>button[aria-current="page"] svg{color:#000}
+  #mmais .mm-box>button b{left:auto;right:8px;top:6px}
+
+  /* cabeçalho mais baixo */
+  .hdr > .in{padding-block:8px;gap:8px}
+  .logo img{height:40px}
+  .hact{gap:6px}
+  .hact .btn{padding:8px 11px}
+  .hact .btn i,.hact .btn svg{margin:0}
+
+  /* topo de cada tela mais compacto */
+  .wrap{gap:14px;padding-block:14px 28px}
+  .head{padding:16px;border-radius:14px;gap:10px}
+  .head::after{display:none}
+  .eyebrow{display:none}
+  .head h1{font-size:22px}
+  .head .sub{font-size:12.5px;margin-top:2px}
+  .head .tools{width:100%}
+  .head .tools .inp,.head .tools select.inp{flex:1 1 150px;min-width:0;width:auto}
+  .head .tools .btn{flex:1 1 auto;justify-content:center}
+  .kb-hint{display:none}
+
+  /* quadros Kanban: uma coluna por vez, com encaixe ao rolar */
+  .board-wrap{scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;margin-inline:-16px;padding-inline:16px;scroll-padding-inline:16px;overscroll-behavior-x:contain}
+  .board,.board[style]{grid-template-columns:none!important;grid-auto-flow:column;grid-auto-columns:min(84vw,320px);min-width:0!important;width:max-content;gap:10px}
+  .board .col{scroll-snap-align:start}
+
+  /* textos e botões que não cabiam */
+  .kpi .btn,.kpi span{white-space:normal}
+  .kpi b{font-size:26px}
+  .kpis{gap:10px}
+  .panel{padding:16px}
+
+  /* o iPhone não dá zoom ao tocar em campos de 16px */
+  .inp,select.inp,textarea.inp,#gq,dialog input,dialog select,dialog textarea{font-size:16px}
+
+  #dvsync{bottom:calc(72px + env(safe-area-inset-bottom,0px))}
+  #dvsync.ok{display:none} /* no celular só aparece enquanto salva ou se der erro */
+  .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+}
+
+@media (max-width:620px){
+  /* janela de ficha, pedido etc. ocupa a tela toda */
+  dialog#dlg{width:100%;max-width:100%;height:100%;max-height:100%;margin:0;border:0;border-radius:0}
+  dialog#dlg form{height:100%;max-height:100%}
+  dialog#dlg .dlg-h{padding-top:calc(12px + env(safe-area-inset-top,0px))}
+  dialog#dlg .dlg-b{flex:1}
+  dialog#dlg .dlg-f{padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+  dialog#dlg .dlg-f .btn{flex:1 1 auto;justify-content:center}
+
+  /* tabelas viram cartões */
+  .tbl-wrap{border:0;background:transparent;box-shadow:none;overflow:visible;border-radius:0}
+  .tbl-wrap table{min-width:0}
+  .tbl-wrap thead{display:none}
+  .tbl-wrap tbody,.tbl-wrap tr{display:block}
+  .tbl-wrap tr{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(24,24,27,.05)}
+  .tbl-wrap td{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:5px 0;border:0;text-align:right;min-width:0;overflow-wrap:anywhere}
+  .tbl-wrap td::before{content:attr(data-label);flex:none;max-width:45%;text-align:left;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .tbl-wrap td[data-label=""]::before{display:none}
+  .tbl-wrap td:first-child{display:block;text-align:left;font-size:15px;padding:2px 0 6px;border-bottom:1px solid var(--line);margin-bottom:4px}
+  .tbl-wrap td:first-child::before{display:none}
+  .tbl-wrap td[colspan]{display:block;text-align:center;border:0;margin:0}
+  .tbl-wrap td[colspan]::before{display:none}
+  .tbl-wrap tbody tr.click:hover td{background:none}
+  .tbl-wrap tbody tr.click:active{border-color:var(--accent)}
+  .tbl-wrap td .btn{flex:none}
+}
+</style>
+<script>
+/* Celular: barra de menu embaixo (Painel, Funil, Tarefas, Vendas e Mais) e tabelas em cartões. */
+(function(){
+  const PRIORIDADE=['painel','crm','tarefas','vendas','estoque','producao','clientes'];
+  const CURTO={painel:'Painel',crm:'Funil',tarefas:'Tarefas',vendas:'Vendas',estoque:'Estoque',producao:'Produção',clientes:'Clientes'};
+  const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const bar=document.createElement('nav');bar.id='mnav';bar.setAttribute('aria-label','Menu principal');bar.hidden=true;
+  const mais=document.createElement('div');mais.id='mmais';mais.hidden=true;
+  document.body.append(bar,mais);
+  let marcado=false;
+  function montar(){
+    marcado=false;
+    const bs=[...document.querySelectorAll('#nav [data-go]')];
+    if(!bs.length){bar.hidden=true;mais.hidden=true;return}
+    bar.hidden=false;
+    const ids=bs.map(b=>b.dataset.go);
+    const atual=(bs.find(b=>b.getAttribute('aria-current')==='page')||{dataset:{}}).dataset.go;
+    const info=id=>{const b=bs.find(x=>x.dataset.go===id);const ic=b.querySelector('svg,i');return{ic:ic?ic.outerHTML:'',t:(b.querySelector('span')||{}).textContent||id,badge:(b.querySelector('.badge')||{}).textContent||''}};
+    const topo=PRIORIDADE.filter(i=>ids.includes(i)).slice(0,4);
+    const resto=ids.filter(i=>!topo.includes(i));
+    const badgeResto=resto.some(i=>info(i).badge);
+    bar.innerHTML=topo.map(id=>{const l=info(id);return`<button type="button" data-go="${id}" ${id===atual?'aria-current="page"':''}>${l.ic}<span>${esc(CURTO[id]||l.t)}</span>${l.badge?`<b>${esc(l.badge)}</b>`:''}</button>`}).join('')
+      +(resto.length?`<button type="button" data-mais aria-haspopup="dialog" ${atual&&!topo.includes(atual)?'aria-current="page"':''}><i class="fa-solid fa-bars" aria-hidden="true"></i><span>Mais</span>${badgeResto?'<b>•</b>':''}</button>`:'');
+    mais.innerHTML=`<div class="mm-bg" data-fechar></div><div class="mm-box" role="dialog" aria-modal="true" aria-label="Todas as telas"><div class="mm-h"><b>Menu</b><button type="button" data-fechar aria-label="Fechar">✕</button></div>${ids.map(id=>{const l=info(id);return`<button type="button" data-go="${id}" ${id===atual?'aria-current="page"':''}>${l.ic}<span>${esc(l.t)}</span>${l.badge?`<b>${esc(l.badge)}</b>`:''}</button>`}).join('')}</div>`;
+  }
+  const agendar=()=>{if(!marcado){marcado=true;requestAnimationFrame(montar)}};
+  bar.addEventListener('click',e=>{if(e.target.closest('[data-mais]')){mais.hidden=false;const f=mais.querySelector('[aria-current="page"],[data-go]');f&&f.focus()}});
+  mais.addEventListener('click',e=>{if(e.target.closest('[data-fechar],[data-go]'))mais.hidden=true});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!mais.hidden)mais.hidden=true});
+
+  // tabelas: cada célula recebe o nome da coluna, que aparece no cartão do celular
+  let marcadoT=false;
+  function rotular(){
+    marcadoT=false;
+    document.querySelectorAll('.tbl-wrap table').forEach(t=>{
+      const th=[...t.querySelectorAll('thead th')].map(x=>x.textContent.trim());
+      if(!th.length)return;
+      t.querySelectorAll('tbody tr').forEach(tr=>{let i=0;for(const td of tr.children){if(!td.hasAttribute('data-label'))td.setAttribute('data-label',td.hasAttribute('colspan')?'':(th[i]||''));i+=Number(td.getAttribute('colspan')||1)}});
+    });
+  }
+  const agendarT=()=>{if(!marcadoT){marcadoT=true;requestAnimationFrame(rotular)}};
+
+  function ligar(){
+    const nav=document.getElementById('nav');
+    if(nav)new MutationObserver(agendar).observe(nav,{childList:true,subtree:true,attributes:true,attributeFilter:['aria-current']});
+    const alvos=[document.getElementById('main'),document.getElementById('dlg')].filter(Boolean);
+    const o=new MutationObserver(agendarT);alvos.forEach(a=>o.observe(a,{childList:true,subtree:true}));
+    agendar();agendarT();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ligar);else ligar();
+})();
+</script>
