@@ -52,6 +52,7 @@ No site do GitHub, aba **Planilhas no Drive → Atualizar lista → Restaurar** 
 ## WhatsApp
 - O botão **WhatsApp**, no topo do sistema, abre o WhatsApp Web numa janela ao lado. Na primeira vez, leia o QR Code com o celular (WhatsApp → Aparelhos conectados → Conectar aparelho). Depois ele continua conectado nesse navegador.
 - Cada cliente com telefone tem um botão **WhatsApp**: nos cards do Funil CRM, na lista do CRM, na tabela de Clientes 360° e na ficha do cliente. Ele abre a conversa já com a saudação "Olá {contato}, tudo bem? Aqui é da Draven Sports.". Clientes sem telefone mostram "Sem telefone".
+- Cliente cujo número **não tem WhatsApp**: na ficha do cliente, aba Dados, marque **Este número não tem WhatsApp**. No lugar do WhatsApp aparece o botão **Ligar**, que liga direto para o número (no celular abre o discador; no computador, o programa de ligação configurado, como o app Telefone do Windows ou o iPhone pelo Mac).
 - Os botões de WhatsApp de clientes, pedidos e campanhas abrem a conversa com a mensagem pronta **nessa mesma janela**, sem abrir abas novas. É só conferir e apertar Enviar.
 - No celular, esses botões abrem o aplicativo do WhatsApp.
 - O WhatsApp Web não pode ficar dentro da página do sistema: o próprio WhatsApp bloqueia ser aberto dentro de outro site.

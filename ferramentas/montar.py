@@ -32,20 +32,26 @@ TROCAS = [
     ("""function waBtn(tel,msg,label){const u=waLink(tel,msg);return u?`<a class="btn sm wa" href="${esc(u)}" target="_blank" rel="noopener">${label||'WhatsApp'}</a>`:''}""",
      """function waBtn(tel,msg,label){const u=waLink(tel,msg);return u?`<a class="btn sm wa" href="${esc(u)}" target="_blank" rel="noopener">${label||'WhatsApp'}</a>`:''}
 function waSaudacao(c){const n=String(c.contato||'').trim().split(' ')[0];return`Olá${n?' '+n:''}, tudo bem? Aqui é da Draven Sports.`}
-function waCli(c){const u=waLink(c.telefone,waSaudacao(c));return u?`<a class="btn sm wa wa-cli" href="${esc(u)}" target="_blank" rel="noopener" aria-label="WhatsApp de ${esc(c.nome)}" title="Conversar no WhatsApp: ${esc(c.telefone)}"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>`:''}""", 1),
+function telLink(tel){let d=String(tel||'').replace(/\\D/g,'');if(!d)return'';if(d.length<=11)d='55'+d;return'tel:+'+d}
+function ligarBtn(c,label){const u=telLink(c.telefone);return u?`<a class="btn sm ligar wa-cli" href="${esc(u)}" aria-label="Ligar para ${esc(c.nome)}" title="Ligar: ${esc(c.telefone)}"><i class="fa-solid fa-phone"></i> ${label||'Ligar'}</a>`:''}
+function waCli(c){if(c.semWhats)return ligarBtn(c);const u=waLink(c.telefone,waSaudacao(c));return u?`<a class="btn sm wa wa-cli" href="${esc(u)}" target="_blank" rel="noopener" aria-label="WhatsApp de ${esc(c.nome)}" title="Conversar no WhatsApp: ${esc(c.telefone)}"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>`:''}""", 1),
     # funil: botão no card
     ('''<div class="row"><span class="ro">${c.valorEstimado?money(c.valorEstimado):''}</span>${pode('crm')?`<select aria-label="Mover etapa"''',
      '''<div class="row"><span class="ro">${c.valorEstimado?money(c.valorEstimado):''}</span>${waCli(c)}${pode('crm')?`<select aria-label="Mover etapa"''', 1),
     # funil em lista: coluna WhatsApp
-    ('<th>Responsável</th></tr></thead>', '<th>Responsável</th><th>WhatsApp</th></tr></thead>', 1),
+    ('<th>Responsável</th></tr></thead>', '<th>Responsável</th><th>WhatsApp / Ligar</th></tr></thead>', 1),
     ('<td>${esc(pessoa(c.responsavel))}</td></tr>', """<td>${esc(pessoa(c.responsavel))}</td><td>${waCli(c)||'<span class="ro">Sem telefone</span>'}</td></tr>""", 1),
     ('<tr><td colspan="7" class="ro">Nenhum contato encontrado com esse filtro.</td></tr>', '<tr><td colspan="8" class="ro">Nenhum contato encontrado com esse filtro.</td></tr>', 1),
     # Clientes 360°: coluna WhatsApp
-    ('<th>Consentimento</th></tr>', '<th>Consentimento</th><th>WhatsApp</th></tr>', 1),
+    ('<th>Consentimento</th></tr>', '<th>Consentimento</th><th>WhatsApp / Ligar</th></tr>', 1),
     ("""'<span class="ro">Sem registro</span>':''}</td></tr>""", """'<span class="ro">Sem registro</span>':''}</td><td>${waCli(c)||'<span class="ro">Sem telefone</span>'}</td></tr>""", 1),
     ('<tr><td colspan="8" class="ro">Nenhum cliente neste filtro.</td></tr>', '<tr><td colspan="9" class="ro">Nenhum cliente neste filtro.</td></tr>', 1),
     # ficha do cliente: já abre com a saudação
-    ("(c.id?waBtn(c.telefone,'','Abrir WhatsApp'):'')", "(c.id?waBtn(c.telefone,waSaudacao(c),'Abrir WhatsApp'):'')", 1),
+    ("(c.id?waBtn(c.telefone,'','Abrir WhatsApp'):'')", "(c.id?(c.semWhats?ligarBtn(c,'Ligar para o cliente'):waBtn(c.telefone,waSaudacao(c),'Abrir WhatsApp')):'')", 1),
+    # ficha: marcar quem não tem WhatsApp (mostra o botão Ligar)
+    ('<label class="chk"><input type="checkbox" id="c-cw" name="consentWhats"',
+     '<label class="chk"><input type="checkbox" id="c-sw" name="semWhats" ${c.semWhats?\'checked\':\'\'} ${d}> Este número não tem WhatsApp (mostrar o botão Ligar)</label>\n   <label class="chk"><input type="checkbox" id="c-cw" name="consentWhats"', 1),
+    ("consentWhats:cw,consentEmail:ce,atualizadoEm:Date.now()};", "consentWhats:cw,consentEmail:ce,semWhats:!!fd.get('semWhats'),atualizadoEm:Date.now()};", 1),
     # botão WhatsApp no topo
     ('<div class="hact"><button class="btn" id="topLead"',
      '<div class="hact"><button class="btn wa" type="button" data-whatsapp-web title="Abrir o WhatsApp Web ao lado do sistema"><i class="fa-brands fa-whatsapp"></i><span class="lbl">WhatsApp</span></button><button class="btn" id="topLead"', 1),
@@ -53,7 +59,8 @@ function waCli(c){const u=waLink(c.telefone,waSaudacao(c));return u?`<a class="b
 
 # Abre o WhatsApp Web numa janela ao lado e manda para ela as conversas abertas pelo sistema.
 # O WhatsApp Web não pode ficar dentro da página: ele bloqueia ser aberto dentro de outro site.
-WHATSAPP = r"""<script>
+WHATSAPP = r"""<style>.btn.ligar{color:#1E3A8A;border-color:#BFDBFE;text-decoration:none}.btn.ligar:hover{border-color:#1E3A8A}.btn.wa{text-decoration:none}</style>
+<script>
 window.DRAVEN_WA=(function(){
   const NOME='draven-whatsapp';
   const computador=()=>!/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)&&!(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent));
