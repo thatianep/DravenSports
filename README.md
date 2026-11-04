@@ -75,7 +75,7 @@ A equipe toda atende pelo **mesmo número do WhatsApp Business** da empresa, cad
   4. Visita à sede: com o endereço da loja (Av. Álvaro Ramos, 2401 - Quarta Parada, São Paulo - SP, ou o que estiver salvo);
   5. Visita externa: com o nome da academia.
   Para leads em Visita agendada, o sistema sugere o modelo certo (sede ou externa, conforme o local). Sem nome do contato na ficha, a saudação fica sem nome ("Oi, tudo bem?").
-- **WhatsApp como segunda tela:** as conversas abrem no **WhatsApp Web numa janela ao lado do sistema**, reaproveitada sempre que o navegador deixar. Se preferir o **app do WhatsApp no computador** (WhatsApp Desktop, abre cada conversa na mesma janela do app), use **trocar** no rodapé da janela de mensagem; a escolha fica guardada em cada computador. No celular, abre no app do WhatsApp.
+- **WhatsApp como segunda tela, numa aba só:** a primeira conversa abre o **WhatsApp Web numa janela ao lado do sistema**; as próximas vão para essa mesma janela. Se o WhatsApp cortar a ligação com o sistema (ele faz isso por segurança em alguns navegadores), o sistema **não abre outra aba**: copia a mensagem e mostra o número para você colar na aba do WhatsApp que já está aberta (**Nova conversa** → número → **Ctrl+V**). Se você fechou aquela aba, use **Abrir em nova aba mesmo assim**. Para abrir sempre direto na conversa, numa janela só, use o **app do WhatsApp no computador** (**trocar**, no rodapé da janela de mensagem). No celular, abre no app do WhatsApp.
 - O WhatsApp Web não pode ficar dentro da página do sistema: o próprio WhatsApp bloqueia ser aberto dentro de outro site. Por isso ele fica numa janela ao lado.
 
 ## Filtro por forma de contato

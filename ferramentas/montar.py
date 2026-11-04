@@ -176,12 +176,57 @@ window.DRAVEN_WA=(function(){
       return'whatsapp://send?phone='+encodeURIComponent(fone)+(txt?'&text='+encodeURIComponent(txt):'')}catch(e){return'whatsapp://'}
   }
   let jan=null;
-  // WhatsApp Web como segunda tela: janela ao lado do sistema, reaproveitada sempre que o navegador deixar
+  // WhatsApp Web como segunda tela, UMA aba só. O WhatsApp pode cortar a ligação com o site que o abriu
+  // (aí o sistema não consegue mais mandar conversas para aquela aba). O sistema percebe isso e, em vez de
+  // abrir outra aba, copia a mensagem e mostra o número para colar na aba que já está aberta.
+  const sess=(k,v)=>{try{if(v===undefined)return sessionStorage.getItem(k);v===null?sessionStorage.removeItem(k):sessionStorage.setItem(k,v)}catch(e){}};
+  let separada=sess('dv-wa-separada')==='1';
+  function vigiar(w){
+    const t0=Date.now();
+    const iv=setInterval(()=>{
+      if(w!==jan){clearInterval(iv);return}
+      if(w.closed){clearInterval(iv);
+        // fechou sozinha em poucos segundos: foi o WhatsApp que cortou a ligação (a aba continua aberta para a pessoa)
+        if(Date.now()-t0<15000){separada=true;sess('dv-wa-separada','1')}else{sess('dv-wa-aberto',null)}
+        jan=null}
+    },500);
+  }
+  function abrirNova(url){
+    const w=Math.max(480,Math.round(screen.availWidth*0.42)),h=screen.availHeight;
+    jan=window.open(url||'https://web.whatsapp.com/',NOME,`width=${w},height=${h},left=${screen.availWidth-w},top=0`)||window.open(url||'https://web.whatsapp.com/',NOME);
+    if(jan){sess('dv-wa-aberto','1');vigiar(jan)}
+  }
+  function copiarParaAba(url){
+    let fone='',txt='';try{const u=new URL(url);fone=u.searchParams.get('phone')||'';txt=u.searchParams.get('text')||''}catch(e){}
+    if(txt&&navigator.clipboard)navigator.clipboard.writeText(txt).catch(()=>{});
+    const fmt=(()=>{let d=fone.replace(/\D/g,'');if(d.startsWith('55')&&d.length>=12)d=d.slice(2);return d.length===11?`(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`:d.length===10?`(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`:fone})();
+    let d=document.getElementById('wacopia');
+    if(!d){d=document.createElement('dialog');d.id='wacopia';document.body.appendChild(d)}
+    d.style.cssText='border:1px solid var(--line);border-radius:16px;padding:0;max-width:min(480px,calc(100vw - 24px));background:var(--surface);color:var(--fg)';
+    d.innerHTML=`<form method="dialog" style="display:flex;flex-direction:column;gap:12px;padding:20px">
+      <h2 style="margin:0;font-size:18px">Continue na aba do WhatsApp</h2>
+      <p class="sub" style="margin:0">Para não abrir outra aba, ${txt?'<b>a mensagem já foi copiada</b>. ':''}Na aba do WhatsApp que já está aberta:</p>
+      <ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:14px">
+        <li>Clique em <b>Nova conversa</b> (ícone de lápis) e digite o número:</li>
+      </ol>
+      <div style="display:flex;gap:8px;align-items:center"><b style="font-size:20px;font-variant-numeric:tabular-nums">${fmt}</b><button type="button" class="btn sm" data-wc="num">Copiar número</button></div>
+      <ol start="2" style="margin:0;padding-left:20px;font-size:14px"><li>Abra a conversa e cole a mensagem com <b>Ctrl+V</b>${txt?'':' (sem mensagem pronta)'}.</li></ol>
+      ${txt?`<button type="button" class="btn sm" data-wc="msg" style="align-self:flex-start">Copiar a mensagem de novo</button>`:''}
+      <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:12px">
+        <button type="button" class="btn" data-wc="nova">Abrir em nova aba mesmo assim</button><button type="button" class="btn pri" data-wc="ok">Entendi</button></div></form>`;
+    d.querySelector('[data-wc="ok"]').onclick=()=>d.close();
+    d.querySelector('[data-wc="num"]').onclick=e=>{navigator.clipboard&&navigator.clipboard.writeText(fmt.replace(/\D/g,''));e.target.textContent='Número copiado'};
+    const m=d.querySelector('[data-wc="msg"]');if(m)m.onclick=e=>{navigator.clipboard&&navigator.clipboard.writeText(txt);e.target.textContent='Mensagem copiada'};
+    d.querySelector('[data-wc="nova"]').onclick=()=>{d.close();separada=false;sess('dv-wa-separada',null);abrirNova(url)};
+    d.showModal();
+  }
   function abrirWeb(url){
     if(jan&&!jan.closed){try{if(url)jan.location.href=url;jan.focus();return}catch(e){}}
-    const w=Math.max(480,Math.round(screen.availWidth*0.42)),h=screen.availHeight;
-    jan=window.open(url||'https://web.whatsapp.com/',NOME,`width=${w},height=${h},left=${screen.availWidth-w},top=0`);
-    if(!jan)jan=window.open(url||'https://web.whatsapp.com/',NOME);
+    // a aba do WhatsApp já foi aberta e o WhatsApp cortou a ligação: não abre outra
+    if(separada&&sess('dv-wa-aberto')){
+      if(!url){if(confirm('A aba do WhatsApp já está aberta: volte para ela na barra de abas do navegador.\n\nSe você fechou essa aba, clique em OK para abrir uma nova.')){separada=false;sess('dv-wa-separada',null);abrirNova()}return}
+      copiarParaAba(url);return}
+    abrirNova(url);
   }
   function abrirApp(url){
     // link whatsapp:// abre a conversa no app do computador; a página do sistema continua onde está
