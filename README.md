@@ -69,6 +69,13 @@ A equipe toda atende pelo **mesmo número do WhatsApp Business** da empresa, cad
 - Botões de WhatsApp de pedidos e campanhas continuam mandando o texto do pedido ou da campanha direto.
 - O WhatsApp Web não pode ficar dentro da página do sistema: o próprio WhatsApp bloqueia ser aberto dentro de outro site. Por isso ele fica numa janela ao lado.
 
+## Filtro por forma de contato
+No **Funil CRM**, a caixa **Todos os contatos** filtra os leads (no quadro e na lista):
+- **Com WhatsApp:** só quem tem o botão WhatsApp (no telefone 1 ou no telefone 2);
+- **Só ligação (fixo):** quem tem telefone, mas só o botão Ligar;
+- **Sem telefone:** quem ainda não tem número.
+Combina com a busca e com os filtros de tipo e canal.
+
 ## Visitas e última ação
 - **Visita agendada:** ao levar um lead para a etapa **Visita agendada** (arrastando ou pela caixa do card), abre a janela **Agendar visita**: escolha **Na nossa loja** ou **Na academia do lead**, o endereço, o dia e a hora. O endereço da loja fica salvo para as próximas; o da academia vai para a ficha do lead.
 - O card mostra o dia, a hora, o local e o link **rota** (Google Maps). Visita que já passou fica em vermelho, para remarcar ou concluir.

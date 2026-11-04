@@ -133,6 +133,13 @@ function waCli(c,label,n){const t=n===2?c.telefone2:c.telefone,sem=n===2?c.semWh
     ("""<td>${esc(c.proximaAcao||'')} ${due(c.dataProxima,ini,fim)}</td>""", """<td>${esc(c.proximaAcao||'')} ${due(c.dataProxima,ini,fim)}</td><td>${window.DRAVEN_VIS?DRAVEN_VIS.uaCol(c):''}</td>""", 1),
     ('<tr><td colspan="8" class="ro">Nenhum contato encontrado com esse filtro.</td></tr>', '<tr><td colspan="9" class="ro">Nenhum contato encontrado com esse filtro.</td></tr>', 1),
     ("""if(sem){const u=telLink(t);return u?`<a class="btn sm ligar wa-cli" href""", """if(sem){const u=telLink(t);return u?`<a class="btn sm ligar wa-cli" data-ligcli="${esc(c.id)}" data-tel="${esc(t)}" href""", 1),
+    # ---- funil: filtro por forma de contato (WhatsApp, só ligação, sem telefone) ----
+    ('<select class="inp" id="o-crm" data-f="ocrm">',
+     """<select class="inp" id="w-crm" data-f="wcrm" aria-label="Filtrar por forma de contato"><option value="">Todos os contatos</option><option value="whats" ${f.wcrm==='whats'?'selected':''}>Com WhatsApp</option><option value="ligar" ${f.wcrm==='ligar'?'selected':''}>Só ligação (fixo)</option><option value="sem" ${f.wcrm==='sem'?'selected':''}>Sem telefone</option></select><select class="inp" id="o-crm" data-f="ocrm">""", 1),
+    ("function crmFiltrados(){const q=norm(S.f.qcrm);return S.clientes.filter(c=>(!S.f.tcrm||c.tipo===S.f.tcrm)&&",
+     """function filtroContato(c,f){if(!f)return true;const dig=t=>String(t||'').replace(/\\D/g,'');const whats=n=>!!dig(n===2?c.telefone2:c.telefone)&&!(n===2?c.semWhats2:c.semWhats);const tel=!!dig(c.telefone)||!!dig(c.telefone2);
+  if(f==='whats')return whats(1)||whats(2);if(f==='ligar')return tel&&!whats(1)&&!whats(2);if(f==='sem')return!tel;return true}
+function crmFiltrados(){const q=norm(S.f.qcrm);return S.clientes.filter(c=>filtroContato(c,S.f.wcrm)&&(!S.f.tcrm||c.tipo===S.f.tcrm)&&""", 1),
 ]
 
 # Abre o WhatsApp Web numa janela ao lado e manda para ela as conversas abertas pelo sistema.

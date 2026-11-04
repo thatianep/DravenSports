@@ -723,11 +723,13 @@ function vCrm(){
    <div class="tools"><input class="inp search" id="q-crm" data-f="qcrm" placeholder="Buscar nome, cidade, contato" value="${esc(f.qcrm||'')}">
    <select class="inp" id="t-crm" data-f="tcrm"><option value="">Todos os tipos</option>${TIPOS.map(t=>`<option ${f.tcrm===t?'selected':''}>${t}</option>`).join('')}</select>
    <div class="tabs" role="tablist" style="border:0"><button role="tab" aria-selected="${S.crmModo==='funil'}" data-a="crm-modo" data-v="funil">Funil</button><button role="tab" aria-selected="${S.crmModo==='lista'}" data-a="crm-modo" data-v="lista">Lista</button></div>
-   <select class="inp" id="o-crm" data-f="ocrm"><option value="">Todos os canais</option>${ORIGENS.map(t=>`<option ${f.ocrm===t?'selected':''}>${t}</option>`).join('')}</select>
+   <select class="inp" id="w-crm" data-f="wcrm" aria-label="Filtrar por forma de contato"><option value="">Todos os contatos</option><option value="whats" ${f.wcrm==='whats'?'selected':''}>Com WhatsApp</option><option value="ligar" ${f.wcrm==='ligar'?'selected':''}>Só ligação (fixo)</option><option value="sem" ${f.wcrm==='sem'?'selected':''}>Sem telefone</option></select><select class="inp" id="o-crm" data-f="ocrm"><option value="">Todos os canais</option>${ORIGENS.map(t=>`<option ${f.ocrm===t?'selected':''}>${t}</option>`).join('')}</select>
    ${pode('crm')?'<button class="btn" data-a="importar-leads"><i class="fa-solid fa-file-import"></i> Importar</button><button class="btn pri" data-a="novo-lead"><i class="fa-solid fa-user-plus"></i> Novo lead</button>':''}</div></div>
   <div id="body">${crmBody()}</div>`;
 }
-function crmFiltrados(){const q=norm(S.f.qcrm);return S.clientes.filter(c=>(!S.f.tcrm||c.tipo===S.f.tcrm)&&(!S.f.ocrm||c.origem===S.f.ocrm)&&(!q||norm([c.nome,c.cidade,c.contato,c.instagram,c.telefone].join(' ')).includes(q)))}
+function filtroContato(c,f){if(!f)return true;const dig=t=>String(t||'').replace(/\D/g,'');const whats=n=>!!dig(n===2?c.telefone2:c.telefone)&&!(n===2?c.semWhats2:c.semWhats);const tel=!!dig(c.telefone)||!!dig(c.telefone2);
+  if(f==='whats')return whats(1)||whats(2);if(f==='ligar')return tel&&!whats(1)&&!whats(2);if(f==='sem')return!tel;return true}
+function crmFiltrados(){const q=norm(S.f.qcrm);return S.clientes.filter(c=>filtroContato(c,S.f.wcrm)&&(!S.f.tcrm||c.tipo===S.f.tcrm)&&(!S.f.ocrm||c.origem===S.f.ocrm)&&(!q||norm([c.nome,c.cidade,c.contato,c.instagram,c.telefone].join(' ')).includes(q)))}
 function crmBody(){
   const lista=crmFiltrados();
   if(!S.clientes.length)return`<div class="empty"><strong>Nenhum contato no CRM</strong><span>Cadastre academias, equipes, escolinhas e lojas que você está prospectando. Cada contato percorre as etapas do funil até virar cliente ativo.</span>${pode('crm')?'<button class="btn pri" data-a="novo-cliente">Cadastrar primeiro contato</button>':''}</div>`;
