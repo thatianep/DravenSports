@@ -92,7 +92,7 @@ window.DRAVEN_WAB=(function(){
       <p class="ro" style="margin:0">${ult}</p>
       ${numeroEmpresa()?'':'<p class="ro" style="margin:0">Dica: a gestão pode cadastrar o número e o catálogo do WhatsApp Business em Equipe e permissões.</p>'}
     </div>
-    <div class="wm-f"><button type="button" class="btn" data-wm="fechar">Cancelar</button><button type="button" class="btn envia" data-wm="enviar"><i class="fa-brands fa-whatsapp"></i> Abrir no WhatsApp</button></div>`;
+    <div class="wm-f">${window.DRAVEN_WA&&DRAVEN_WA.computador()?`<span class="ro" style="margin-right:auto;align-self:center;font-size:12px">Abre no ${DRAVEN_WA.modoAtual()==='web'?'WhatsApp Web':DRAVEN_WA.modoAtual()==='app'?'app do WhatsApp':'—'} · <button type="button" data-wm="modo" style="all:unset;cursor:pointer;text-decoration:underline">trocar</button></span>`:''}<button type="button" class="btn" data-wm="fechar">Cancelar</button><button type="button" class="btn envia" data-wm="enviar"><i class="fa-brands fa-whatsapp"></i> Abrir no WhatsApp</button></div>`;
     const sel=f.querySelector('#wm-mod'),tx=f.querySelector('#wm-txt');
     const pinta=()=>{tx.value=sel.value==='livre'?'':preencher(modelo(sel.value),c)};
     sel.onchange=pinta;pinta();
@@ -112,12 +112,12 @@ window.DRAVEN_WAB=(function(){
       salvar('clientes',c.id,{historico:[...(atualC.historico||[]),h],ultimoWhatsEm:h.em,ultimoWhatsPor:S.myId}).catch(()=>{});
     }
     // no computador: janela do WhatsApp Web ao lado; no celular: app do WhatsApp, sem sair do sistema
-    if(window.DRAVEN_WA&&DRAVEN_WA.computador())DRAVEN_WA.abrir(url);
-    else if(!window.open(url,'_blank'))location.href=url;
+    if(window.DRAVEN_WA)DRAVEN_WA.abrir(url);
+    else window.open(url,'draven-whatsapp');
   }
   document.addEventListener('click',e=>{
     const b=e.target.closest&&e.target.closest('[data-wm]');if(!b)return;
-    e.preventDefault();if(b.dataset.wm==='fechar')$w('#wamsg').close();else if(b.dataset.wm==='enviar')enviar();
+    e.preventDefault();if(b.dataset.wm==='fechar')$w('#wamsg').close();else if(b.dataset.wm==='enviar')enviar();else if(b.dataset.wm==='modo'){$w('#wamsg').close();DRAVEN_WA.trocarModo()}
   });
 
   // ---- configuração (gestão) ----

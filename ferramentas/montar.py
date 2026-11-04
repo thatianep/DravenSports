@@ -165,15 +165,47 @@ WHATSAPP = r"""<style>.btn.ligar{color:#1E3A8A;border-color:#BFDBFE;text-decorat
 window.DRAVEN_WA=(function(){
   const NOME='draven-whatsapp';
   const computador=()=>!/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)&&!(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent));
-  let jan=null;
-  function abrir(url){
-    if(!computador()){location.href=url&&!/web\.whatsapp\.com/.test(url)?url:'https://wa.me/';return}
-    const w=Math.max(480,Math.round(screen.availWidth*0.42)),h=screen.availHeight;
-    const pos=`width=${w},height=${h},left=${screen.availWidth-w},top=0`;
-    if(jan&&!jan.closed){if(url)jan.location.href=url;jan.focus();return}
-    jan=window.open(url||'https://web.whatsapp.com/',NOME,pos);
-    if(!jan){window.open(url||'https://web.whatsapp.com/','_blank')}
+  // O WhatsApp Web se isola quando é aberto por outro site: depois de carregar, o sistema não consegue mais
+  // reaproveitar aquela aba. Por isso, no computador, o padrão é o app do WhatsApp (whatsapp://), que abre
+  // cada conversa na mesma janela do app. A escolha fica guardada em cada computador.
+  const lerModo=()=>{try{return localStorage.getItem('dv-wa-modo')||''}catch(e){return''}};
+  const gravarModo=m=>{try{m?localStorage.setItem('dv-wa-modo',m):localStorage.removeItem('dv-wa-modo')}catch(e){}};
+  function paraApp(url){
+    if(!url)return'whatsapp://';
+    try{const u=new URL(url),fone=u.searchParams.get('phone')||(u.hostname==='wa.me'?u.pathname.slice(1):''),txt=u.searchParams.get('text');
+      return'whatsapp://send?phone='+encodeURIComponent(fone)+(txt?'&text='+encodeURIComponent(txt):'')}catch(e){return'whatsapp://'}
   }
+  let jan=null;
+  function abrirWeb(url){
+    if(jan&&!jan.closed){try{if(url)jan.location.href=url;jan.focus();return}catch(e){}}
+    jan=window.open(url||'https://web.whatsapp.com/',NOME);
+  }
+  function abrirApp(url){
+    // link whatsapp:// abre a conversa no app do computador; a página do sistema continua onde está
+    const l=document.createElement('a');l.href=paraApp(url);l.rel='noopener';l.style.display='none';document.body.appendChild(l);l.click();setTimeout(()=>l.remove(),1000);
+  }
+  function perguntar(url){
+    let d=document.getElementById('wamodo');
+    if(!d){d=document.createElement('dialog');d.id='wamodo';document.body.appendChild(d)}
+    d.style.cssText='border:1px solid var(--line);border-radius:16px;padding:0;max-width:min(520px,calc(100vw - 24px));background:var(--surface);color:var(--fg)';
+    d.innerHTML=`<form method="dialog" style="display:flex;flex-direction:column;gap:12px;padding:20px">
+      <h2 style="margin:0;font-size:18px">Onde abrir as conversas do WhatsApp?</h2>
+      <p class="sub" style="margin:0">Fica guardado neste computador. Dá para trocar depois na janela de mensagem.</p>
+      <button type="button" class="btn pri" data-modo="app" style="justify-content:flex-start;text-align:left;white-space:normal;text-transform:none;letter-spacing:0;font-size:14px;padding:14px"><span><b>App do WhatsApp no computador</b> (recomendado)<br><span style="font-weight:500">Abre cada conversa sempre na mesma janela do app, sem abrir abas. Precisa do WhatsApp Desktop instalado e conectado ao número da empresa.</span></span></button>
+      <button type="button" class="btn" data-modo="web" style="justify-content:flex-start;text-align:left;white-space:normal;padding:14px"><span><b>WhatsApp Web no navegador</b><br><span style="color:var(--muted)">O WhatsApp não deixa o sistema reaproveitar a aba dele: cada conversa pode abrir uma aba nova.</span></span></button>
+      <a href="https://www.whatsapp.com/download" target="_blank" rel="noopener" style="font-size:13px">Baixar o WhatsApp para computador</a>
+      <div style="display:flex;justify-content:flex-end"><button type="button" class="btn" data-modo="">Cancelar</button></div></form>`;
+    d.querySelectorAll('[data-modo]').forEach(b=>b.addEventListener('click',()=>{const m=b.dataset.modo;d.close();if(!m)return;gravarModo(m);if(url!==null)abrir(url)}));
+    d.showModal();
+  }
+  function abrir(url){
+    if(!computador()){window.open(url&&!/web\.whatsapp\.com/.test(url)?url:'https://wa.me/',NOME);return}
+    const m=lerModo();
+    if(!m){perguntar(url);return}
+    if(m==='app')abrirApp(url);else abrirWeb(url);
+  }
+  const modoAtual=()=>lerModo();
+  const trocarModo=()=>{gravarModo('');perguntar(null)};
   const noBotao=e=>e.target.closest&&e.target.closest('.wa-cli');
   ['pointerdown','mousedown','touchstart'].forEach(t=>document.addEventListener(t,e=>{if(noBotao(e))e.stopPropagation()},{capture:true,passive:true}));
   document.addEventListener('click',e=>{
@@ -185,7 +217,7 @@ window.DRAVEN_WA=(function(){
     const a=e.target.closest&&e.target.closest('a[href^="https://web.whatsapp.com/"]');
     if(a&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey){e.preventDefault();abrir(a.href)}
   },true);
-  return{computador,abrir};
+  return{computador,abrir,modoAtual,trocarModo};
 })();
 </script>
 """

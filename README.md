@@ -74,6 +74,7 @@ A equipe toda atende pelo **mesmo número do WhatsApp Business** da empresa, cad
   4. Visita à sede: com o endereço da loja (Av. Álvaro Ramos, 2401 - Quarta Parada, São Paulo - SP, ou o que estiver salvo);
   5. Visita externa: com o nome da academia.
   Para leads em Visita agendada, o sistema sugere o modelo certo (sede ou externa, conforme o local). Sem nome do contato na ficha, a saudação fica sem nome ("Oi, tudo bem?").
+- **Onde abrir as conversas (em cada computador):** no primeiro clique, o sistema pergunta. **App do WhatsApp no computador** (recomendado): cada conversa abre **sempre na mesma janela do app**, sem abrir abas; precisa do WhatsApp Desktop (https://www.whatsapp.com/download) instalado e conectado ao número da empresa. **WhatsApp Web**: o próprio WhatsApp não deixa o sistema reaproveitar a aba dele, então cada conversa pode abrir uma aba nova. Para trocar, use **trocar** no rodapé da janela de mensagem. No celular, abre no app do WhatsApp.
 - O WhatsApp Web não pode ficar dentro da página do sistema: o próprio WhatsApp bloqueia ser aberto dentro de outro site. Por isso ele fica numa janela ao lado.
 
 ## Filtro por forma de contato
