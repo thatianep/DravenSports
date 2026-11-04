@@ -1,8 +1,12 @@
-<!-- Quadros Kanban (Funil, Tarefas, Pedidos) e menu no computador, sem barras de rolagem:
+<!-- Sem barras de rolagem em todo o sistema. Quadros Kanban (Funil, Tarefas, Pedidos) e menu no computador:
      - as colunas sempre cabem na largura da tela; para baixo, a página rola direto;
      - o menu de abas quebra em duas linhas quando não cabe, em vez de rolar para o lado.
      Entra no index.html pelo ferramentas/montar.py. No celular o quadro continua deslizando com o dedo. -->
 <style>
+/* nenhuma barra de rolagem visível no sistema (página, funil, colunas, menus e janelas);
+   rolar continua funcionando com a roda do mouse, o touchpad ou o dedo */
+html,body,*{scrollbar-width:none!important;-ms-overflow-style:none!important}
+html::-webkit-scrollbar,body::-webkit-scrollbar,*::-webkit-scrollbar{display:none!important;width:0!important;height:0!important;background:transparent!important}
 @media (min-width:901px){
   .board-wrap{overflow:visible!important;padding-bottom:0!important}
   .board,.board[style]{min-width:0!important;align-items:start}

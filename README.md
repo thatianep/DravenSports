@@ -95,7 +95,7 @@ Combina com a busca e com os filtros de tipo e canal.
 O **Funil CRM** segue o mesmo padrão da aba **Tarefas**: indicadores no topo (**Atrasadas**, **Para hoje**, **No funil** e **Visitas em 7 dias**), todas as colunas na largura da tela e card no mesmo formato (tipo do lead e canal em cima, nome, contato e cidade, visitas, próxima ação, responsável e prazo, última ação, botões WhatsApp/Ligar e a etapa). O quadro de **Pedidos** também passou a caber na largura da tela.
 
 ## Sem barras de rolagem
-No computador, os quadros (Funil, Tarefas e Pedidos) sempre cabem na largura da tela, então não há barra para os lados; para baixo, a página rola direto. O menu de abas quebra em duas linhas quando não cabe, em vez de ter barra de rolagem. No celular, o quadro desliza com o dedo, uma coluna por vez.
+O sistema não mostra barras de rolagem em lugar nenhum (página, funil, colunas, menu e janelas); rolar continua funcionando com a roda do mouse, o touchpad ou o dedo. No computador, os quadros (Funil, Tarefas e Pedidos) sempre cabem na largura da tela, e o menu de abas quebra em duas linhas quando não cabe. No celular, o quadro desliza com o dedo, uma coluna por vez.
 
 ## Produtos e catálogo
 - Em **Estoque e custos → Importar produtos → Usar o catálogo Draven 2026**, o sistema cadastra os **60 itens** do catálogo de preços 2026 (`catalogo-2026.csv`): Angry, The Mist preta e vermelha, protetor de canela branco, Shark, The Eagle, pera de velocidade, raquete de foco, bastão de treino, saco de pancada, mochila, bolsa duffle e luvas de goleiro Astro, Lotus, Alpha I e Alpha II, cada cor com o seu **SKU (Art. DE-…)**, **preço de atacado** e **preço de varejo**.
