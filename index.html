@@ -12,9 +12,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="DRAVEN">
 <!-- Gerado por ferramentas/montar.py a partir de versao-claude-ai/sistema-draven.html. Não edite à mão. -->
-<script src="config.js?v=202611041628"></script>
+<script src="config.js?v=202611041632"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="drive-db.js?v=202611041628"></script>
+<script src="drive-db.js?v=202611041632"></script>
 </head>
 <body>
 <style>.btn.ligar{color:#1E3A8A;border-color:#BFDBFE;text-decoration:none}.btn.ligar:hover{border-color:#1E3A8A}.btn.wa{text-decoration:none}</style>
@@ -2754,7 +2754,7 @@ window.DRAVEN_WAB=(function(){
 </script>
 <!-- Sem barras de rolagem no sistema, exceto a barra lateral do Funil (layout original). No computador:
      - Tarefas e Pedidos cabem na largura da tela; o Funil tem colunas largas e rola para os lados;
-     - o menu de abas quebra em duas linhas quando não cabe, em vez de rolar para o lado.
+     - o menu de abas fica numa linha, com a barra de rolagem embaixo (layout original).
      Entra no index.html pelo ferramentas/montar.py. No celular o quadro continua deslizando com o dedo. -->
 <style>
 /* nenhuma barra de rolagem visível no sistema (página, funil, colunas, menus e janelas);
@@ -2767,7 +2767,11 @@ html::-webkit-scrollbar,body::-webkit-scrollbar,*::-webkit-scrollbar{display:non
   .board[style]{min-width:0!important;align-items:start}
   .board[style] .col,.board[style] .card{min-width:0}
   .board .col{max-height:none!important;overflow:visible!important}
-  .nav{flex-wrap:wrap!important;overflow:visible!important;row-gap:4px}
+  /* menu de abas: layout original, numa linha só, com a barra de rolagem embaixo */
+  .nav{overflow-x:auto!important;scrollbar-width:thin!important;scrollbar-color:#C9C6BD transparent!important}
+  .nav::-webkit-scrollbar{display:block!important;height:8px!important;width:auto!important;background:transparent!important}
+  .nav::-webkit-scrollbar-thumb{background:#C9C6BD;border-radius:4px}
+  .nav::-webkit-scrollbar-thumb:hover{background:var(--accent)}
   /* Funil: layout original, colunas largas com rolagem para os lados e a barra embaixo do quadro */
   .board-wrap:not(:has(> .board[style])){overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:auto!important;scrollbar-color:var(--accent) var(--surface-2)!important;padding-bottom:8px}
   .board-wrap:not(:has(> .board[style]))::-webkit-scrollbar{display:block!important;height:12px!important;width:auto!important;background:var(--surface-2)!important;border-radius:999px}

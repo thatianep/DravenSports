@@ -95,7 +95,7 @@ Combina com a busca e com os filtros de tipo e canal.
 O **Funil CRM** está no layout original do sistema: colunas largas, rolagem para os lados com a barra dourada embaixo do quadro e o card original (com os botões WhatsApp/Ligar, as visitas e a última ação). O quadro de **Tarefas** e o de **Pedidos** cabem na largura da tela.
 
 ## Barras de rolagem
-O sistema esconde as barras de rolagem (página, menu, tabelas e janelas); rolar continua funcionando com a roda do mouse, o touchpad ou o dedo. A exceção é o **Funil CRM**, que mostra a barra para os lados embaixo do quadro. O menu de abas quebra em duas linhas quando não cabe. No celular, os quadros deslizam com o dedo, uma coluna por vez.
+O sistema esconde as barras de rolagem (página, menu, tabelas e janelas); rolar continua funcionando com a roda do mouse, o touchpad ou o dedo. As exceções são o **Funil CRM**, que mostra a barra para os lados embaixo do quadro, e o **menu de abas**, que fica numa linha com a barra de rolagem embaixo. No celular, os quadros deslizam com o dedo, uma coluna por vez.
 
 ## Produtos e catálogo
 - Em **Estoque e custos → Importar produtos → Usar o catálogo Draven 2026**, o sistema cadastra os **60 itens** do catálogo de preços 2026 (`catalogo-2026.csv`): Angry, The Mist preta e vermelha, protetor de canela branco, Shark, The Eagle, pera de velocidade, raquete de foco, bastão de treino, saco de pancada, mochila, bolsa duffle e luvas de goleiro Astro, Lotus, Alpha I e Alpha II, cada cor com o seu **SKU (Art. DE-…)**, **preço de atacado** e **preço de varejo**.
