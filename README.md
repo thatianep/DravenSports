@@ -94,8 +94,8 @@ Combina com a busca e com os filtros de tipo e canal.
 ## Funil no padrão das Tarefas
 O **Funil CRM** segue o mesmo padrão da aba **Tarefas**: indicadores no topo (**Atrasadas**, **Para hoje**, **No funil** e **Visitas em 7 dias**), todas as colunas na largura da tela e card no mesmo formato (tipo do lead e canal em cima, nome, contato e cidade, visitas, próxima ação, responsável e prazo, última ação, botões WhatsApp/Ligar e a etapa). O quadro de **Pedidos** também passou a caber na largura da tela.
 
-## Rolagem do funil
-No computador, os quadros (Funil, Tarefas e Pedidos) rolam **para os lados só pela barra do topo**, logo acima das colunas: ela fica presa abaixo do menu enquanto você desce a página. Arraste o pegador dourado, clique na trilha ou use as setas **◀ ▶**. **Para baixo, a página rola direto**: as colunas mostram todos os leads, sem barra no rodapé. No celular, deslize o quadro com o dedo.
+## Sem barras de rolagem
+No computador, os quadros (Funil, Tarefas e Pedidos) sempre cabem na largura da tela, então não há barra para os lados; para baixo, a página rola direto. O menu de abas quebra em duas linhas quando não cabe, em vez de ter barra de rolagem. No celular, o quadro desliza com o dedo, uma coluna por vez.
 
 ## Produtos e catálogo
 - Em **Estoque e custos → Importar produtos → Usar o catálogo Draven 2026**, o sistema cadastra os **60 itens** do catálogo de preços 2026 (`catalogo-2026.csv`): Angry, The Mist preta e vermelha, protetor de canela branco, Shark, The Eagle, pera de velocidade, raquete de foco, bastão de treino, saco de pancada, mochila, bolsa duffle e luvas de goleiro Astro, Lotus, Alpha I e Alpha II, cada cor com o seu **SKU (Art. DE-…)**, **preço de atacado** e **preço de varejo**.
@@ -136,7 +136,7 @@ Pode importar a mesma lista de novo sempre que exportar: só entra o que é novo
 | `ferramentas/visita.html` | Visita agendada (local, endereço, dia e hora) e última ação de cada lead |
 | `ferramentas/produtos.html` | Importação de produtos (catálogo 2026 ou CSV) e preço de atacado |
 | `catalogo-2026.csv` | Catálogo de preços Draven 2026 (60 itens, atacado e varejo) |
-| `ferramentas/quadros.html` | Barra de rolagem lateral dos quadros e rolagem de cada coluna |
+| `ferramentas/quadros.html` | Quadros e menu sem barras de rolagem no computador |
 | `ferramentas/importar.html` | Importação de leads (CSV e .vcf), limpeza dos telefones e Telefone 2 |
 | `ferramentas/celular.html` | Ajustes de celular e tablet (barra de menu embaixo, tabelas em cartões) |
 | `ferramentas/montar.py` | Gera o `index.html` a partir da fonte: `python3 ferramentas/montar.py` |

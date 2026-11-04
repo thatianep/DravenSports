@@ -155,9 +155,10 @@ function crmFiltrados(){const q=norm(S.f.qcrm);return S.clientes.filter(c=>filtr
     # ---- Funil CRM e Pedidos no mesmo padrão da aba Tarefas ----
     ('${cs.map(c=>`<div class="card" data-a="edit-cliente" data-id="${c.id}" tabindex="0"${pode(\'crm\')?` data-drag="lead" data-from="${c.etapa||\'lead\'}"`:\'\'}><div class="t">${esc(c.nome)}</div>${window.DRAVEN_VIS?DRAVEN_VIS.visCard(c)+DRAVEN_VIS.uaCard(c):\'\'}${c.origem?`<div><span class="pill">${esc(c.origem)}</span></div>`:\'\'}<div class="d">${esc([c.tipo,c.cidade].filter(Boolean).join(\' · \'))}</div>\n     ${c.proximaAcao||c.dataProxima?`<div class="d">${esc(c.proximaAcao||\'\')} ${due(c.dataProxima,ini,fim)}</div>`:\'\'}\n     <div class="row"><span class="ro">${c.valorEstimado?money(c.valorEstimado):\'\'}</span>${waCli(c)}${c.telefone2?waCli(c,\'\',2):\'\'}${pode(\'crm\')?`<select aria-label="Mover etapa" data-etapa="${c.id}">${ETAPAS.map(x=>`<option value="${x.id}" ${x.id===(c.etapa||\'lead\')?\'selected\':\'\'}>${x.nome}</option>`).join(\'\')}</select>`:\'\'}</div></div>`).join(\'\')}', "${cs.map(c=>window.DRAVEN_FUNIL?DRAVEN_FUNIL.card(c,ini,fim):'').join('')}", 1),
     ("<div class=\"board-wrap\"><div class=\"board\">${ETAPAS.map(e=>{const cs=lista.filter(c=>(c.etapa||'lead')===e.id);",
-     "<div class=\"board-wrap\"><div class=\"board kb-lead\" style=\"grid-template-columns:repeat(${ETAPAS.length},minmax(155px,1fr));min-width:0\">${ETAPAS.map(e=>{const cs=lista.filter(c=>(c.etapa||'lead')===e.id);", 1),
+     "<div class=\"board-wrap\"><div class=\"board kb-lead\" style=\"grid-template-columns:repeat(${ETAPAS.length},minmax(0,1fr));min-width:0\">${ETAPAS.map(e=>{const cs=lista.filter(c=>(c.etapa||'lead')===e.id);", 1),
     ('<div id="body">${crmBody()}</div>', "${window.DRAVEN_FUNIL?DRAVEN_FUNIL.kpis():''}<div id=\"body\">${crmBody()}</div>", 1),
-    ('style="grid-template-columns:repeat(5,minmax(270px,1fr));min-width:1420px"', 'style="grid-template-columns:repeat(5,minmax(190px,1fr));min-width:0"', 1),
+    ('style="grid-template-columns:repeat(5,minmax(270px,1fr));min-width:1420px"', 'style="grid-template-columns:repeat(5,minmax(0,1fr));min-width:0"', 1),
+    ('style="grid-template-columns:repeat(4,minmax(260px,1fr));min-width:1100px"', 'style="grid-template-columns:repeat(4,minmax(0,1fr));min-width:0"', 1),
 ]
 
 # Abre o WhatsApp Web numa janela ao lado e manda para ela as conversas abertas pelo sistema.

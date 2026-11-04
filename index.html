@@ -12,9 +12,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="DRAVEN">
 <!-- Gerado por ferramentas/montar.py a partir de versao-claude-ai/sistema-draven.html. Não edite à mão. -->
-<script src="config.js?v=202611041607"></script>
+<script src="config.js?v=202611041613"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="drive-db.js?v=202611041607"></script>
+<script src="drive-db.js?v=202611041613"></script>
 </head>
 <body>
 <style>.btn.ligar{color:#1E3A8A;border-color:#BFDBFE;text-decoration:none}.btn.ligar:hover{border-color:#1E3A8A}.btn.wa{text-decoration:none}</style>
@@ -739,7 +739,7 @@ function crmBody(){
     ${lista.sort((a,b)=>(a.nome||'').localeCompare(b.nome||'')).map(c=>`<tr class="click" data-a="edit-cliente" data-id="${c.id}"><td><b>${esc(c.nome)}</b><div class="ro">${esc(c.contato||'')}</div></td><td>${esc(c.tipo||'')}</td><td>${esc(c.cidade||'')}</td><td>${etapaPill(c.etapa)}</td><td class="num">${c.valorEstimado?money(c.valorEstimado):'—'}</td><td>${esc(c.proximaAcao||'')} ${due(c.dataProxima,ini,fim)}</td><td>${window.DRAVEN_VIS?DRAVEN_VIS.uaCol(c):''}</td><td>${esc(pessoa(c.responsavel))}</td><td>${(waCli(c)+(c.telefone2?' '+waCli(c,'',2):''))||'<span class="ro">Sem telefone</span>'}</td></tr>`).join('')||'<tr><td colspan="9" class="ro">Nenhum contato encontrado com esse filtro.</td></tr>'}
     </tbody></table></div>`;
   }
-  return`${pode('crm')?KB_DICA:''}<div class="board-wrap"><div class="board kb-lead" style="grid-template-columns:repeat(${ETAPAS.length},minmax(155px,1fr));min-width:0">${ETAPAS.map(e=>{const cs=lista.filter(c=>(c.etapa||'lead')===e.id);
+  return`${pode('crm')?KB_DICA:''}<div class="board-wrap"><div class="board kb-lead" style="grid-template-columns:repeat(${ETAPAS.length},minmax(0,1fr));min-width:0">${ETAPAS.map(e=>{const cs=lista.filter(c=>(c.etapa||'lead')===e.id);
     return`<div class="col" data-drop="lead" data-col="${e.id}"><div class="col-h"><span class="lft"><span class="dot" style="background:var(--st-${e.id})"></span><b>${e.nome}</b><span class="cnt">${cs.length}</span></span><span>${cs.length?money(sum(cs,c=>c.valorEstimado)):''}</span></div>
     ${cs.length?'':`<div class="col-vazia">${pode('crm')?'Arraste um contato para cá':'Nenhum contato nesta etapa'}</div>`}
     ${cs.map(c=>window.DRAVEN_FUNIL?DRAVEN_FUNIL.card(c,ini,fim):'').join('')}
@@ -1577,7 +1577,7 @@ function tarefasBody(){
   if(!tarefasVisiveis().length)return`<div class="empty"><strong>Nenhuma tarefa ainda</strong><span>Registre cada ação comercial: ligar para uma academia, enviar o catálogo, visitar uma loja, cobrar a resposta de uma proposta. A tarefa pode ficar ligada ao cliente do CRM e aparece no Painel quando vencer.</span>${pode('tarefas')?'<button class="btn pri" data-a="nova-tarefa">Criar primeira tarefa</button>':''}</div>`;
   const l=tarefasFiltradas();const fim=new Date().setHours(23,59,59,999),ini=fim-86399999;
   const ordem={alta:0,media:1,baixa:2};
-  return`${pode('tarefas')?KB_DICA:''}<div class="board-wrap"><div class="board" style="grid-template-columns:repeat(4,minmax(260px,1fr));min-width:1100px">${TAREFA_ST.map(c=>{
+  return`${pode('tarefas')?KB_DICA:''}<div class="board-wrap"><div class="board" style="grid-template-columns:repeat(4,minmax(0,1fr));min-width:0">${TAREFA_ST.map(c=>{
     let ts=l.filter(t=>(t.status||'afazer')===c.id);
     ts=c.id==='concluido'?ts.sort((a,b)=>(b.concluidoEm||0)-(a.concluidoEm||0)):ts.sort((a,b)=>(ordem[a.prioridade]??1)-(ordem[b.prioridade]??1)||(a.prazo||9e15)-(b.prazo||9e15));
     const mais=c.id==='concluido'&&ts.length>15?ts.length-15:0;if(mais)ts=ts.slice(0,15);
@@ -1653,7 +1653,7 @@ const colPedido=v=>(v.status==='orcamento'||v.status==='confirmado')&&loteAberto
 function pedidosQuadro(l){
   const fim=new Date().setHours(23,59,59,999),ini=fim-86399999;
   const arrasta=pode('vendas')||pode('producao')||pode('entregar');
-  return`${arrasta?KB_DICA:''}<div class="board-wrap"><div class="board" style="grid-template-columns:repeat(5,minmax(190px,1fr));min-width:0">${PED_COL.map(c=>{
+  return`${arrasta?KB_DICA:''}<div class="board-wrap"><div class="board" style="grid-template-columns:repeat(5,minmax(0,1fr));min-width:0">${PED_COL.map(c=>{
     let vs=l.filter(v=>colPedido(v)===c.id);const tot=sum(vs,v=>v.total);
     vs=vs.sort((a,b)=>c.id==='entregue'||c.id==='cancelado'?(b.data||0)-(a.data||0):(a.prazo||a.data||0)-(b.prazo||b.data||0));
     const mais=(c.id==='entregue'||c.id==='cancelado')&&vs.length>15?vs.length-15:0;if(mais)vs=vs.slice(0,15);
@@ -2750,81 +2750,19 @@ window.DRAVEN_WAB=(function(){
   return{escolher,painel,numeroEmpresa,catalogo,enderecoLoja,LOJA_PADRAO};
 })();
 </script>
-<!-- Quadros Kanban (Funil, Tarefas, Pedidos) no computador:
-     - para os lados: só a barra logo acima do quadro (presa no topo ao descer), com setas;
-     - para baixo: a página rola direto, com as colunas na altura toda (sem barra no rodapé).
+<!-- Quadros Kanban (Funil, Tarefas, Pedidos) e menu no computador, sem barras de rolagem:
+     - as colunas sempre cabem na largura da tela; para baixo, a página rola direto;
+     - o menu de abas quebra em duas linhas quando não cabe, em vez de rolar para o lado.
      Entra no index.html pelo ferramentas/montar.py. No celular o quadro continua deslizando com o dedo. -->
 <style>
-.kb-nav{display:none}
 @media (min-width:901px){
-  .kb-nav{display:flex;align-items:center;gap:8px;position:sticky;top:132px;z-index:7;background:var(--bg);padding:6px 0 8px;margin-bottom:-2px}
-  .kb-nav button{all:unset;cursor:pointer;flex:none;width:34px;height:34px;display:grid;place-items:center;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font-size:14px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
-  .kb-nav button:hover{border-color:var(--accent);color:var(--accent-text)}
-  .kb-nav button:focus-visible{outline:2px solid var(--accent)}
-  .kb-nav button:disabled{opacity:.35;cursor:default}
-  .kb-top{flex:1;min-width:0;position:relative;height:16px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);cursor:pointer;touch-action:none}
-  .kb-top:focus-visible{outline:2px solid var(--accent)}
-  .kb-top .kb-thumb{position:absolute;top:2px;bottom:2px;left:0;min-width:40px;border-radius:999px;background:var(--accent);cursor:grab;box-shadow:0 1px 3px rgba(0,0,0,.15)}
-  .kb-top .kb-thumb:hover,.kb-top.arrastando .kb-thumb{background:var(--accent-2)}
-  .kb-top.arrastando .kb-thumb{cursor:grabbing}
-
-  /* rolagem para os lados só pela barra do topo; para baixo, a página rola direto (colunas com a altura toda) */
-  .board-wrap{overflow-x:auto!important;overflow-y:hidden!important;scroll-behavior:smooth;scrollbar-width:none!important;padding-bottom:0!important}
-  .board-wrap::-webkit-scrollbar{display:none!important;height:0!important;width:0!important}
-  .board{align-items:start}
-  .board .col{max-height:none!important;overflow:visible!important}
-
+  .board-wrap{overflow:visible!important;padding-bottom:0!important}
+  .board,.board[style]{min-width:0!important;align-items:start}
+  .board .col{max-height:none!important;overflow:visible!important;min-width:0}
+  .board .card{min-width:0}
+  .nav{flex-wrap:wrap!important;overflow:visible!important;row-gap:4px}
 }
 </style>
-<script>
-(function(){
-  const larguraColuna=w=>{const c=w.querySelector('.board .col');return c?c.getBoundingClientRect().width+14:300};
-  function ligar(w){
-    if(w.dataset.kb)return;w.dataset.kb='1';
-    const nav=document.createElement('div');nav.className='kb-nav';
-    nav.innerHTML='<button type="button" data-kb="-1" aria-label="Colunas anteriores">◀</button><div class="kb-top" role="scrollbar" aria-orientation="horizontal" aria-label="Rolar as colunas" tabindex="0"><div class="kb-thumb"></div></div><button type="button" data-kb="1" aria-label="Próximas colunas">▶</button>';
-    w.parentNode.insertBefore(nav,w);
-    const top=nav.querySelector('.kb-top'),thumb=top.firstChild,ant=nav.querySelector('[data-kb="-1"]'),prox=nav.querySelector('[data-kb="1"]');
-    // barra própria (sempre visível, também no Mac): o pegador acompanha o quadro;
-    // arrastar o pegador ou clicar na trilha move o quadro
-    const geo=()=>{const tw=top.clientWidth,max=Math.max(1,w.scrollWidth-w.clientWidth),th=Math.min(tw,Math.max(40,tw*w.clientWidth/Math.max(1,w.scrollWidth)));return{tw,max,th,livre:Math.max(1,tw-th)}};
-    const medir=()=>{
-      const sobra=w.scrollWidth-w.clientWidth;
-      nav.style.display=sobra>4?'':'none';
-      const g=geo();thumb.style.width=g.th+'px';thumb.style.left=(Math.min(1,w.scrollLeft/g.max)*g.livre)+'px';
-      top.setAttribute('aria-valuenow',String(Math.round(w.scrollLeft/g.max*100)));
-      ant.disabled=w.scrollLeft<=2;prox.disabled=w.scrollLeft>=sobra-2;
-    };
-    const irPara=x=>{const g=geo();w.style.scrollBehavior='auto';w.scrollLeft=Math.min(g.max,Math.max(0,x/g.livre*g.max));w.style.scrollBehavior=''};
-    let arr=null;
-    thumb.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();arr={x:e.clientX,l:parseFloat(thumb.style.left)||0};try{thumb.setPointerCapture(e.pointerId)}catch(x){}top.classList.add('arrastando')});
-    thumb.addEventListener('pointermove',e=>{if(arr)irPara(arr.l+e.clientX-arr.x)});
-    const solta=()=>{arr=null;top.classList.remove('arrastando')};
-    thumb.addEventListener('pointerup',solta);thumb.addEventListener('pointercancel',solta);
-    top.addEventListener('pointerdown',e=>{if(e.target===thumb)return;const r=top.getBoundingClientRect(),g=geo();irPara(e.clientX-r.left-g.th/2)});
-    top.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();w.scrollBy({left:(e.key==='ArrowRight'?1:-1)*larguraColuna(w),behavior:'smooth'})}});
-    w.addEventListener('scroll',medir,{passive:true});
-    nav.addEventListener('click',e=>{const b=e.target.closest('[data-kb]');if(b)w.scrollBy({left:Number(b.dataset.kb)*larguraColuna(w)*2,behavior:'smooth'})});
-    new ResizeObserver(medir).observe(w);
-    medir();
-  }
-  // o sistema redesenha a tela inteira: liga as barras nos quadros novos e guarda a posição da rolagem
-  const posicao={};
-  function varrer(){
-    document.querySelectorAll('#main .board-wrap').forEach(w=>{
-      const chave=(typeof S!=='undefined'&&S.view)||'q';
-      if(w.dataset.kb)return;
-      ligar(w);
-      if(posicao[chave]){w.style.scrollBehavior='auto';w.scrollLeft=posicao[chave];w.style.scrollBehavior=''}
-      w.addEventListener('scroll',()=>{posicao[chave]=w.scrollLeft},{passive:true});
-    });
-  }
-  let marcado=false;
-  const agendar=()=>{if(!marcado){marcado=true;requestAnimationFrame(()=>{marcado=false;varrer()})}};
-  function iniciar(){const m=document.getElementById('main');if(m)new MutationObserver(agendar).observe(m,{childList:true,subtree:true});agendar()}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',iniciar);else iniciar();
-})();
-</script>
 <!-- Produtos: preço de atacado e importação de produtos (catálogo Draven 2026 ou planilha CSV).
      Entra no index.html pelo ferramentas/montar.py, depois do sistema (usa S, salvar, abrir… do sistema). -->
 <style>.tbl-wrap td.mono{white-space:nowrap}</style>
