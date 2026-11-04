@@ -62,7 +62,7 @@ A equipe toda atende pelo **mesmo número do WhatsApp Business** da empresa, cad
 **Configurar (gestão):** em **Equipe e permissões → WhatsApp Business → Configurar**, cadastre o número da empresa, o link do catálogo (vazio = catálogo do próprio WhatsApp Business, `wa.me/c/número`) e, se quiser, mude as mensagens prontas. Variáveis: `{contato}` `{nome}` `{cidade}` `{catalogo}` `{vendedor}` `{prazo}`.
 
 **No dia a dia**
-- Cada cliente com telefone tem o botão **WhatsApp** (cards do Funil CRM, lista do CRM, Clientes 360° e ficha do cliente). Ele abre a mensagem pronta da **etapa do funil** do cliente (novo lead, primeiro contato com catálogo, proposta, negociação, cliente ativo, reativar perdido) ou uma saudação; dá para trocar a mensagem e editar o texto antes de abrir.
+- Cada cliente com telefone tem o botão **WhatsApp** (cards do Funil CRM, lista do CRM, Clientes 360° e ficha do cliente). Ele abre a mensagem pronta da **etapa do funil** do cliente (novo lead, primeiro contato com catálogo, visita agendada, proposta, negociação, cliente ativo, reativar perdido) ou uma saudação; dá para trocar a mensagem e editar o texto antes de abrir.
 - **Abrir no WhatsApp** leva a conversa, com o texto, para a janela do WhatsApp Web ao lado (no celular, para o app). É só conferir e apertar Enviar.
 - O envio fica na **linha do tempo do cliente** como "WhatsApp enviado", com o nome de quem mandou e a data. A ficha mostra o último WhatsApp registrado.
 - Cliente cujo número **não tem WhatsApp**: na ficha, aba Dados, marque **Este número não tem WhatsApp**. No lugar aparece o botão **Ligar**.

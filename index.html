@@ -64,7 +64,7 @@ window.DRAVEN_WA=(function(){
   --accent:#D4AF37; --accent-2:#CA8A04; --accent-ink:#000000; --accent-soft:#FBF3D9; --accent-text:#8A6A00; --logo-bg:#FFFFFF; --red:#DC2626;
   --ok:#15803D; --ok-soft:#DCFCE7; --warn:#A16207; --warn-soft:#FEF3C7; --bad:#DC2626; --bad-soft:#FEE2E2; --info:#1E3A8A; --info-soft:#DBEAFE;
   --side:#FFFFFF; --side-fg:#18181B; --side-muted:#52525B; --side-hi:#F4F4F5; --head:rgba(253,253,253,.97);
-  --st-lead:#1E3A8A; --st-contato:#6366F1; --st-proposta:#A855F7; --st-negociacao:#D4AF37; --st-ganho:#15803D; --st-perdido:#DC2626;
+  --st-lead:#1E3A8A; --st-contato:#6366F1; --st-visita:#0891B2; --st-proposta:#A855F7; --st-negociacao:#D4AF37; --st-ganho:#15803D; --st-perdido:#DC2626;
   --f-display:"Oswald","Arial Narrow",Arial,sans-serif;
   --f-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
@@ -157,7 +157,7 @@ tbody tr.click:hover td{background:var(--surface-2)}
 th.num,td.num{text-align:right}
 .low td.est{color:var(--bad);font-weight:600}
 .board-wrap{overflow-x:auto;padding-bottom:6px}
-.board{display:grid;grid-template-columns:repeat(6,minmax(280px,1fr));gap:14px;min-width:1760px}
+.board{display:grid;grid-template-columns:repeat(7,minmax(270px,1fr));gap:14px;min-width:1990px}
 .col{background:color-mix(in srgb,var(--surface) 60%,var(--bg));border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
 .col-h{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:0 2px 10px;border-bottom:1px solid var(--line);margin-bottom:2px}
 .col-h .dot{width:11px;height:11px;border-radius:50%;flex:none}
@@ -516,7 +516,7 @@ function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTi
 function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
 
 // ---------- domínio ----------
-const ETAPAS=[{id:'lead',nome:'Novo lead'},{id:'contato',nome:'Primeiro contato'},{id:'proposta',nome:'Proposta enviada'},{id:'negociacao',nome:'Negociação'},{id:'ganho',nome:'Cliente ativo'},{id:'perdido',nome:'Perdido'}];
+const ETAPAS=[{id:'lead',nome:'Novo lead'},{id:'contato',nome:'Primeiro contato'},{id:'visita',nome:'Visita agendada'},{id:'proposta',nome:'Proposta enviada'},{id:'negociacao',nome:'Negociação'},{id:'ganho',nome:'Cliente ativo'},{id:'perdido',nome:'Perdido'}];
 const ATIVAS=['lead','contato','proposta','negociacao'];
 const TIPOS=['Academia','Equipe/Time','Escolinha de futebol','Loja','Distribuidor','Atleta','Outro'];
 const ORIGENS=['Instagram','WhatsApp','Indicação','Prospecção ativa','Visita à loja','Loja virtual / site','Ligação recebida','E-mail','Feira/Evento','Facebook','TikTok','Google','LinkedIn','Mercado Livre','Outro'];
@@ -745,7 +745,7 @@ function crmBody(){
      <div class="row"><span class="ro">${c.valorEstimado?money(c.valorEstimado):''}</span>${waCli(c)}${c.telefone2?waCli(c,'',2):''}${pode('crm')?`<select aria-label="Mover etapa" data-etapa="${c.id}">${ETAPAS.map(x=>`<option value="${x.id}" ${x.id===(c.etapa||'lead')?'selected':''}>${x.nome}</option>`).join('')}</select>`:''}</div></div>`).join('')}
     </div>`}).join('')}</div></div>`;
 }
-function etapaPill(id){const e=ETAPAS.find(x=>x.id===id)||ETAPAS[0];const cls={ganho:'ok',perdido:'',negociacao:'warn',proposta:'info'}[e.id]||'acc';return`<span class="pill ${cls}">${e.nome}</span>`}
+function etapaPill(id){const e=ETAPAS.find(x=>x.id===id)||ETAPAS[0];const cls={ganho:'ok',perdido:'',negociacao:'warn',proposta:'info',visita:'info'}[e.id]||'acc';return`<span class="pill ${cls}">${e.nome}</span>`}
 function membrosOpts(sel){const ids=new Set([...Object.keys(S.equipe)]);if(S.myId)ids.add(S.myId);if(sel)ids.add(sel);
   return`<option value="">—</option>`+[...ids].map(i=>`<option value="${esc(i)}" ${i===sel?'selected':''}>${esc(pessoa(i))}</option>`).join('')}
 // ---------- itens (vendas e compras) ----------
@@ -2423,13 +2423,14 @@ window.DRAVEN_WAB=(function(){
     geral:'Olá {contato}, tudo bem? Aqui é {vendedor}, da Draven Sports.',
     lead:'Olá {contato}, tudo bem? Aqui é {vendedor}, da Draven Sports. Fabricamos luvas, kimonos e equipamentos de luta, também com a marca de {nome}. Posso te mandar o nosso catálogo?',
     contato:'Olá {contato}! Segue o nosso catálogo: {catalogo}\nQual linha mais interessa para {nome}? Monto uma proposta sem compromisso.',
+    visita:'Olá {contato}, tudo bem? Aqui é {vendedor}, da Draven Sports. Passando para confirmar a nossa visita em {nome}. Vou levar amostras das luvas e kimonos para vocês verem de perto.',
     proposta:'Olá {contato}, tudo bem? Conseguiu ver a proposta que te enviei? Posso ajustar quantidades, cores ou prazo.',
     negociacao:'Olá {contato}! Consigo manter essa condição até {prazo}. Podemos fechar o pedido de {nome}?',
     ganho:'Olá {contato}, obrigado pela parceria! Quando precisar de reposição, é só chamar aqui.',
     perdido:'Olá {contato}, tudo bem? Chegaram novidades no nosso catálogo: {catalogo}\nVale uma olhada!'
   };
-  const NOMES={geral:'Saudação',lead:'Novo lead',contato:'Primeiro contato (catálogo)',proposta:'Proposta enviada',negociacao:'Negociação',ganho:'Cliente ativo',perdido:'Perdido (reativar)'};
-  const ORDEM=['geral','lead','contato','proposta','negociacao','ganho','perdido'];
+  const NOMES={geral:'Saudação',lead:'Novo lead',contato:'Primeiro contato (catálogo)',visita:'Visita agendada (confirmar)',proposta:'Proposta enviada',negociacao:'Negociação',ganho:'Cliente ativo',perdido:'Perdido (reativar)'};
+  const ORDEM=['geral','lead','contato','visita','proposta','negociacao','ganho','perdido'];
   const $w=s=>document.querySelector(s);
   const cfg=()=>((S.config||[]).find(x=>x.id==='whatsapp')||{});
   const soNum=t=>String(t||'').replace(/\D/g,'');

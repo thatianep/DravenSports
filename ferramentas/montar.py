@@ -86,6 +86,11 @@ function vEquipe(){""", 1),
     # ficha: campo Telefone 2
     ('<label class="f">WhatsApp / telefone<input class="inp" id="c-tel" name="telefone" value="${esc(c.telefone||\'\')}" placeholder="(11) 90000-0000" ${d}></label>',
      '<label class="f">WhatsApp / telefone<input class="inp" id="c-tel" name="telefone" value="${esc(c.telefone||\'\')}" placeholder="(11) 90000-0000" ${d}></label>\n   <label class="f">Telefone 2<input class="inp" id="c-tel2" name="telefone2" value="${esc(c.telefone2||\'\')}" placeholder="opcional" ${d}></label>', 1),
+    # ---- funil: etapa "Visita agendada" entre Primeiro contato e Proposta enviada ----
+    ("{id:'contato',nome:'Primeiro contato'},{id:'proposta'", "{id:'contato',nome:'Primeiro contato'},{id:'visita',nome:'Visita agendada'},{id:'proposta'", 1),
+    ("--st-proposta:#A855F7;", "--st-visita:#0891B2; --st-proposta:#A855F7;", 1),
+    ("grid-template-columns:repeat(6,minmax(280px,1fr));gap:14px;min-width:1760px", "grid-template-columns:repeat(7,minmax(270px,1fr));gap:14px;min-width:1990px", 1),
+    ("{ganho:'ok',perdido:'',negociacao:'warn',proposta:'info'}", "{ganho:'ok',perdido:'',negociacao:'warn',proposta:'info',visita:'info'}", 1),
     # ---- WhatsApp Web ao lado do sistema ----
     # no computador as conversas abrem no WhatsApp Web; no celular, no aplicativo
     ("return`https://wa.me/${d}${msg?'?text='+encodeURIComponent(msg):''}`}",
