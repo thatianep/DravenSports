@@ -284,7 +284,8 @@
       setTimeout(rodar, 10000);
     } finally { salvando = false }
   }
-  window.addEventListener('beforeunload', e => { if (pend || salvando) { e.preventDefault(); e.returnValue = '' } });
+  // links de app (WhatsApp, telefone, e-mail) não saem da página: não mostram o aviso de "alterações não salvas"
+  window.addEventListener('beforeunload', e => { if (Date.now() - (window.__dvSaidaExterna || 0) < 4000) return; if (pend || salvando) { e.preventDefault(); e.returnValue = '' } });
 
   // ---------------- banco no formato que o sistema usa ----------------
   let avisoMarcado = false;
