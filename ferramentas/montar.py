@@ -152,11 +152,7 @@ function crmFiltrados(){const q=norm(S.f.qcrm);return S.clientes.filter(c=>filtr
     ("""${pode('produtos')?'<button class="btn pri" data-a="novo-produto">Novo produto</button>'""",
      """${pode('produtos')?'<button class="btn" data-a="importar-produtos"><i class="fa-solid fa-file-import"></i> Importar produtos</button><button class="btn pri" data-a="novo-produto">Novo produto</button>'""", 1),
     ('<tr><td colspan="9" class="ro">Nenhum produto com esse filtro.</td></tr>', '<tr><td colspan="10" class="ro">Nenhum produto com esse filtro.</td></tr>', 1),
-    # ---- Funil CRM e Pedidos no mesmo padrão da aba Tarefas ----
-    ('${cs.map(c=>`<div class="card" data-a="edit-cliente" data-id="${c.id}" tabindex="0"${pode(\'crm\')?` data-drag="lead" data-from="${c.etapa||\'lead\'}"`:\'\'}><div class="t">${esc(c.nome)}</div>${window.DRAVEN_VIS?DRAVEN_VIS.visCard(c)+DRAVEN_VIS.uaCard(c):\'\'}${c.origem?`<div><span class="pill">${esc(c.origem)}</span></div>`:\'\'}<div class="d">${esc([c.tipo,c.cidade].filter(Boolean).join(\' · \'))}</div>\n     ${c.proximaAcao||c.dataProxima?`<div class="d">${esc(c.proximaAcao||\'\')} ${due(c.dataProxima,ini,fim)}</div>`:\'\'}\n     <div class="row"><span class="ro">${c.valorEstimado?money(c.valorEstimado):\'\'}</span>${waCli(c)}${c.telefone2?waCli(c,\'\',2):\'\'}${pode(\'crm\')?`<select aria-label="Mover etapa" data-etapa="${c.id}">${ETAPAS.map(x=>`<option value="${x.id}" ${x.id===(c.etapa||\'lead\')?\'selected\':\'\'}>${x.nome}</option>`).join(\'\')}</select>`:\'\'}</div></div>`).join(\'\')}', "${cs.map(c=>window.DRAVEN_FUNIL?DRAVEN_FUNIL.card(c,ini,fim):'').join('')}", 1),
-    ("<div class=\"board-wrap\"><div class=\"board\">${ETAPAS.map(e=>{const cs=lista.filter(c=>(c.etapa||'lead')===e.id);",
-     "<div class=\"board-wrap\"><div class=\"board kb-lead\" style=\"grid-template-columns:repeat(${ETAPAS.length},minmax(0,1fr));min-width:0\">${ETAPAS.map(e=>{const cs=lista.filter(c=>(c.etapa||'lead')===e.id);", 1),
-    ('<div id="body">${crmBody()}</div>', "${window.DRAVEN_FUNIL?DRAVEN_FUNIL.kpis():''}<div id=\"body\">${crmBody()}</div>", 1),
+    # ---- Pedidos no mesmo padrão da aba Tarefas (o Funil fica no layout original) ----
     ('style="grid-template-columns:repeat(5,minmax(270px,1fr));min-width:1420px"', 'style="grid-template-columns:repeat(5,minmax(0,1fr));min-width:0"', 1),
     ('style="grid-template-columns:repeat(4,minmax(260px,1fr));min-width:1100px"', 'style="grid-template-columns:repeat(4,minmax(0,1fr));min-width:0"', 1),
 ]
@@ -224,9 +220,8 @@ IMPORTAR = (RAIZ / 'ferramentas' / 'importar.html').read_text(encoding='utf-8')
 VISITA = (RAIZ / 'ferramentas' / 'visita.html').read_text(encoding='utf-8')
 QUADROS = (RAIZ / 'ferramentas' / 'quadros.html').read_text(encoding='utf-8')
 PRODUTOS = (RAIZ / 'ferramentas' / 'produtos.html').read_text(encoding='utf-8')
-FUNIL = (RAIZ / 'ferramentas' / 'funil.html').read_text(encoding='utf-8')
 import time
 VERSAO = time.strftime('%Y%m%d%H%M')
 CABECA = CABECA.replace('src="config.js"', f'src="config.js?v={VERSAO}"').replace('src="drive-db.js"', f'src="drive-db.js?v={VERSAO}"')
-(RAIZ / 'index.html').write_text(CABECA + WHATSAPP + app.strip() + '\n' + IMPORTAR + VISITA + WAB + QUADROS + PRODUTOS + FUNIL + CELULAR + '</body>\n</html>\n', encoding='utf-8')
+(RAIZ / 'index.html').write_text(CABECA + WHATSAPP + app.strip() + '\n' + IMPORTAR + VISITA + WAB + QUADROS + PRODUTOS + CELULAR + '</body>\n</html>\n', encoding='utf-8')
 print('index.html gerado')

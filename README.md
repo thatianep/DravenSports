@@ -91,11 +91,11 @@ Combina com a busca e com os filtros de tipo e canal.
 - Na ficha do lead (aba Dados) ficam o **Endereço** da academia, a lista de **Visitas** e o botão **Agendar nova visita**.
 - **Última ação:** cada card do funil e a lista do CRM mostram a ação mais recente com o lead, quando foi e quem fez: WhatsApp enviado, ligação, visita, troca de etapa, tarefa concluída, orçamento ou pedido. Atualiza sozinho. Clicar em **Ligar** também fica registrado.
 
-## Funil no padrão das Tarefas
-O **Funil CRM** segue o mesmo padrão da aba **Tarefas**: indicadores no topo (**Atrasadas**, **Para hoje**, **No funil** e **Visitas em 7 dias**), todas as colunas na largura da tela e card no mesmo formato (tipo do lead e canal em cima, nome, contato e cidade, visitas, próxima ação, responsável e prazo, última ação, botões WhatsApp/Ligar e a etapa). O quadro de **Pedidos** também passou a caber na largura da tela.
+## Funil no layout original
+O **Funil CRM** está no layout original do sistema: colunas largas, rolagem para os lados com a barra dourada embaixo do quadro e o card original (com os botões WhatsApp/Ligar, as visitas e a última ação). O quadro de **Tarefas** e o de **Pedidos** cabem na largura da tela.
 
-## Sem barras de rolagem
-O sistema não mostra barras de rolagem em lugar nenhum (página, funil, colunas, menu e janelas); rolar continua funcionando com a roda do mouse, o touchpad ou o dedo. No computador, os quadros (Funil, Tarefas e Pedidos) sempre cabem na largura da tela, e o menu de abas quebra em duas linhas quando não cabe. No celular, o quadro desliza com o dedo, uma coluna por vez.
+## Barras de rolagem
+O sistema esconde as barras de rolagem (página, menu, tabelas e janelas); rolar continua funcionando com a roda do mouse, o touchpad ou o dedo. A exceção é o **Funil CRM**, que mostra a barra para os lados embaixo do quadro. O menu de abas quebra em duas linhas quando não cabe. No celular, os quadros deslizam com o dedo, uma coluna por vez.
 
 ## Produtos e catálogo
 - Em **Estoque e custos → Importar produtos → Usar o catálogo Draven 2026**, o sistema cadastra os **60 itens** do catálogo de preços 2026 (`catalogo-2026.csv`): Angry, The Mist preta e vermelha, protetor de canela branco, Shark, The Eagle, pera de velocidade, raquete de foco, bastão de treino, saco de pancada, mochila, bolsa duffle e luvas de goleiro Astro, Lotus, Alpha I e Alpha II, cada cor com o seu **SKU (Art. DE-…)**, **preço de atacado** e **preço de varejo**.
@@ -136,7 +136,7 @@ Pode importar a mesma lista de novo sempre que exportar: só entra o que é novo
 | `ferramentas/visita.html` | Visita agendada (local, endereço, dia e hora) e última ação de cada lead |
 | `ferramentas/produtos.html` | Importação de produtos (catálogo 2026 ou CSV) e preço de atacado |
 | `catalogo-2026.csv` | Catálogo de preços Draven 2026 (60 itens, atacado e varejo) |
-| `ferramentas/quadros.html` | Quadros e menu sem barras de rolagem no computador |
+| `ferramentas/quadros.html` | Barras de rolagem escondidas (menos a do Funil) e quadros de Tarefas/Pedidos na largura da tela |
 | `ferramentas/importar.html` | Importação de leads (CSV e .vcf), limpeza dos telefones e Telefone 2 |
 | `ferramentas/celular.html` | Ajustes de celular e tablet (barra de menu embaixo, tabelas em cartões) |
 | `ferramentas/montar.py` | Gera o `index.html` a partir da fonte: `python3 ferramentas/montar.py` |
