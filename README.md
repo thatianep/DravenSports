@@ -102,6 +102,7 @@ O sistema esconde as barras de rolagem (página, menu, tabelas e janelas); rolar
 - Itens marcados como **Indisponível** no catálogo (pera de velocidade preta e saco de pancada) entram inativos; a pera de velocidade está com preço **sob consulta** (R$ 0).
 - O estoque começa em zero: dê entrada com **Ajustar** em cada produto (ou importe uma planilha com a coluna Estoque). Custo de produção e estoque mínimo também ficam para preencher.
 - Também dá para importar uma planilha CSV própria (Nome, Variação, SKU, Categoria, Unidade, Preço atacado, Preço varejo, Custo, Estoque, Mínimo, Ativo). Produto com o mesmo SKU **não duplica**: só atualiza preços e dados, sem mexer no estoque. Serve para atualizar a tabela de preços quando sair um catálogo novo.
+- **Atualizar o estoque por planilha:** exporte o estoque (**Exportar CSV**), preencha a coluna **Estoque** com a contagem e importe em **Importar produtos**. Com a opção **Atualizar o estoque com as quantidades da planilha** marcada, cada produto fica com a quantidade da planilha: o sistema lança um ajuste com a diferença (aparece em **Movimentações** como "Importação de planilha"). Colunas que não estão na planilha (ex.: preço de atacado, ativo) não mudam nada.
 - Cada produto tem agora **Preço atacado** e **Preço varejo**; a tabela do estoque mostra as duas colunas. Novas categorias: **Equipamentos de treino** e **Bolsas**.
 
 ## Importar listas de leads

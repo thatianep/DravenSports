@@ -29,28 +29,36 @@ window.DRAVEN_PROD=(function(){
   function preparar(rows){
     const porSku=new Map(S.produtos.filter(p=>p.sku).map(p=>[chave(p.sku),p]));
     const porNome=new Map(S.produtos.map(p=>[chave(p.nome+' '+(p.variacao||'')),p]));
-    const novos=[],atualiza=[],iguais=[];
+    const novos=[],atualiza=[],iguais=[],ajustes=[];
     for(const r of rows){
       const d={nome:String(r.nome).trim(),variacao:String(r.variacao||'').trim(),sku:String(r.sku||'').trim().toUpperCase(),categoria:categoria(r.categoria),unidade:String(r.unidade||'un').trim()||'un',
         preco:numBR(r.preco),precoAtacado:numBR(r.precoAtacado),ativo:r.ativo==null||r.ativo===''?true:sim(r.ativo),obs:String(r.obs||'').trim()};
-      if(r.custo!=null&&r.custo!=='')d.custo=numBR(r.custo);
-      if(r.minimo!=null&&r.minimo!=='')d.minimo=numBR(r.minimo);
+      if(r.custo!=null&&r.custo!==''&&numBR(r.custo)>0)d.custo=numBR(r.custo);
+      if(r.minimo!=null&&r.minimo!==''&&numBR(r.minimo)>0)d.minimo=numBR(r.minimo);
       const ini=r.estoque!=null&&r.estoque!==''?numBR(r.estoque):0;
       const p=(d.sku&&porSku.get(chave(d.sku)))||porNome.get(chave(d.nome+' '+d.variacao));
       if(!p){novos.push({d,ini});continue}
-      const muda={};for(const k of['nome','variacao','sku','categoria','unidade','preco','precoAtacado','ativo','custo','minimo'])if(k in d&&d[k]!==''&&d[k]!==p[k])muda[k]=d[k];
+      // quantidade da planilha: vira ajuste de estoque (diferença para o saldo atual)
+      if(r.estoque!=null&&r.estoque!==''){const atual=Number(p.estoque)||0,delta=ini-atual;if(delta)ajustes.push({p,atual,alvo:ini,delta})}
+      // só compara o que a planilha traz: coluna ausente (ou vazia) não muda nada no produto
+      const tem=k=>k in r&&String(r[k]).trim()!=='';
+      const muda={};for(const k of['nome','variacao','sku','categoria','unidade','preco','precoAtacado','ativo','custo','minimo'])if(tem(k)&&k in d&&d[k]!==''&&d[k]!==p[k])muda[k]=d[k];
       if(d.obs&&d.obs!==p.obs)muda.obs=d.obs;
       Object.keys(muda).length?atualiza.push({p,muda}):iguais.push(p);
     }
-    return{novos,atualiza,iguais};
+    return{novos,atualiza,iguais,ajustes};
   }
   function previa(txt){
     const box=document.getElementById('ip-prev');if(!box)return;
     const r=lerCsv(txt);
     if(r.erro){IMPP=null;box.innerHTML=String(txt||'').trim()?`<p class="err">${esc(r.erro)}</p>`:'';return}
     const p=preparar(r.rows);IMPP=p;
+    const temEstoque=r.cols.includes('estoque'),chk=document.getElementById('ip-est');
+    if(chk){chk.closest('label').hidden=!temEstoque||!p.ajustes.length}
+    const usarAj=chk&&chk.checked&&temEstoque;
     const inat=p.novos.filter(x=>!x.d.ativo).length;
-    box.innerHTML=`<div class="notice"><b>${p.novos.length}</b> produto${p.novos.length===1?'':'s'} novo${p.novos.length===1?'':'s'}${inat?` (${inat} marcado${inat===1?'':'s'} como indisponível)`:''}${p.atualiza.length?` · <b>${p.atualiza.length}</b> já cadastrado${p.atualiza.length===1?'':'s'} com preço ou dado atualizado`:''}${p.iguais.length?` · ${p.iguais.length} já ${p.iguais.length===1?'está igual':'estão iguais'}`:''}. O estoque atual dos produtos já cadastrados não muda.</div>
+    box.innerHTML=`<div class="notice"><b>${p.novos.length}</b> produto${p.novos.length===1?'':'s'} novo${p.novos.length===1?'':'s'}${inat?` (${inat} marcado${inat===1?'':'s'} como indisponível)`:''}${p.atualiza.length?` · <b>${p.atualiza.length}</b> já cadastrado${p.atualiza.length===1?'':'s'} com preço ou dado atualizado`:''}${p.iguais.length?` · ${p.iguais.length} já ${p.iguais.length===1?'está igual':'estão iguais'}`:''}.${p.ajustes.length?(usarAj?` · <b>${p.ajustes.length}</b> com estoque ajustado para a quantidade da planilha (${p.ajustes.reduce((a,x)=>a+x.delta,0)>=0?'+':''}${p.ajustes.reduce((a,x)=>a+x.delta,0)} unidades no total)`:` · estoque dos já cadastrados não muda`):''}</div>
+    ${usarAj&&p.ajustes.length?`<div class="tbl-wrap" style="max-height:220px;overflow:auto"><table style="min-width:560px"><thead><tr><th>SKU</th><th>Produto</th><th class="num">Hoje</th><th class="num">Planilha</th><th class="num">Ajuste</th></tr></thead><tbody>${p.ajustes.map(a=>`<tr><td class="mono">${esc(a.p.sku||'—')}</td><td>${esc(a.p.nome)}${a.p.variacao?`<div class="ro">${esc(a.p.variacao)}</div>`:''}</td><td class="num">${a.atual}</td><td class="num">${a.alvo}</td><td class="num"><b class="${a.delta>0?'ok':'bad'}">${a.delta>0?'+':''}${a.delta}</b></td></tr>`).join('')}</tbody></table></div>`:''}
     ${p.novos.length||p.atualiza.length?`<div class="tbl-wrap" style="max-height:280px;overflow:auto"><table style="min-width:640px"><thead><tr><th>SKU</th><th>Produto</th><th>Categoria</th><th class="num">Atacado</th><th class="num">Varejo</th><th>Situação</th></tr></thead><tbody>
     ${[...p.novos.map(x=>[x.d,'Novo'+(x.d.ativo?'':' · indisponível')]),...p.atualiza.map(x=>[{...x.p,...x.muda},'Atualiza: '+Object.keys(x.muda).map(k=>({preco:'varejo',precoAtacado:'atacado'}[k]||k)).join(', ')])].slice(0,80).map(([d,s])=>`<tr><td class="mono">${esc(d.sku||'—')}</td><td>${esc(d.nome)}${d.variacao?`<div class="ro">${esc(d.variacao)}</div>`:''}</td><td>${esc(d.categoria)}</td><td class="num">${d.precoAtacado?money(d.precoAtacado):'—'}</td><td class="num">${d.preco?money(d.preco):(d.obs||'—')}</td><td>${esc(s)}</td></tr>`).join('')}
     </tbody></table></div>`:''}`;
@@ -58,14 +66,16 @@ window.DRAVEN_PROD=(function(){
   function formImportar(){
     IMPP=null;
     abrir('Importar produtos',`
-     <p class="sub" style="margin:0">Carregue o <b>catálogo Draven 2026</b> (60 itens: Angry, The Mist preta e vermelha, Shark, The Eagle, treino, bolsas e luvas de goleiro, com preço de atacado e varejo) ou uma planilha CSV sua. Produtos com o mesmo SKU (Art.) não são duplicados: só têm preço e dados atualizados.</p>
+     <p class="sub" style="margin:0">Carregue o <b>catálogo Draven 2026</b> (60 itens: Angry, The Mist preta e vermelha, Shark, The Eagle, treino, bolsas e luvas de goleiro, com preço de atacado e varejo) ou uma planilha CSV sua. Produtos com o mesmo SKU (Art.) não são duplicados: só têm preço e dados atualizados. Se a planilha tiver a coluna <b>Estoque</b>, dá para atualizar o estoque de cada produto para a quantidade dela.</p>
      <div class="tools"><button type="button" class="btn pri" id="ip-cat"><i class="fa-solid fa-book-open"></i> Usar o catálogo Draven 2026</button></div>
      <label class="f">Ou arquivo CSV<input class="inp" id="ip-arq" type="file" accept=".csv,.txt,text/csv"></label>
      <label class="f">Ou cole aqui<textarea class="inp mono" id="ip-txt" rows="5" placeholder="Nome;Variação;SKU;Categoria;Unidade;Preço atacado;Preço varejo;Estoque"></textarea></label>
+     <label class="chk" hidden><input type="checkbox" id="ip-est" name="ajustarEstoque" checked> Atualizar o estoque com as quantidades da planilha (lança um ajuste para cada produto)</label>
      <div id="ip-prev"></div><p class="err" id="v-err" hidden></p>`,
-    async()=>{
-      if(!IMPP||(!IMPP.novos.length&&!IMPP.atualiza.length)){erro('#v-err','Nenhum produto novo ou alterado para importar.');return false}
-      const btn=document.querySelector('#dlgForm button[type=submit]'),agora=Date.now(),total=IMPP.novos.length+IMPP.atualiza.length;let n=0;
+    async fd=>{
+      const aj=fd.get('ajustarEstoque')&&!document.getElementById('ip-est').closest('label').hidden?IMPP&&IMPP.ajustes||[]:[];
+      if(!IMPP||(!IMPP.novos.length&&!IMPP.atualiza.length&&!aj.length)){erro('#v-err','Nada novo para importar: produtos, preços e estoque já estão iguais à planilha.');return false}
+      const btn=document.querySelector('#dlgForm button[type=submit]'),agora=Date.now(),total=IMPP.novos.length+IMPP.atualiza.length+aj.length;let n=0;
       for(const{d,ini}of IMPP.novos){
         const dados={...d,minimo:d.minimo||0,estoque:0,criadoEm:agora,atualizadoEm:agora,criadoPor:S.myId,origem:'Importação de produtos'};
         if(!dados.obs)delete dados.obs;
@@ -74,11 +84,13 @@ window.DRAVEN_PROD=(function(){
         n++;if(n%10===0)btn.textContent=`Importando ${n}/${total}…`;
       }
       for(const{p,muda}of IMPP.atualiza){await salvar('produtos',p.id,{...muda,atualizadoEm:agora});n++;if(n%10===0)btn.textContent=`Importando ${n}/${total}…`}
-      toast(`${IMPP.novos.length} produto${IMPP.novos.length===1?'':'s'} cadastrado${IMPP.novos.length===1?'':'s'}${IMPP.atualiza.length?` · ${IMPP.atualiza.length} atualizado${IMPP.atualiza.length===1?'':'s'}`:''}`);
+      for(const a of aj){const atual=Number((prod(a.p.id)||a.p).estoque)||0,delta=a.alvo-atual;if(delta){try{await moverEstoque(a.p.id,delta,'ajuste','Importação de planilha','')}catch(e){}}n++;if(n%10===0)btn.textContent=`Importando ${n}/${total}…`}
+      toast(`${aj.length?aj.length+' estoque'+(aj.length===1?'':'s')+' ajustado'+(aj.length===1?'':'s')+' · ':''}${IMPP.novos.length} produto${IMPP.novos.length===1?'':'s'} cadastrado${IMPP.novos.length===1?'':'s'}${IMPP.atualiza.length?` · ${IMPP.atualiza.length} atualizado${IMPP.atualiza.length===1?'':'s'}`:''}`);
       return true;
     },{submitLabel:'Importar produtos'});
     const txt=document.getElementById('ip-txt');
     txt.addEventListener('input',()=>previa(txt.value));
+    document.getElementById('ip-est').addEventListener('change',()=>previa(txt.value));
     document.getElementById('ip-arq').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{txt.value=fr.result;previa(fr.result)};fr.readAsText(f)});
     document.getElementById('ip-cat').addEventListener('click',async e=>{
       e.target.disabled=true;
