@@ -2752,9 +2752,8 @@ window.DRAVEN_WAB=(function(){
 })();
 </script>
 <!-- Quadros Kanban (Funil, Tarefas, Pedidos) no computador:
-     - barra de rolagem logo acima do quadro, com setas para pular de coluna em coluna;
-     - cada coluna rola por dentro (título fixo), para o quadro caber na tela;
-     - barra de rolagem mais grossa e na cor da marca.
+     - para os lados: só a barra logo acima do quadro (presa no topo ao descer), com setas;
+     - para baixo: a página rola direto, com as colunas na altura toda (sem barra no rodapé).
      Entra no index.html pelo ferramentas/montar.py. No celular o quadro continua deslizando com o dedo. -->
 <style>
 .kb-nav{display:none}
@@ -2771,18 +2770,11 @@ window.DRAVEN_WAB=(function(){
   .kb-top.arrastando .kb-thumb{cursor:grabbing}
   .kb-nav small{flex:none;font-size:12px;color:var(--muted);min-width:96px;text-align:right}
 
-  .board-wrap{overflow-x:auto;overflow-y:hidden;padding-bottom:4px;scroll-behavior:smooth}
+  /* rolagem para os lados só pela barra do topo; para baixo, a página rola direto (colunas com a altura toda) */
+  .board-wrap{overflow-x:auto;overflow-y:hidden;scroll-behavior:smooth;scrollbar-width:none}
+  .board-wrap::-webkit-scrollbar{display:none}
   .board{align-items:start}
-  .board .col{max-height:calc(100dvh - 210px);overflow-y:auto;overscroll-behavior:contain}
-  .board .col-h{position:sticky;top:-14px;z-index:2;background:inherit;margin-top:-14px;padding-top:14px}
 
-  .board-wrap::-webkit-scrollbar{height:14px}
-  .board-wrap::-webkit-scrollbar-track{background:var(--surface-2);border-radius:999px}
-  .board-wrap::-webkit-scrollbar-thumb{background:var(--accent);border-radius:999px;border:3px solid var(--surface-2)}
-  .board-wrap::-webkit-scrollbar-thumb:hover{background:var(--accent-2)}
-  .board .col::-webkit-scrollbar{width:8px}
-  .board .col::-webkit-scrollbar-thumb{background:#D4D2CB;border-radius:4px}
-  .board-wrap{scrollbar-color:var(--accent) var(--surface-2)}
 }
 </style>
 <script>
@@ -2817,8 +2809,6 @@ window.DRAVEN_WAB=(function(){
     top.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();w.scrollBy({left:(e.key==='ArrowRight'?1:-1)*larguraColuna(w),behavior:'smooth'})}});
     w.addEventListener('scroll',medir,{passive:true});
     nav.addEventListener('click',e=>{const b=e.target.closest('[data-kb]');if(b)w.scrollBy({left:Number(b.dataset.kb)*larguraColuna(w)*2,behavior:'smooth'})});
-    // roda do mouse no espaço vazio entre as colunas também anda para os lados
-    w.addEventListener('wheel',e=>{if(e.shiftKey||Math.abs(e.deltaX)>Math.abs(e.deltaY))return;if(e.target.closest('.col'))return;w.scrollLeft+=e.deltaY;e.preventDefault()},{passive:false});
     new ResizeObserver(medir).observe(w);
     medir();
   }
