@@ -84,11 +84,15 @@ No **Funil CRM**, a caixa **Todos os contatos** filtra os leads (no quadro e na 
 Combina com a busca e com os filtros de tipo e canal.
 
 ## Visitas e última ação
-- **Visita agendada:** ao levar um lead para a etapa **Visita agendada** (arrastando ou pela caixa do card), abre a janela **Agendar visita**: escolha **Na nossa loja** ou **Na academia do lead**, o endereço, o dia e a hora. O endereço da loja fica salvo para as próximas; o da academia vai para a ficha do lead.
-- O card mostra o dia, a hora, o local e o link **rota** (Google Maps). Visita que já passou fica em vermelho, para remarcar ou concluir.
-- Ao agendar, o sistema cria uma **tarefa de visita** (aba Tarefas e Painel) e põe a visita como **próxima ação** do lead.
-- Na ficha do lead (aba Dados) ficam o **Endereço** da academia e os campos da visita (onde, endereço, dia e hora), que também podem ser alterados por lá.
+- **Visitas:** cada lead guarda **todas** as visitas (agendadas, realizadas e canceladas). Agendar uma nova não apaga as anteriores.
+- Ao levar um lead para a etapa **Visita agendada** (arrastando ou pela caixa do card), abre a janela **Agendar visita**: escolha **Na nossa loja** ou **Na academia do lead**, o endereço, o dia e a hora. O endereço da loja fica salvo (padrão: Av. Álvaro Ramos, 2401 - Quarta Parada); o da academia vai para a ficha do lead.
+- No card aparecem todas as visitas do lead (as agendadas primeiro), com local e link **rota** (Google Maps), e o botão **nova visita**. Em **alterar**, dá para mudar dia, hora e local ou marcar a visita como **Realizada** ou **Cancelada** (a tarefa da visita é concluída junto). Visita que já passou e não foi marcada fica em vermelho.
+- Cada visita nova cria uma **tarefa de visita** (aba Tarefas e Painel). A próxima visita agendada vira a **próxima ação** do lead e é a usada nas mensagens de WhatsApp.
+- Na ficha do lead (aba Dados) ficam o **Endereço** da academia, a lista de **Visitas** e o botão **Agendar nova visita**.
 - **Última ação:** cada card do funil e a lista do CRM mostram a ação mais recente com o lead, quando foi e quem fez: WhatsApp enviado, ligação, visita, troca de etapa, tarefa concluída, orçamento ou pedido. Atualiza sozinho. Clicar em **Ligar** também fica registrado.
+
+## Rolagem do funil
+No computador, os quadros (Funil, Tarefas e Pedidos) têm uma **barra de rolagem logo acima das colunas**, que fica presa no topo ao descer a página: arraste o pegador dourado, clique na trilha ou use as setas **◀ ▶** para ir às outras colunas. Ao lado aparece "colunas 1–5 de 7". **Cada coluna rola para baixo por dentro**, com o título fixo, então todos os leads da coluna ficam acessíveis. No celular, deslize o quadro com o dedo.
 
 ## Importar listas de leads
 No **Funil CRM** (ou em Clientes 360°), clique em **Importar** e escolha o arquivo exportado:
@@ -120,6 +124,7 @@ Pode importar a mesma lista de novo sempre que exportar: só entra o que é novo
 | `versao-claude-ai/sistema-draven.html` | Fonte do sistema (a mesma versão publicada no claude.ai) |
 | `ferramentas/whatsapp-business.html` | WhatsApp Business: número, mensagens prontas e registro dos envios |
 | `ferramentas/visita.html` | Visita agendada (local, endereço, dia e hora) e última ação de cada lead |
+| `ferramentas/quadros.html` | Barra de rolagem lateral dos quadros e rolagem de cada coluna |
 | `ferramentas/importar.html` | Importação de leads (CSV e .vcf), limpeza dos telefones e Telefone 2 |
 | `ferramentas/celular.html` | Ajustes de celular e tablet (barra de menu embaixo, tabelas em cartões) |
 | `ferramentas/montar.py` | Gera o `index.html` a partir da fonte: `python3 ferramentas/montar.py` |

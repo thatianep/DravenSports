@@ -10,6 +10,14 @@
 .vis-box.atrasada{background:#FEF2F2;border-color:#FECACA;color:#991B1B}
 .vis-box.pendente{background:#FFFBEB;border-color:#FDE68A;color:#92400E}
 .vis-box button{all:unset;cursor:pointer;font-weight:700;text-decoration:underline}
+.vis-box{gap:8px}
+.vis-it{display:flex;flex-direction:column;gap:2px;padding-bottom:6px;border-bottom:1px dashed #A5F3FC}
+.vis-it:last-of-type{border-bottom:0;padding-bottom:0}
+.vis-it.atrasada{color:#991B1B}
+.vis-it.feita{color:#166534;opacity:.85}
+.vis-it.cancelada{color:#71717A;text-decoration:line-through;opacity:.75}
+.vis-it.cancelada button,.vis-it.cancelada a{text-decoration:none}
+.vis-obs{font-size:11.5px;opacity:.9}
 fieldset.vis-f{grid-column:1/-1}
 fieldset.vis-f .fg{margin:0}
 .vis-locais{display:flex;gap:8px;flex-wrap:wrap}
@@ -62,94 +70,107 @@ window.DRAVEN_VIS=(function(){
   function uaCard(c){const u=ultimaAcao(c);return u?`<div class="ua" title="Última ação: ${esc(u.txt)} · ${esc(new Date(u.em).toLocaleString('pt-BR'))}"><i class="fa-solid fa-clock-rotate-left"></i><span>${esc(u.txt)} · ${esc(ha(u.em))}${u.por?' · '+esc(primeiroNome(u.por)):''}</span></div>`:''}
   function uaCol(c){const u=ultimaAcao(c);return u?`<div class="ua-col">${esc(u.txt)}<small>${esc(ha(u.em))}${u.por?' · '+esc(pessoa(u.por)):''}</small></div>`:'<span class="ro">—</span>'}
 
-  // ---------------- visita no card e na ficha ----------------
-  function visCard(c){
-    if((c.etapa||'lead')!=='visita')return'';
-    const v=c.visita;
-    if(!v||!v.quando)return pode('crm')?`<div class="vis-box pendente"><span><i class="fa-solid fa-calendar-plus"></i> Falta marcar a visita · <button type="button" data-visita="${esc(c.id)}">agendar</button></span></div>`:'';
-    const late=v.quando<Date.now()-3600e3;
-    return`<div class="vis-box ${late?'atrasada':''}"><span class="vis-l"><i class="fa-solid fa-calendar-check"></i> <b>${esc(fmtQuando(v.quando))}</b></span>
-      <span class="vis-l"><i class="fa-solid ${v.local==='loja'?'fa-store':'fa-dumbbell'}"></i> ${esc(LOCAIS[v.local]||'')}${v.endereco?` · <a href="${esc(mapa(v.endereco))}" target="_blank" rel="noopener" title="${esc(v.endereco)}">rota</a>`:''}</span>
-      ${pode('crm')?`<span><button type="button" data-visita="${esc(c.id)}">${late?'remarcar ou concluir':'alterar'}</button></span>`:''}</div>`;
+  // ---------------- várias visitas por lead ----------------
+  // cada lead guarda todas as visitas em "visitas"; "visita" é a próxima (usada nas mensagens de WhatsApp)
+  const SITU={agendada:['Agendada',''],realizada:['Realizada','ok'],cancelada:['Cancelada','bad']};
+  const novoVid=()=>'v'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  function visitasDe(c){
+    let l=Array.isArray(c.visitas)?c.visitas.filter(v=>v&&v.quando):[];
+    if(!l.length&&c.visita&&c.visita.quando)l=[{id:'v0',status:'agendada',...c.visita}];
+    return l.map(v=>({status:'agendada',...v}));
   }
-  // campos da ficha (aba Dados)
-  function camposFicha(c,d){
-    const v=c.visita||{};
-    return`<label class="f full">Endereço (academia do lead)<input class="inp" id="c-end" name="endereco" value="${esc(c.endereco||'')}" placeholder="Rua, número, bairro" ${d}></label>
-    <fieldset class="vis-f"><legend>Visita agendada</legend>
-     <div class="fg">
-      <label class="f">Onde<select class="inp" id="c-vloc" name="visLocal" ${d}><option value="">Sem visita</option>${Object.entries(LOCAIS).map(([k,n])=>`<option value="${k}" ${v.local===k?'selected':''}>${n}</option>`).join('')}</select></label>
-      <label class="f">Endereço da visita<input class="inp" id="c-vend" name="visEndereco" value="${esc(v.endereco||'')}" placeholder="Preenchido pelo local escolhido" ${d}></label>
-      <label class="f">Dia<input class="inp" id="c-vdia" name="visDia" type="date" value="${dataInp(v.quando)}" ${d}></label>
-      <label class="f">Hora<input class="inp" id="c-vhora" name="visHora" type="time" value="${horaInp(v.quando)}" ${d}></label>
-     </div></fieldset>`;
+  function proxima(l){
+    const ag=l.filter(v=>v.status==='agendada');
+    return ag.filter(v=>v.quando>=Date.now()-3600e3).sort((a,b)=>a.quando-b.quando)[0]||ag.sort((a,b)=>b.quando-a.quando)[0]||null;
   }
-  // devolve os campos de visita para gravar junto com a ficha
-  function lerFicha(fd,c){
-    const out={endereco:String(fd.get('endereco')||'').trim()};
-    const local=fd.get('visLocal')||'',q=quando(fd.get('visDia'),fd.get('visHora'));
-    const ant=c.visita||null;
-    if(!local&&!q){if(ant)out.visita=null;return out}
-    const v={local:local||'academia',endereco:String(fd.get('visEndereco')||'').trim()||(local==='loja'?cfgLoja().endereco||'':endAcademia({...c,endereco:out.endereco})),quando:q,obs:ant?.obs||'',agendadaEm:ant?.agendadaEm||Date.now(),agendadaPor:ant?.agendadaPor||S.myId};
-    out.visita=v;
-    if(q&&(!ant||ant.quando!==q||ant.local!==v.local)){
-      out.proximaAcao=`Visita ${v.local==='loja'?'na nossa loja':'na academia'}`;out.dataProxima=q;
-      out.historico=[...(c.historico||[]),{tipo:'visita',txt:`Visita agendada para ${fmtQuando(q)} · ${LOCAIS[v.local]}${v.endereco?' · '+v.endereco:''}`,em:Date.now(),por:S.myId}];
-    }
-    return out;
-  }
-  // na ficha, escolher o local preenche o endereço
-  document.addEventListener('change',e=>{
-    if(e.target.id!=='c-vloc')return;
-    const end=document.getElementById('c-vend');if(!end||end.value.trim())return;
-    if(e.target.value==='loja')end.value=cfgLoja().endereco||'';
-    else if(e.target.value==='academia'){const c=cli((DLG&&DLG.ctx&&DLG.ctx.id)||'');const ea=document.getElementById('c-end');end.value=[ea?ea.value:(c&&c.endereco)||'',c&&c.cidade].filter(Boolean).join(' - ')}
-  });
+  // ordem para mostrar: agendadas (da mais próxima), depois as outras (da mais recente)
+  const ordenar=l=>[...l.filter(v=>v.status==='agendada').sort((a,b)=>a.quando-b.quando),...l.filter(v=>v.status!=='agendada').sort((a,b)=>b.quando-a.quando)];
 
-  // ---------------- janela "Agendar visita" ----------------
-  function agendar(id){
+  function linhaVisita(c,v,podeEditar){
+    const late=v.status==='agendada'&&v.quando<Date.now()-3600e3,cls=v.status==='realizada'?'feita':v.status==='cancelada'?'cancelada':late?'atrasada':'';
+    return`<div class="vis-it ${cls}">
+      <span class="vis-l"><i class="fa-solid ${v.status==='realizada'?'fa-circle-check':v.status==='cancelada'?'fa-circle-xmark':'fa-calendar-check'}"></i> <b>${esc(fmtQuando(v.quando))}</b>${v.status!=='agendada'?` · ${SITU[v.status][0]}`:late?' · atrasada':''}</span>
+      <span class="vis-l"><i class="fa-solid ${v.local==='loja'?'fa-store':'fa-dumbbell'}"></i> ${esc(LOCAIS[v.local]||'')}${v.endereco?` · <a href="${esc(mapa(v.endereco))}" target="_blank" rel="noopener" title="${esc(v.endereco)}">rota</a>`:''}</span>
+      ${v.obs?`<span class="vis-obs">${esc(v.obs)}</span>`:''}
+      ${podeEditar?`<span><button type="button" data-visita="${esc(c.id)}" data-vid="${esc(v.id)}">${late?'concluir ou remarcar':'alterar'}</button></span>`:''}
+    </div>`;
+  }
+  function visCard(c){
+    const l=visitasDe(c),pe=pode('crm');
+    if(!l.length)return(c.etapa||'lead')==='visita'&&pe?`<div class="vis-box pendente"><span><i class="fa-solid fa-calendar-plus"></i> Falta marcar a visita · <button type="button" data-visita="${esc(c.id)}">agendar</button></span></div>`:'';
+    return`<div class="vis-box">${ordenar(l).map(v=>linhaVisita(c,v,pe)).join('')}${pe?`<span><button type="button" data-visita="${esc(c.id)}" data-vid="nova"><i class="fa-solid fa-plus"></i> nova visita</button></span>`:''}</div>`;
+  }
+  // ficha (aba Dados): endereço do lead e a lista de todas as visitas
+  function camposFicha(c,d){
+    const l=c.id?visitasDe(c):[];
+    return`<label class="f full">Endereço (academia do lead)<input class="inp" id="c-end" name="endereco" value="${esc(c.endereco||'')}" placeholder="Rua, número, bairro" ${d}></label>
+    ${c.id?`<fieldset class="vis-f"><legend>Visitas (${l.length})</legend>
+     ${l.length?`<div class="vis-box">${ordenar(l).map(v=>linhaVisita(c,v,!d&&pode('crm'))).join('')}</div>`:'<p class="ro" style="margin:0">Nenhuma visita ainda.</p>'}
+     ${!d&&pode('crm')?`<div><button type="button" class="btn sm" data-visita="${esc(c.id)}" data-vid="nova"><i class="fa-solid fa-calendar-plus"></i> Agendar nova visita</button></div>`:''}
+    </fieldset>`:''}`;
+  }
+  function lerFicha(fd){return{endereco:String(fd.get('endereco')||'').trim()}}
+
+  // ---------------- janela "Agendar visita" (nova ou alterar uma) ----------------
+  function agendar(id,vid){
     const c=cli(id);if(!c)return;
     if(!pode('crm')){toast('Seu perfil não pode agendar visitas.');return}
-    const v=c.visita||{},loja=cfgLoja().endereco||'',local=v.local||'academia';
-    const endIni=v.endereco||(local==='loja'?loja:endAcademia(c));
+    const lista=visitasDe(c),v=(vid&&vid!=='nova'&&lista.find(x=>x.id===vid))||null,nova=!v;
+    const ref=v||proxima(lista)||{},local=ref.local||'academia',loja=cfgLoja().endereco||'';
+    const endIni=(v&&v.endereco)||(local==='loja'?loja:(ref.endereco&&ref.local==='academia'?ref.endereco:endAcademia(c)));
     const amanha=new Date(Date.now()+864e5);
-    abrir(`Agendar visita · ${esc(c.nome)}`,`
+    abrir(`${nova?'Agendar visita':'Visita'} · ${esc(c.nome)}`,`
      <div class="vis-locais" role="radiogroup" aria-label="Onde será a visita">
       ${Object.entries(LOCAIS).map(([k,n])=>`<label><input type="radio" name="local" value="${k}" ${local===k?'checked':''}> <i class="fa-solid ${k==='loja'?'fa-store':'fa-dumbbell'}"></i> ${n}</label>`).join('')}
      </div>
      <div class="fg">
       <label class="f full">Endereço *<input class="inp" id="va-end" name="endereco" required value="${esc(endIni)}" placeholder="Rua, número, bairro, cidade"></label>
-      <label class="f">Dia *<input class="inp" id="va-dia" name="dia" type="date" required value="${dataInp(v.quando)||dataInp(amanha)}"></label>
-      <label class="f">Hora *<input class="inp" id="va-hora" name="hora" type="time" required value="${horaInp(v.quando)||'10:00'}"></label>
-      <label class="f full">Observação<input class="inp" id="va-obs" name="obs" value="${esc(v.obs||'')}" placeholder="Levar amostras de luvas 14oz, falar com o Prof. Carlos…"></label>
+      <label class="f">Dia *<input class="inp" id="va-dia" name="dia" type="date" required value="${v?dataInp(v.quando):dataInp(amanha)}"></label>
+      <label class="f">Hora *<input class="inp" id="va-hora" name="hora" type="time" required value="${v?horaInp(v.quando):'10:00'}"></label>
+      <label class="f full">Observação<input class="inp" id="va-obs" name="obs" value="${esc(v?v.obs||'':'')}" placeholder="Levar amostras de luvas 14oz, falar com o Prof. Carlos…"></label>
+      ${nova?'':`<label class="f">Situação<select class="inp" id="va-sit" name="status">${Object.entries(SITU).map(([k,n])=>`<option value="${k}" ${v.status===k?'selected':''}>${n[0]}</option>`).join('')}</select></label>`}
      </div>
-     <label class="chk"><input type="checkbox" name="tarefa" ${v.tarefaId?'':'checked'}> Criar tarefa de visita para o responsável</label>
+     ${nova?'<label class="chk"><input type="checkbox" name="tarefa" checked> Criar tarefa de visita para o responsável</label>':''}
+     ${lista.length&&nova?`<p class="ro" style="margin:0">Este lead já tem ${lista.length} visita${lista.length===1?'':'s'}; elas continuam guardadas.</p>`:''}
      <p class="err" id="v-err" hidden></p>`,
     async fd=>{
       const loc=fd.get('local')||'academia',end=String(fd.get('endereco')||'').trim(),q=quando(fd.get('dia'),fd.get('hora'));
       if(!end){erro('#v-err','Informe o endereço da visita.');return false}
       if(!q){erro('#v-err','Informe o dia e a hora.');return false}
-      const atual=cli(id)||c,agora=Date.now(),obs=String(fd.get('obs')||'').trim();
-      const vis={local:loc,endereco:end,quando:q,obs,agendadaEm:agora,agendadaPor:S.myId,tarefaId:v.tarefaId||null};
-      if(fd.get('tarefa')){
-        try{vis.tarefaId=await salvar('tarefas',null,{titulo:`Visita: ${atual.nome}`,tipo:'Visita',clienteId:id,status:'afazer',prioridade:'alta',prazo:q,
-          responsavel:atual.responsavel||S.myId,descricao:`${LOCAIS[loc]} · ${end}${obs?' · '+obs:''}`,criadoEm:agora,criadoPor:S.myId})}catch(e){}
-      }else if(v.tarefaId){try{await salvar('tarefas',v.tarefaId,{prazo:q,descricao:`${LOCAIS[loc]} · ${end}${obs?' · '+obs:''}`})}catch(e){}}
-      const dados={visita:vis,proximaAcao:`Visita ${loc==='loja'?'na nossa loja':'na academia'}`,dataProxima:q,atualizadoEm:agora,
-        historico:[...(atual.historico||[]),{tipo:'visita',txt:`Visita agendada para ${fmtQuando(q)} · ${LOCAIS[loc]} · ${end}${obs?' · '+obs:''}`,em:agora,por:S.myId}]};
-      if((atual.etapa||'lead')!=='visita'&&(atual.etapa||'lead')!=='ganho')dados.etapa='visita';
+      const atual=cli(id)||c,agora=Date.now(),obs=String(fd.get('obs')||'').trim(),status=nova?'agendada':(fd.get('status')||'agendada');
+      const l=visitasDe(atual),desc=`${LOCAIS[loc]} · ${end}${obs?' · '+obs:''}`;
+      let vis;
+      if(nova){
+        vis={id:novoVid(),status:'agendada',local:loc,endereco:end,quando:q,obs,agendadaEm:agora,agendadaPor:S.myId,tarefaId:null};
+        if(fd.get('tarefa')){try{vis.tarefaId=await salvar('tarefas',null,{titulo:`Visita: ${atual.nome}`,tipo:'Visita',clienteId:id,status:'afazer',prioridade:'alta',prazo:q,
+          responsavel:atual.responsavel||S.myId,descricao:desc,criadoEm:agora,criadoPor:S.myId})}catch(e){}}
+        l.push(vis);
+      }else{
+        const k=l.findIndex(x=>x.id===v.id);
+        vis={...l[k],local:loc,endereco:end,quando:q,obs,status,atualizadaEm:agora,atualizadaPor:S.myId};l[k]=vis;
+        if(vis.tarefaId){try{await salvar('tarefas',vis.tarefaId,{prazo:q,descricao:desc,...(status!=='agendada'?{status:'concluido',concluidoEm:agora}:{})})}catch(e){}}
+      }
+      const txt=nova?`Visita agendada para ${fmtQuando(q)} · ${LOCAIS[loc]} · ${end}${obs?' · '+obs:''}`
+        :status==='realizada'?`Visita realizada (${fmtQuando(q)}) · ${LOCAIS[loc]}${obs?' · '+obs:''}`
+        :status==='cancelada'?`Visita cancelada (${fmtQuando(q)})`
+        :`Visita alterada para ${fmtQuando(q)} · ${LOCAIS[loc]} · ${end}`;
+      const prox=proxima(l);
+      const dados={visitas:l,visita:prox||vis,atualizadoEm:agora,historico:[...(atual.historico||[]),{tipo:'visita',txt,em:agora,por:S.myId}]};
+      if(prox){dados.proximaAcao=`Visita ${prox.local==='loja'?'na nossa loja':'na academia'}`;dados.dataProxima=prox.quando}
+      else if(/^Visita /.test(atual.proximaAcao||'')){dados.proximaAcao='';dados.dataProxima=null}
+      if(nova&&(atual.etapa||'lead')!=='visita'&&(atual.etapa||'lead')!=='ganho')dados.etapa='visita';
       if(loc==='academia'&&!atual.endereco)dados.endereco=end;
       await salvar('clientes',id,dados);
       if(loc==='loja'&&end!==cfgLoja().endereco){try{await S.db.doc('config/loja').set({...cfgLoja(),endereco:end,atualizadoEm:agora})}catch(e){}}
-      toast('Visita agendada');
-      // já oferece a mensagem de pós-agendamento no WhatsApp
-      const cc=cli(id)||atual,num=(cc.telefone&&!cc.semWhats)?1:(cc.telefone2&&!cc.semWhats2)?2:0;
-      if(num&&window.DRAVEN_WAB)setTimeout(()=>DRAVEN_WAB.escolher(id,num,'visita_pos'),350);
+      toast(nova?'Visita agendada':status==='realizada'?'Visita marcada como realizada':status==='cancelada'?'Visita cancelada':'Visita alterada');
+      // nova visita: já oferece a mensagem de pós-agendamento no WhatsApp
+      if(nova){const cc=cli(id)||atual,num=(cc.telefone&&!cc.semWhats)?1:(cc.telefone2&&!cc.semWhats2)?2:0;
+        if(num&&window.DRAVEN_WAB)setTimeout(()=>DRAVEN_WAB.escolher(id,num,'visita_pos'),350);}
       return true;
-    },{submitLabel:'Agendar visita'});
+    },{submitLabel:nova?'Agendar visita':'Salvar'});
     const box=document.getElementById('va-end');
     document.querySelectorAll('#dlgForm input[name=local]').forEach(r=>r.addEventListener('change',()=>{
-      if(r.value==='loja')box.value=cfgLoja().endereco||'';else box.value=endAcademia(cli(id)||c);
+      box.value=r.value==='loja'?(cfgLoja().endereco||''):endAcademia(cli(id)||c);
       box.placeholder=r.value==='loja'?'Endereço da loja (fica salvo para as próximas)':'Rua, número, bairro, cidade';
     }));
   }
@@ -160,12 +181,12 @@ window.DRAVEN_VIS=(function(){
     const antes=(cli(id)||{}).etapa;
     await moverOriginal(id,etapa);
     const c=cli(id);
-    if(etapa==='visita'&&antes!=='visita'&&c&&c.etapa==='visita'&&!(c.visita&&c.visita.quando>Date.now()))setTimeout(()=>agendar(id),150);
+    if(etapa==='visita'&&antes!=='visita'&&c&&c.etapa==='visita'&&!visitasDe(c).some(v=>v.status==='agendada'&&v.quando>Date.now()))setTimeout(()=>agendar(id,'nova'),150);
   };
 
   document.addEventListener('click',e=>{
     const b=e.target.closest&&e.target.closest('[data-visita]');
-    if(b){e.preventDefault();e.stopPropagation();agendar(b.dataset.visita);return}
+    if(b){e.preventDefault();e.stopPropagation();agendar(b.dataset.visita,b.dataset.vid||'');return}
     // clicar em Ligar registra a ligação na linha do tempo
     const l=e.target.closest&&e.target.closest('a[data-ligcli]');
     if(l&&pode('crm')){const c=cli(l.dataset.ligcli);if(c){const agora=Date.now();
@@ -175,6 +196,6 @@ window.DRAVEN_VIS=(function(){
   // a "última ação" usa tempo relativo: atualiza a tela do funil a cada minuto
   setInterval(()=>{if(S.view==='crm'&&!document.querySelector('dialog[open]')&&typeof render==='function')render()},60000);
 
-  return{agendar,visCard,uaCard,uaCol,camposFicha,lerFicha,ultimaAcao};
+  return{agendar,visCard,uaCard,uaCol,camposFicha,lerFicha,ultimaAcao,visitasDe};
 })();
 </script>
