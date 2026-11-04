@@ -92,7 +92,7 @@ Combina com a busca e com os filtros de tipo e canal.
 - **Última ação:** cada card do funil e a lista do CRM mostram a ação mais recente com o lead, quando foi e quem fez: WhatsApp enviado, ligação, visita, troca de etapa, tarefa concluída, orçamento ou pedido. Atualiza sozinho. Clicar em **Ligar** também fica registrado.
 
 ## Rolagem do funil
-No computador, os quadros (Funil, Tarefas e Pedidos) rolam **para os lados só pela barra do topo**, logo acima das colunas: ela fica presa abaixo do menu enquanto você desce a página. Arraste o pegador dourado, clique na trilha ou use as setas **◀ ▶**; ao lado aparece "colunas 1–5 de 7". **Para baixo, a página rola direto**: as colunas mostram todos os leads, sem barra no rodapé. No celular, deslize o quadro com o dedo.
+No computador, os quadros (Funil, Tarefas e Pedidos) rolam **para os lados só pela barra do topo**, logo acima das colunas: ela fica presa abaixo do menu enquanto você desce a página. Arraste o pegador dourado, clique na trilha ou use as setas **◀ ▶**. **Para baixo, a página rola direto**: as colunas mostram todos os leads, sem barra no rodapé. No celular, deslize o quadro com o dedo.
 
 ## Produtos e catálogo
 - Em **Estoque e custos → Importar produtos → Usar o catálogo Draven 2026**, o sistema cadastra os **60 itens** do catálogo de preços 2026 (`catalogo-2026.csv`): Angry, The Mist preta e vermelha, protetor de canela branco, Shark, The Eagle, pera de velocidade, raquete de foco, bastão de treino, saco de pancada, mochila, bolsa duffle e luvas de goleiro Astro, Lotus, Alpha I e Alpha II, cada cor com o seu **SKU (Art. DE-…)**, **preço de atacado** e **preço de varejo**.

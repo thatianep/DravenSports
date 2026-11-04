@@ -12,9 +12,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="DRAVEN">
 <!-- Gerado por ferramentas/montar.py a partir de versao-claude-ai/sistema-draven.html. Não edite à mão. -->
-<script src="config.js"></script>
+<script src="config.js?v=202611041558"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="drive-db.js"></script>
+<script src="drive-db.js?v=202611041558"></script>
 </head>
 <body>
 <style>.btn.ligar{color:#1E3A8A;border-color:#BFDBFE;text-decoration:none}.btn.ligar:hover{border-color:#1E3A8A}.btn.wa{text-decoration:none}</style>
@@ -2769,12 +2769,12 @@ window.DRAVEN_WAB=(function(){
   .kb-top .kb-thumb{position:absolute;top:2px;bottom:2px;left:0;min-width:40px;border-radius:999px;background:var(--accent);cursor:grab;box-shadow:0 1px 3px rgba(0,0,0,.15)}
   .kb-top .kb-thumb:hover,.kb-top.arrastando .kb-thumb{background:var(--accent-2)}
   .kb-top.arrastando .kb-thumb{cursor:grabbing}
-  .kb-nav small{flex:none;font-size:12px;color:var(--muted);min-width:96px;text-align:right}
 
   /* rolagem para os lados só pela barra do topo; para baixo, a página rola direto (colunas com a altura toda) */
-  .board-wrap{overflow-x:auto;overflow-y:hidden;scroll-behavior:smooth;scrollbar-width:none}
-  .board-wrap::-webkit-scrollbar{display:none}
+  .board-wrap{overflow-x:auto!important;overflow-y:hidden!important;scroll-behavior:smooth;scrollbar-width:none!important;padding-bottom:0!important}
+  .board-wrap::-webkit-scrollbar{display:none!important;height:0!important;width:0!important}
   .board{align-items:start}
+  .board .col{max-height:none!important;overflow:visible!important}
 
 }
 </style>
@@ -2784,9 +2784,9 @@ window.DRAVEN_WAB=(function(){
   function ligar(w){
     if(w.dataset.kb)return;w.dataset.kb='1';
     const nav=document.createElement('div');nav.className='kb-nav';
-    nav.innerHTML='<button type="button" data-kb="-1" aria-label="Colunas anteriores">◀</button><div class="kb-top" role="scrollbar" aria-orientation="horizontal" aria-label="Rolar as colunas" tabindex="0"><div class="kb-thumb"></div></div><button type="button" data-kb="1" aria-label="Próximas colunas">▶</button><small></small>';
+    nav.innerHTML='<button type="button" data-kb="-1" aria-label="Colunas anteriores">◀</button><div class="kb-top" role="scrollbar" aria-orientation="horizontal" aria-label="Rolar as colunas" tabindex="0"><div class="kb-thumb"></div></div><button type="button" data-kb="1" aria-label="Próximas colunas">▶</button>';
     w.parentNode.insertBefore(nav,w);
-    const top=nav.querySelector('.kb-top'),thumb=top.firstChild,info=nav.querySelector('small'),ant=nav.querySelector('[data-kb="-1"]'),prox=nav.querySelector('[data-kb="1"]');
+    const top=nav.querySelector('.kb-top'),thumb=top.firstChild,ant=nav.querySelector('[data-kb="-1"]'),prox=nav.querySelector('[data-kb="1"]');
     // barra própria (sempre visível, também no Mac): o pegador acompanha o quadro;
     // arrastar o pegador ou clicar na trilha move o quadro
     const geo=()=>{const tw=top.clientWidth,max=Math.max(1,w.scrollWidth-w.clientWidth),th=Math.min(tw,Math.max(40,tw*w.clientWidth/Math.max(1,w.scrollWidth)));return{tw,max,th,livre:Math.max(1,tw-th)}};
@@ -2795,9 +2795,6 @@ window.DRAVEN_WAB=(function(){
       nav.style.display=sobra>4?'':'none';
       const g=geo();thumb.style.width=g.th+'px';thumb.style.left=(Math.min(1,w.scrollLeft/g.max)*g.livre)+'px';
       top.setAttribute('aria-valuenow',String(Math.round(w.scrollLeft/g.max*100)));
-      const cols=[...w.querySelectorAll('.board > .col')],r=w.getBoundingClientRect();
-      const vis=cols.filter(c=>{const b=c.getBoundingClientRect();return b.right>r.left+40&&b.left<r.right-40});
-      if(cols.length&&vis.length)info.textContent=`colunas ${cols.indexOf(vis[0])+1}–${cols.indexOf(vis[vis.length-1])+1} de ${cols.length}`;
       ant.disabled=w.scrollLeft<=2;prox.disabled=w.scrollLeft>=sobra-2;
     };
     const irPara=x=>{const g=geo();w.style.scrollBehavior='auto';w.scrollLeft=Math.min(g.max,Math.max(0,x/g.livre*g.max));w.style.scrollBehavior=''};
