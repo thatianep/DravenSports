@@ -21,7 +21,8 @@ fieldset.vis-f .fg{margin:0}
 <script>
 window.DRAVEN_VIS=(function(){
   const LOCAIS={loja:'Na nossa loja',academia:'Na academia do lead'};
-  const cfgLoja=()=>((S.config||[]).find(x=>x.id==='loja')||{});
+  // endereço da loja: o salvo no sistema ou o da sede
+  const cfgLoja=()=>{const c=((S.config||[]).find(x=>x.id==='loja')||{});return{...c,endereco:c.endereco||'Av. Álvaro Ramos, 2401 - Quarta Parada, São Paulo - SP'}};
   const doisDig=n=>String(n).padStart(2,'0');
   const dataInp=ms=>{if(!ms)return'';const d=new Date(ms);return`${d.getFullYear()}-${doisDig(d.getMonth()+1)}-${doisDig(d.getDate())}`};
   const horaInp=ms=>{if(!ms)return'';const d=new Date(ms);return`${doisDig(d.getHours())}:${doisDig(d.getMinutes())}`};
@@ -140,7 +141,11 @@ window.DRAVEN_VIS=(function(){
       if(loc==='academia'&&!atual.endereco)dados.endereco=end;
       await salvar('clientes',id,dados);
       if(loc==='loja'&&end!==cfgLoja().endereco){try{await S.db.doc('config/loja').set({...cfgLoja(),endereco:end,atualizadoEm:agora})}catch(e){}}
-      toast('Visita agendada');return true;
+      toast('Visita agendada');
+      // já oferece a mensagem de pós-agendamento no WhatsApp
+      const cc=cli(id)||atual,num=(cc.telefone&&!cc.semWhats)?1:(cc.telefone2&&!cc.semWhats2)?2:0;
+      if(num&&window.DRAVEN_WAB)setTimeout(()=>DRAVEN_WAB.escolher(id,num,'visita_pos'),350);
+      return true;
     },{submitLabel:'Agendar visita'});
     const box=document.getElementById('va-end');
     document.querySelectorAll('#dlgForm input[name=local]').forEach(r=>r.addEventListener('change',()=>{

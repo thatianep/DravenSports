@@ -33,14 +33,19 @@ window.DRAVEN_WAB=(function(){
     geral:'Olá {contato}, tudo bem? Aqui é {vendedor}, da Draven Sports.',
     lead:'Olá {contato}, tudo bem? Aqui é {vendedor}, da Draven Sports. Fabricamos luvas, kimonos e equipamentos de luta, também com a marca de {nome}. Posso te mandar o nosso catálogo?',
     contato:'Olá {contato}! Segue o nosso catálogo: {catalogo}\nQual linha mais interessa para {nome}? Monto uma proposta sem compromisso.',
-    visita:'Olá {contato}, tudo bem? Aqui é {vendedor}, da Draven Sports. Passando para confirmar a nossa visita em {nome}. Vou levar amostras das luvas e kimonos para vocês verem de perto.',
+    visita_pos:'Combinado, {contato}! 🙌\n\nJá deixei agendado aqui para o dia {data}, às {hora}.\n\nUm pouquinho antes eu te chamo aqui só para confirmar, tá bom? Muito obrigada e um excelente trabalho por aí!',
+    visita_conf:'Oi, {contato}, tudo bem?\n\nPassando para confirmar nosso encontro no dia {data}, às {hora}!\n\nContinua tudo certo por aí para a gente conversar sobre a parceria com a Draven Sports? 👍',
+    visita_material:'Oi, {contato}, tudo certo?\n\nEstou montando o show-room que vou levar na nossa visita e queria confirmar com você: quais equipamentos ou acessórios você tem mais interesse em ver de perto?\n\nAssim já separo os modelos e cores ideais para o perfil dos seus alunos! 🥊',
+    visita_sede:'Olá, {contato}, tudo bem? 🥰\n\nEstamos ansiosos para te receber em nossa sede!\n\n🗓️ Data e Horário: {data}, às {hora}\n\n📍 Endereço: {endereco_loja}\n\nPrecisando de qualquer suporte com o caminho, estou à disposição. Até breve! 😉',
+    visita_externa:'Oi, {contato}, tudo bem?\n\nPassando para confirmar nossa visita na {nome} no dia {data}, às {hora}.\n\nVou levar nossa linha de produtos para você conhecer de perto a qualidade do nosso trabalho. Nos vemos em breve!',
     proposta:'Olá {contato}, tudo bem? Conseguiu ver a proposta que te enviei? Posso ajustar quantidades, cores ou prazo.',
     negociacao:'Olá {contato}! Consigo manter essa condição até {prazo}. Podemos fechar o pedido de {nome}?',
     ganho:'Olá {contato}, obrigado pela parceria! Quando precisar de reposição, é só chamar aqui.',
     perdido:'Olá {contato}, tudo bem? Chegaram novidades no nosso catálogo: {catalogo}\nVale uma olhada!'
   };
-  const NOMES={geral:'Saudação',lead:'Novo lead',contato:'Primeiro contato (catálogo)',visita:'Visita agendada (confirmar)',proposta:'Proposta enviada',negociacao:'Negociação',ganho:'Cliente ativo',perdido:'Perdido (reativar)'};
-  const ORDEM=['geral','lead','contato','visita','proposta','negociacao','ganho','perdido'];
+  const NOMES={geral:'Saudação',lead:'Novo lead',contato:'Primeiro contato (catálogo)',visita_pos:'1. Pós-agendamento (logo após marcar)',visita_conf:'2. Confirmação de agendamento',visita_material:'3. Confirmação de material para apresentação',visita_sede:'4. Visita à sede (cliente vem até a Draven)',visita_externa:'5. Visita externa (vamos até a academia)',proposta:'Proposta enviada',negociacao:'Negociação',ganho:'Cliente ativo',perdido:'Perdido (reativar)'};
+  const VISITA=['visita_pos','visita_conf','visita_material','visita_sede','visita_externa'];
+  const ORDEM=['geral','lead','contato',...VISITA,'proposta','negociacao','ganho','perdido'];
   const $w=s=>document.querySelector(s);
   const cfg=()=>((S.config||[]).find(x=>x.id==='whatsapp')||{});
   const soNum=t=>String(t||'').replace(/\D/g,'');
@@ -48,24 +53,41 @@ window.DRAVEN_WAB=(function(){
   function catalogo(){const c=cfg();if(c.catalogo)return c.catalogo;const n=numeroEmpresa();return n?'https://wa.me/c/'+n:''}
   function modelo(k){const m=(cfg().modelos||{})[k];return m!=null&&String(m).trim()?m:PADRAO[k]}
   const proxSexta=()=>{const d=new Date();d.setDate(d.getDate()+((5-d.getDay()+7)%7||7));return d.toLocaleDateString('pt-BR')};
+  const LOJA_PADRAO='Av. Álvaro Ramos, 2401 - Quarta Parada, São Paulo - SP';
+  const enderecoLoja=()=>(((S.config||[]).find(x=>x.id==='loja')||{}).endereco)||LOJA_PADRAO;
+  const dd=n=>String(n).padStart(2,'0');
   function preencher(txt,c){
-    const v={contato:String(c.contato||c.nome||'').trim().split(' ')[0],nome:c.nome||'',cidade:c.cidade||'',catalogo:catalogo()||'(peça o catálogo)',
-      vendedor:String((S.me&&S.me.name)||'a equipe').split(' ')[0],empresa:'Draven Sports',prazo:proxSexta()};
-    return String(txt||'').replace(/\{(\w+)\}/g,(m,k)=>k in v?v[k]:m).replace(/^Olá ,/,'Olá,').replace(/Olá !/,'Olá!');
+    const vis=c.visita&&c.visita.quando?c.visita:null,q=vis?new Date(vis.quando):null;
+    const v={contato:String(c.contato||'').trim().split(' ')[0],nome:c.nome||'',cidade:c.cidade||'',catalogo:catalogo()||'(peça o catálogo)',
+      vendedor:String((S.me&&S.me.name)||'a equipe').split(' ')[0],empresa:'Draven Sports',prazo:proxSexta(),
+      data:q?q.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'}):'[data]',
+      hora:q?`${dd(q.getHours())}:${dd(q.getMinutes())}`:'[horário]',
+      endereco:(vis&&vis.endereco)||'[endereço]',endereco_loja:enderecoLoja()};
+    // sem nome do contato, tira a vírgula sobrando: "Oi, , tudo bem?" vira "Oi, tudo bem?"
+    return String(txt||'').replace(/\{(\w+)\}/g,(m,k)=>k in v?v[k]:m).replace(/, ?(?=[,!?.])/g,'').replace(/ +(?=[,!?.])/g,'');
+  }
+  // qual modelo da visita abrir primeiro
+  function modeloVisita(c){
+    const v=c.visita;
+    if(!v||!v.quando)return'visita_conf';
+    if(v.agendadaEm&&Date.now()-v.agendadaEm<2*3600e3)return'visita_pos';
+    return v.local==='loja'?'visita_sede':'visita_externa';
   }
 
   let atual=null;
   let atualTel='';
-  function escolher(id,n){
+  function escolher(id,n,inicial){
     const c=typeof cli==='function'?cli(id):null;if(!c){return}
     atual=c;atualTel=n===2?c.telefone2:c.telefone;
-    const etapa=ORDEM.includes(c.etapa)?c.etapa:'geral';
+    const etapa=inicial&&ORDEM.includes(inicial)?inicial:c.etapa==='visita'?modeloVisita(c):ORDEM.includes(c.etapa)?c.etapa:'geral';
+    const atualEtapa=k=>k===etapa&&k!=='geral'&&!inicial;
     const ult=c.ultimoWhatsEm?`Último WhatsApp: ${fmtD(c.ultimoWhatsEm)}${c.ultimoWhatsPor?' por '+esc(pessoa(c.ultimoWhatsPor)):''}`:'Ainda sem WhatsApp registrado';
     const d=$w('#wamsg'),f=d.querySelector('form');
     f.innerHTML=`<div class="wm-h"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i><h2 id="wamsg-t">${esc(c.nome)}</h2><button type="button" class="btn ghost sm" data-wm="fechar" aria-label="Fechar">✕</button></div>
     <div class="wm-b">
       <div class="wm-info"><span><i class="fa-solid fa-phone"></i> ${esc(atualTel||'')}${n===2?' (telefone 2)':''}</span>${c.contato?`<span><i class="fa-solid fa-user"></i> ${esc(c.contato)}</span>`:''}<span>${etapaPill(c.etapa)}</span></div>
-      <label class="f">Mensagem pronta<select class="inp" id="wm-mod">${ORDEM.map(k=>`<option value="${k}" ${k===etapa?'selected':''}>${esc(NOMES[k])}${k===etapa&&k!=='geral'?' (etapa atual)':''}</option>`).join('')}<option value="livre">Escrever do zero</option></select></label>
+      <label class="f">Mensagem pronta<select class="inp" id="wm-mod">${(()=>{const op=k=>`<option value="${k}" ${k===etapa?'selected':''}>${esc(NOMES[k])}${atualEtapa(k)?' (sugerida)':''}</option>`;
+        return ORDEM.filter(k=>!VISITA.includes(k)).slice(0,3).map(op).join('')+`<optgroup label="Visita agendada">${VISITA.map(op).join('')}</optgroup>`+ORDEM.filter(k=>!VISITA.includes(k)).slice(3).map(op).join('')})()}<option value="livre">Escrever do zero</option></select></label>
       <label class="f">Texto (pode editar antes de enviar)<textarea class="inp" id="wm-txt"></textarea></label>
       <p class="ro" style="margin:0">${ult}</p>
       ${numeroEmpresa()?'':'<p class="ro" style="margin:0">Dica: a gestão pode cadastrar o número e o catálogo do WhatsApp Business em Equipe e permissões.</p>'}
@@ -120,7 +142,7 @@ window.DRAVEN_WAB=(function(){
       <label class="f">Número do WhatsApp Business *<input class="inp" id="wab-num" name="numero" inputmode="tel" value="${esc(c.numero||'')}" placeholder="(11) 98578-0370"></label>
       <label class="f">Link do catálogo<input class="inp" id="wab-cat" name="catalogo" value="${esc(c.catalogo||'')}" placeholder="vazio = catálogo do WhatsApp (wa.me/c/…)"></label>
      </div>
-     <p class="ro" style="margin:0">Nas mensagens você pode usar: {contato} {nome} {cidade} {catalogo} {vendedor} {prazo}. Deixe um campo vazio para voltar ao texto padrão.</p>
+     <p class="ro" style="margin:0">Nas mensagens você pode usar: {contato} (pessoa) {nome} (academia) {cidade} {catalogo} {vendedor} {prazo} e, na visita, {data} {hora} {endereco} {endereco_loja}. Deixe um campo vazio para voltar ao texto padrão.</p>
      ${ORDEM.map(k=>`<label class="f">${esc(NOMES[k])}<textarea class="inp" name="m_${k}" rows="3" placeholder="${esc(PADRAO[k])}">${esc(m[k]||'')}</textarea></label>`).join('')}
      <p class="err" id="v-err" hidden></p>`,
     async fd=>{
@@ -133,6 +155,6 @@ window.DRAVEN_WAB=(function(){
   }
   document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-wab="config"]');if(b){e.preventDefault();configurar()}});
 
-  return{escolher,painel,numeroEmpresa,catalogo};
+  return{escolher,painel,numeroEmpresa,catalogo,enderecoLoja,LOJA_PADRAO};
 })();
 </script>

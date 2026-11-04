@@ -67,6 +67,13 @@ A equipe toda atende pelo **mesmo número do WhatsApp Business** da empresa, cad
 - O envio fica na **linha do tempo do cliente** como "WhatsApp enviado", com o nome de quem mandou e a data. A ficha mostra o último WhatsApp registrado.
 - Cliente cujo número **não tem WhatsApp**: na ficha, aba Dados, marque **Este número não tem WhatsApp**. No lugar aparece o botão **Ligar**.
 - Botões de WhatsApp de pedidos e campanhas continuam mandando o texto do pedido ou da campanha direto.
+- **Mensagens da Visita agendada** (5 modelos, com dia, hora e endereço preenchidos sozinhos a partir da visita):
+  1. Pós-agendamento: abre sozinho logo depois de agendar a visita;
+  2. Confirmação de agendamento;
+  3. Confirmação de material para apresentação;
+  4. Visita à sede: com o endereço da loja (Av. Álvaro Ramos, 2401 - Quarta Parada, São Paulo - SP, ou o que estiver salvo);
+  5. Visita externa: com o nome da academia.
+  Para leads em Visita agendada, o sistema sugere o modelo certo (sede ou externa, conforme o local). Sem nome do contato na ficha, a saudação fica sem nome ("Oi, tudo bem?").
 - O WhatsApp Web não pode ficar dentro da página do sistema: o próprio WhatsApp bloqueia ser aberto dentro de outro site. Por isso ele fica numa janela ao lado.
 
 ## Filtro por forma de contato
