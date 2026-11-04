@@ -31,6 +31,7 @@ window.DRAVEN_WAB=(function(){
   // mensagens prontas de fábrica; a gestão muda em Equipe e permissões > WhatsApp Business
   const PADRAO={
     geral:'Olá {contato}, tudo bem? Aqui é {vendedor}, da Draven Sports.',
+    lead_resp:'Olá, tudo bem? 🥰\n\nSou a {vendedor}, da Draven Sports. Gostaria de falar com a pessoa responsável pelas compras ou pela parte de equipamentos e acessórios da academia.\n\nPoderia me direcionar, por gentileza?',
     lead:'Olá {contato}, tudo bem? Aqui é {vendedor}, da Draven Sports. Fabricamos luvas, kimonos e equipamentos de luta, também com a marca de {nome}. Posso te mandar o nosso catálogo?',
     contato:'Olá {contato}! Segue o nosso catálogo: {catalogo}\nQual linha mais interessa para {nome}? Monto uma proposta sem compromisso.',
     visita_pos:'Combinado, {contato}! 🙌\n\nJá deixei agendado aqui para o dia {data}, às {hora}.\n\nUm pouquinho antes eu te chamo aqui só para confirmar, tá bom? Muito obrigada e um excelente trabalho por aí!',
@@ -43,9 +44,10 @@ window.DRAVEN_WAB=(function(){
     ganho:'Olá {contato}, obrigado pela parceria! Quando precisar de reposição, é só chamar aqui.',
     perdido:'Olá {contato}, tudo bem? Chegaram novidades no nosso catálogo: {catalogo}\nVale uma olhada!'
   };
-  const NOMES={geral:'Saudação',lead:'Novo lead',contato:'Primeiro contato (catálogo)',visita_pos:'1. Pós-agendamento (logo após marcar)',visita_conf:'2. Confirmação de agendamento',visita_material:'3. Confirmação de material para apresentação',visita_sede:'4. Visita à sede (cliente vem até a Draven)',visita_externa:'5. Visita externa (vamos até a academia)',proposta:'Proposta enviada',negociacao:'Negociação',ganho:'Cliente ativo',perdido:'Perdido (reativar)'};
+  const NOMES={geral:'Saudação',lead_resp:'1. Falar com o responsável pelas compras',lead:'2. Apresentação e catálogo',contato:'Primeiro contato (catálogo)',visita_pos:'1. Pós-agendamento (logo após marcar)',visita_conf:'2. Confirmação de agendamento',visita_material:'3. Confirmação de material para apresentação',visita_sede:'4. Visita à sede (cliente vem até a Draven)',visita_externa:'5. Visita externa (vamos até a academia)',proposta:'Proposta enviada',negociacao:'Negociação',ganho:'Cliente ativo',perdido:'Perdido (reativar)'};
   const VISITA=['visita_pos','visita_conf','visita_material','visita_sede','visita_externa'];
-  const ORDEM=['geral','lead','contato',...VISITA,'proposta','negociacao','ganho','perdido'];
+  const LEAD=['lead_resp','lead'];
+  const ORDEM=['geral',...LEAD,'contato',...VISITA,'proposta','negociacao','ganho','perdido'];
   const $w=s=>document.querySelector(s);
   const cfg=()=>((S.config||[]).find(x=>x.id==='whatsapp')||{});
   const soNum=t=>String(t||'').replace(/\D/g,'');
@@ -79,7 +81,7 @@ window.DRAVEN_WAB=(function(){
   function escolher(id,n,inicial){
     const c=typeof cli==='function'?cli(id):null;if(!c){return}
     atual=c;atualTel=n===2?c.telefone2:c.telefone;
-    const etapa=inicial&&ORDEM.includes(inicial)?inicial:c.etapa==='visita'?modeloVisita(c):ORDEM.includes(c.etapa)?c.etapa:'geral';
+    const etapa=inicial&&ORDEM.includes(inicial)?inicial:c.etapa==='visita'?modeloVisita(c):(c.etapa||'lead')==='lead'?'lead_resp':ORDEM.includes(c.etapa)?c.etapa:'geral';
     const atualEtapa=k=>k===etapa&&k!=='geral'&&!inicial;
     const ult=c.ultimoWhatsEm?`Último WhatsApp: ${fmtD(c.ultimoWhatsEm)}${c.ultimoWhatsPor?' por '+esc(pessoa(c.ultimoWhatsPor)):''}`:'Ainda sem WhatsApp registrado';
     const d=$w('#wamsg'),f=d.querySelector('form');
@@ -87,7 +89,7 @@ window.DRAVEN_WAB=(function(){
     <div class="wm-b">
       <div class="wm-info"><span><i class="fa-solid fa-phone"></i> ${esc(atualTel||'')}${n===2?' (telefone 2)':''}</span>${c.contato?`<span><i class="fa-solid fa-user"></i> ${esc(c.contato)}</span>`:''}<span>${etapaPill(c.etapa)}</span></div>
       <label class="f">Mensagem pronta<select class="inp" id="wm-mod">${(()=>{const op=k=>`<option value="${k}" ${k===etapa?'selected':''}>${esc(NOMES[k])}${atualEtapa(k)?' (sugerida)':''}</option>`;
-        return ORDEM.filter(k=>!VISITA.includes(k)).slice(0,3).map(op).join('')+`<optgroup label="Visita agendada">${VISITA.map(op).join('')}</optgroup>`+ORDEM.filter(k=>!VISITA.includes(k)).slice(3).map(op).join('')})()}<option value="livre">Escrever do zero</option></select></label>
+        const resto=ORDEM.filter(k=>!VISITA.includes(k)&&!LEAD.includes(k));return op('geral')+`<optgroup label="Novo lead">${LEAD.map(op).join('')}</optgroup>`+op('contato')+`<optgroup label="Visita agendada">${VISITA.map(op).join('')}</optgroup>`+resto.filter(k=>k!=='geral'&&k!=='contato').map(op).join('')})()}<option value="livre">Escrever do zero</option></select></label>
       <label class="f">Texto (pode editar antes de enviar)<textarea class="inp" id="wm-txt"></textarea></label>
       <p class="ro" style="margin:0">${ult}</p>
       ${numeroEmpresa()?'':'<p class="ro" style="margin:0">Dica: a gestão pode cadastrar o número e o catálogo do WhatsApp Business em Equipe e permissões.</p>'}

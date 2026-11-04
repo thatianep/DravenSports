@@ -67,6 +67,7 @@ A equipe toda atende pelo **mesmo número do WhatsApp Business** da empresa, cad
 - O envio fica na **linha do tempo do cliente** como "WhatsApp enviado", com o nome de quem mandou e a data. A ficha mostra o último WhatsApp registrado.
 - Cliente cujo número **não tem WhatsApp**: na ficha, aba Dados, marque **Este número não tem WhatsApp**. No lugar aparece o botão **Ligar**.
 - Botões de WhatsApp de pedidos e campanhas continuam mandando o texto do pedido ou da campanha direto.
+- **Mensagens do Novo lead:** 1. Falar com o responsável pelas compras ("Olá, tudo bem? 🥰 Sou a {vendedor}, da Draven Sports. Gostaria de falar com a pessoa responsável pelas compras…") — é a sugerida para leads em Novo lead; 2. Apresentação e catálogo. {vendedor} vira o primeiro nome de quem envia.
 - **Mensagens da Visita agendada** (5 modelos, com dia, hora e endereço preenchidos sozinhos a partir da visita):
   1. Pós-agendamento: abre sozinho logo depois de agendar a visita;
   2. Confirmação de agendamento;
