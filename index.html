@@ -12,9 +12,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="DRAVEN">
 <!-- Gerado por ferramentas/montar.py a partir de versao-claude-ai/sistema-draven.html. Não edite à mão. -->
-<script src="config.js?v=202611041558"></script>
+<script src="config.js?v=202611041607"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="drive-db.js?v=202611041558"></script>
+<script src="drive-db.js?v=202611041607"></script>
 </head>
 <body>
 <style>.btn.ligar{color:#1E3A8A;border-color:#BFDBFE;text-decoration:none}.btn.ligar:hover{border-color:#1E3A8A}.btn.wa{text-decoration:none}</style>
@@ -725,7 +725,7 @@ function vCrm(){
    <div class="tabs" role="tablist" style="border:0"><button role="tab" aria-selected="${S.crmModo==='funil'}" data-a="crm-modo" data-v="funil">Funil</button><button role="tab" aria-selected="${S.crmModo==='lista'}" data-a="crm-modo" data-v="lista">Lista</button></div>
    <select class="inp" id="w-crm" data-f="wcrm" aria-label="Filtrar por forma de contato"><option value="">Todos os contatos</option><option value="whats" ${f.wcrm==='whats'?'selected':''}>Com WhatsApp</option><option value="ligar" ${f.wcrm==='ligar'?'selected':''}>Só ligação (fixo)</option><option value="sem" ${f.wcrm==='sem'?'selected':''}>Sem telefone</option></select><select class="inp" id="o-crm" data-f="ocrm"><option value="">Todos os canais</option>${ORIGENS.map(t=>`<option ${f.ocrm===t?'selected':''}>${t}</option>`).join('')}</select>
    ${pode('crm')?'<button class="btn" data-a="importar-leads"><i class="fa-solid fa-file-import"></i> Importar</button><button class="btn pri" data-a="novo-lead"><i class="fa-solid fa-user-plus"></i> Novo lead</button>':''}</div></div>
-  <div id="body">${crmBody()}</div>`;
+  ${window.DRAVEN_FUNIL?DRAVEN_FUNIL.kpis():''}<div id="body">${crmBody()}</div>`;
 }
 function filtroContato(c,f){if(!f)return true;const dig=t=>String(t||'').replace(/\D/g,'');const whats=n=>!!dig(n===2?c.telefone2:c.telefone)&&!(n===2?c.semWhats2:c.semWhats);const tel=!!dig(c.telefone)||!!dig(c.telefone2);
   if(f==='whats')return whats(1)||whats(2);if(f==='ligar')return tel&&!whats(1)&&!whats(2);if(f==='sem')return!tel;return true}
@@ -739,12 +739,10 @@ function crmBody(){
     ${lista.sort((a,b)=>(a.nome||'').localeCompare(b.nome||'')).map(c=>`<tr class="click" data-a="edit-cliente" data-id="${c.id}"><td><b>${esc(c.nome)}</b><div class="ro">${esc(c.contato||'')}</div></td><td>${esc(c.tipo||'')}</td><td>${esc(c.cidade||'')}</td><td>${etapaPill(c.etapa)}</td><td class="num">${c.valorEstimado?money(c.valorEstimado):'—'}</td><td>${esc(c.proximaAcao||'')} ${due(c.dataProxima,ini,fim)}</td><td>${window.DRAVEN_VIS?DRAVEN_VIS.uaCol(c):''}</td><td>${esc(pessoa(c.responsavel))}</td><td>${(waCli(c)+(c.telefone2?' '+waCli(c,'',2):''))||'<span class="ro">Sem telefone</span>'}</td></tr>`).join('')||'<tr><td colspan="9" class="ro">Nenhum contato encontrado com esse filtro.</td></tr>'}
     </tbody></table></div>`;
   }
-  return`${pode('crm')?KB_DICA:''}<div class="board-wrap"><div class="board">${ETAPAS.map(e=>{const cs=lista.filter(c=>(c.etapa||'lead')===e.id);
+  return`${pode('crm')?KB_DICA:''}<div class="board-wrap"><div class="board kb-lead" style="grid-template-columns:repeat(${ETAPAS.length},minmax(155px,1fr));min-width:0">${ETAPAS.map(e=>{const cs=lista.filter(c=>(c.etapa||'lead')===e.id);
     return`<div class="col" data-drop="lead" data-col="${e.id}"><div class="col-h"><span class="lft"><span class="dot" style="background:var(--st-${e.id})"></span><b>${e.nome}</b><span class="cnt">${cs.length}</span></span><span>${cs.length?money(sum(cs,c=>c.valorEstimado)):''}</span></div>
     ${cs.length?'':`<div class="col-vazia">${pode('crm')?'Arraste um contato para cá':'Nenhum contato nesta etapa'}</div>`}
-    ${cs.map(c=>`<div class="card" data-a="edit-cliente" data-id="${c.id}" tabindex="0"${pode('crm')?` data-drag="lead" data-from="${c.etapa||'lead'}"`:''}><div class="t">${esc(c.nome)}</div>${window.DRAVEN_VIS?DRAVEN_VIS.visCard(c)+DRAVEN_VIS.uaCard(c):''}${c.origem?`<div><span class="pill">${esc(c.origem)}</span></div>`:''}<div class="d">${esc([c.tipo,c.cidade].filter(Boolean).join(' · '))}</div>
-     ${c.proximaAcao||c.dataProxima?`<div class="d">${esc(c.proximaAcao||'')} ${due(c.dataProxima,ini,fim)}</div>`:''}
-     <div class="row"><span class="ro">${c.valorEstimado?money(c.valorEstimado):''}</span>${waCli(c)}${c.telefone2?waCli(c,'',2):''}${pode('crm')?`<select aria-label="Mover etapa" data-etapa="${c.id}">${ETAPAS.map(x=>`<option value="${x.id}" ${x.id===(c.etapa||'lead')?'selected':''}>${x.nome}</option>`).join('')}</select>`:''}</div></div>`).join('')}
+    ${cs.map(c=>window.DRAVEN_FUNIL?DRAVEN_FUNIL.card(c,ini,fim):'').join('')}
     </div>`}).join('')}</div></div>`;
 }
 function etapaPill(id){const e=ETAPAS.find(x=>x.id===id)||ETAPAS[0];const cls={ganho:'ok',perdido:'',negociacao:'warn',proposta:'info',visita:'info'}[e.id]||'acc';return`<span class="pill ${cls}">${e.nome}</span>`}
@@ -1655,7 +1653,7 @@ const colPedido=v=>(v.status==='orcamento'||v.status==='confirmado')&&loteAberto
 function pedidosQuadro(l){
   const fim=new Date().setHours(23,59,59,999),ini=fim-86399999;
   const arrasta=pode('vendas')||pode('producao')||pode('entregar');
-  return`${arrasta?KB_DICA:''}<div class="board-wrap"><div class="board" style="grid-template-columns:repeat(5,minmax(270px,1fr));min-width:1420px">${PED_COL.map(c=>{
+  return`${arrasta?KB_DICA:''}<div class="board-wrap"><div class="board" style="grid-template-columns:repeat(5,minmax(190px,1fr));min-width:0">${PED_COL.map(c=>{
     let vs=l.filter(v=>colPedido(v)===c.id);const tot=sum(vs,v=>v.total);
     vs=vs.sort((a,b)=>c.id==='entregue'||c.id==='cancelado'?(b.data||0)-(a.data||0):(a.prazo||a.data||0)-(b.prazo||b.data||0));
     const mais=(c.id==='entregue'||c.id==='cancelado')&&vs.length>15?vs.length-15:0;if(mais)vs=vs.slice(0,15);
@@ -2918,6 +2916,61 @@ window.DRAVEN_PROD=(function(){
   }
   document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-a="importar-produtos"]');if(b){e.preventDefault();e.stopPropagation();formImportar()}},true);
   return{formImportar,lerCsv,preparar};
+})();
+</script>
+<!-- Funil CRM no mesmo padrão da aba Tarefas: indicadores no topo, colunas na largura da tela e card no mesmo formato.
+     Entra no index.html pelo ferramentas/montar.py, depois do sistema. -->
+<style>
+@media (min-width:901px){
+  .board.kb-lead{gap:10px}
+  .board.kb-lead .col{padding:10px}
+  .board.kb-lead .card{padding:11px}
+  .board.kb-lead .card .row:first-child{justify-content:space-between}
+  .board.kb-lead .card .row{flex-wrap:wrap}
+  .board.kb-lead .card select{max-width:100%}
+  .board.kb-lead .card .acoes{display:flex;gap:6px;flex-wrap:wrap}
+  .board.kb-lead .card .acoes:empty{display:none}
+}
+.card .tk-tipo i{width:12px;text-align:center}
+</style>
+<script>
+window.DRAVEN_FUNIL=(function(){
+  const ICO={'Academia':'fa-dumbbell','Equipe/Time':'fa-people-group','Escolinha de futebol':'fa-futbol','Loja':'fa-store','Distribuidor':'fa-truck','Atleta':'fa-user','Outro':'fa-building'};
+  const ehAberto=c=>!['ganho','perdido'].includes(c.etapa||'lead');
+  // card do lead no formato do card de tarefa
+  function card(c,ini,fim){
+    const pc=pode('crm');
+    const tipo=c.tipo||'Lead';
+    const linhaCli=[c.contato?`<span class="tk-cli">${esc(c.contato)}</span>`:'',esc(c.cidade||'')].filter(Boolean).join(' · ');
+    const prazo=c.dataProxima?due(c.dataProxima,ini,fim):(c.valorEstimado?`<span class="due">${money(c.valorEstimado)}</span>`:'');
+    const botoes=(waCli(c)||'')+(c.telefone2?waCli(c,'',2):'');
+    return`<div class="card" data-a="edit-cliente" data-id="${c.id}" tabindex="0"${pc?` data-drag="lead" data-from="${c.etapa||'lead'}"`:''}>
+      <div class="row"><span class="tk-tipo"><i class="fa-solid ${ICO[tipo]||'fa-building'}" aria-hidden="true"></i>${esc(tipo)}</span>${c.origem?`<span class="pill">${esc(c.origem)}</span>`:''}</div>
+      <div class="t">${esc(c.nome)}</div>
+      ${linhaCli?`<div class="d">${linhaCli}</div>`:''}
+      ${window.DRAVEN_VIS?DRAVEN_VIS.visCard(c):''}
+      ${c.proximaAcao?`<div class="d">${esc(c.proximaAcao)}</div>`:''}
+      <div class="row"><span class="who">${esc(c.responsavel?pessoa(c.responsavel):'Sem responsável')}</span>${prazo}</div>
+      ${window.DRAVEN_VIS?DRAVEN_VIS.uaCard(c):''}
+      ${botoes?`<div class="acoes">${botoes}</div>`:''}
+      ${pc?`<div class="row"><span></span><select aria-label="Mover etapa" data-etapa="${c.id}">${ETAPAS.map(x=>`<option value="${x.id}" ${x.id===(c.etapa||'lead')?'selected':''}>${x.nome}</option>`).join('')}</select></div>`:''}
+    </div>`;
+  }
+  // indicadores no topo, como em Tarefas
+  function kpis(){
+    const fim=new Date().setHours(23,59,59,999),ini=fim-86399999,sem=fim+7*864e5;
+    const ab=S.clientes.filter(ehAberto);
+    const atras=ab.filter(c=>c.dataProxima&&c.dataProxima<ini).length;
+    const hoje=ab.filter(c=>c.dataProxima>=ini&&c.dataProxima<=fim).length;
+    let vis=0;for(const c of S.clientes){const l=window.DRAVEN_VIS?DRAVEN_VIS.visitasDe(c):[];vis+=l.filter(v=>v.status==='agendada'&&v.quando>=ini&&v.quando<=sem).length}
+    return`<div class="kpis">
+     <div class="kpi ${atras?'alert':''}"><small>Atrasadas</small><b>${atras}</b><span>próxima ação já passou</span></div>
+     <div class="kpi"><small>Para hoje</small><b class="${hoje?'acc':''}">${hoje}</b><span>leads com ação hoje</span></div>
+     <div class="kpi"><small>No funil</small><b>${ab.length}</b><span>leads em aberto</span></div>
+     <div class="kpi"><small>Visitas em 7 dias</small><b class="ok">${vis}</b><span>agendadas na semana</span></div>
+    </div>`;
+  }
+  return{card,kpis};
 })();
 </script>
 <!-- Ajustes de celular e tablet. Entra no index.html pelo ferramentas/montar.py, depois do sistema.

@@ -1,0 +1,55 @@
+<!-- Funil CRM no mesmo padrão da aba Tarefas: indicadores no topo, colunas na largura da tela e card no mesmo formato.
+     Entra no index.html pelo ferramentas/montar.py, depois do sistema. -->
+<style>
+@media (min-width:901px){
+  .board.kb-lead{gap:10px}
+  .board.kb-lead .col{padding:10px}
+  .board.kb-lead .card{padding:11px}
+  .board.kb-lead .card .row:first-child{justify-content:space-between}
+  .board.kb-lead .card .row{flex-wrap:wrap}
+  .board.kb-lead .card select{max-width:100%}
+  .board.kb-lead .card .acoes{display:flex;gap:6px;flex-wrap:wrap}
+  .board.kb-lead .card .acoes:empty{display:none}
+}
+.card .tk-tipo i{width:12px;text-align:center}
+</style>
+<script>
+window.DRAVEN_FUNIL=(function(){
+  const ICO={'Academia':'fa-dumbbell','Equipe/Time':'fa-people-group','Escolinha de futebol':'fa-futbol','Loja':'fa-store','Distribuidor':'fa-truck','Atleta':'fa-user','Outro':'fa-building'};
+  const ehAberto=c=>!['ganho','perdido'].includes(c.etapa||'lead');
+  // card do lead no formato do card de tarefa
+  function card(c,ini,fim){
+    const pc=pode('crm');
+    const tipo=c.tipo||'Lead';
+    const linhaCli=[c.contato?`<span class="tk-cli">${esc(c.contato)}</span>`:'',esc(c.cidade||'')].filter(Boolean).join(' · ');
+    const prazo=c.dataProxima?due(c.dataProxima,ini,fim):(c.valorEstimado?`<span class="due">${money(c.valorEstimado)}</span>`:'');
+    const botoes=(waCli(c)||'')+(c.telefone2?waCli(c,'',2):'');
+    return`<div class="card" data-a="edit-cliente" data-id="${c.id}" tabindex="0"${pc?` data-drag="lead" data-from="${c.etapa||'lead'}"`:''}>
+      <div class="row"><span class="tk-tipo"><i class="fa-solid ${ICO[tipo]||'fa-building'}" aria-hidden="true"></i>${esc(tipo)}</span>${c.origem?`<span class="pill">${esc(c.origem)}</span>`:''}</div>
+      <div class="t">${esc(c.nome)}</div>
+      ${linhaCli?`<div class="d">${linhaCli}</div>`:''}
+      ${window.DRAVEN_VIS?DRAVEN_VIS.visCard(c):''}
+      ${c.proximaAcao?`<div class="d">${esc(c.proximaAcao)}</div>`:''}
+      <div class="row"><span class="who">${esc(c.responsavel?pessoa(c.responsavel):'Sem responsável')}</span>${prazo}</div>
+      ${window.DRAVEN_VIS?DRAVEN_VIS.uaCard(c):''}
+      ${botoes?`<div class="acoes">${botoes}</div>`:''}
+      ${pc?`<div class="row"><span></span><select aria-label="Mover etapa" data-etapa="${c.id}">${ETAPAS.map(x=>`<option value="${x.id}" ${x.id===(c.etapa||'lead')?'selected':''}>${x.nome}</option>`).join('')}</select></div>`:''}
+    </div>`;
+  }
+  // indicadores no topo, como em Tarefas
+  function kpis(){
+    const fim=new Date().setHours(23,59,59,999),ini=fim-86399999,sem=fim+7*864e5;
+    const ab=S.clientes.filter(ehAberto);
+    const atras=ab.filter(c=>c.dataProxima&&c.dataProxima<ini).length;
+    const hoje=ab.filter(c=>c.dataProxima>=ini&&c.dataProxima<=fim).length;
+    let vis=0;for(const c of S.clientes){const l=window.DRAVEN_VIS?DRAVEN_VIS.visitasDe(c):[];vis+=l.filter(v=>v.status==='agendada'&&v.quando>=ini&&v.quando<=sem).length}
+    return`<div class="kpis">
+     <div class="kpi ${atras?'alert':''}"><small>Atrasadas</small><b>${atras}</b><span>próxima ação já passou</span></div>
+     <div class="kpi"><small>Para hoje</small><b class="${hoje?'acc':''}">${hoje}</b><span>leads com ação hoje</span></div>
+     <div class="kpi"><small>No funil</small><b>${ab.length}</b><span>leads em aberto</span></div>
+     <div class="kpi"><small>Visitas em 7 dias</small><b class="ok">${vis}</b><span>agendadas na semana</span></div>
+    </div>`;
+  }
+  return{card,kpis};
+})();
+</script>

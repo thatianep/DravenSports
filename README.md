@@ -91,6 +91,9 @@ Combina com a busca e com os filtros de tipo e canal.
 - Na ficha do lead (aba Dados) ficam o **Endereço** da academia, a lista de **Visitas** e o botão **Agendar nova visita**.
 - **Última ação:** cada card do funil e a lista do CRM mostram a ação mais recente com o lead, quando foi e quem fez: WhatsApp enviado, ligação, visita, troca de etapa, tarefa concluída, orçamento ou pedido. Atualiza sozinho. Clicar em **Ligar** também fica registrado.
 
+## Funil no padrão das Tarefas
+O **Funil CRM** segue o mesmo padrão da aba **Tarefas**: indicadores no topo (**Atrasadas**, **Para hoje**, **No funil** e **Visitas em 7 dias**), todas as colunas na largura da tela e card no mesmo formato (tipo do lead e canal em cima, nome, contato e cidade, visitas, próxima ação, responsável e prazo, última ação, botões WhatsApp/Ligar e a etapa). O quadro de **Pedidos** também passou a caber na largura da tela.
+
 ## Rolagem do funil
 No computador, os quadros (Funil, Tarefas e Pedidos) rolam **para os lados só pela barra do topo**, logo acima das colunas: ela fica presa abaixo do menu enquanto você desce a página. Arraste o pegador dourado, clique na trilha ou use as setas **◀ ▶**. **Para baixo, a página rola direto**: as colunas mostram todos os leads, sem barra no rodapé. No celular, deslize o quadro com o dedo.
 
