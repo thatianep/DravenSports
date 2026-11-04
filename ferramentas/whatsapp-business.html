@@ -54,15 +54,16 @@ window.DRAVEN_WAB=(function(){
   }
 
   let atual=null;
-  function escolher(id){
+  let atualTel='';
+  function escolher(id,n){
     const c=typeof cli==='function'?cli(id):null;if(!c){return}
-    atual=c;
+    atual=c;atualTel=n===2?c.telefone2:c.telefone;
     const etapa=ORDEM.includes(c.etapa)?c.etapa:'geral';
     const ult=c.ultimoWhatsEm?`Último WhatsApp: ${fmtD(c.ultimoWhatsEm)}${c.ultimoWhatsPor?' por '+esc(pessoa(c.ultimoWhatsPor)):''}`:'Ainda sem WhatsApp registrado';
     const d=$w('#wamsg'),f=d.querySelector('form');
     f.innerHTML=`<div class="wm-h"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i><h2 id="wamsg-t">${esc(c.nome)}</h2><button type="button" class="btn ghost sm" data-wm="fechar" aria-label="Fechar">✕</button></div>
     <div class="wm-b">
-      <div class="wm-info"><span><i class="fa-solid fa-phone"></i> ${esc(c.telefone||'')}</span>${c.contato?`<span><i class="fa-solid fa-user"></i> ${esc(c.contato)}</span>`:''}<span>${etapaPill(c.etapa)}</span></div>
+      <div class="wm-info"><span><i class="fa-solid fa-phone"></i> ${esc(atualTel||'')}${n===2?' (telefone 2)':''}</span>${c.contato?`<span><i class="fa-solid fa-user"></i> ${esc(c.contato)}</span>`:''}<span>${etapaPill(c.etapa)}</span></div>
       <label class="f">Mensagem pronta<select class="inp" id="wm-mod">${ORDEM.map(k=>`<option value="${k}" ${k===etapa?'selected':''}>${esc(NOMES[k])}${k===etapa&&k!=='geral'?' (etapa atual)':''}</option>`).join('')}<option value="livre">Escrever do zero</option></select></label>
       <label class="f">Texto (pode editar antes de enviar)<textarea class="inp" id="wm-txt"></textarea></label>
       <p class="ro" style="margin:0">${ult}</p>
@@ -78,7 +79,7 @@ window.DRAVEN_WAB=(function(){
   function enviar(){
     const c=atual;if(!c)return;
     const txt=$w('#wm-txt').value.trim(),mod=$w('#wm-mod').value;
-    const url=waLink(c.telefone,txt);
+    const url=waLink(atualTel||c.telefone,txt);
     $w('#wamsg').close();
     if(!url)return;
     // registra na linha do tempo do cliente: quem mandou, quando e qual mensagem

@@ -83,6 +83,9 @@ function vEquipe(){""", 1),
     # linha do tempo: envios de WhatsApp aparecem como tal
     ("(c.historico||[]).forEach(h=>ev.push({em:h.em,t:'Anotação',d:h.txt,por:h.por}));",
      "(c.historico||[]).forEach(h=>ev.push({em:h.em,t:h.tipo==='whatsapp'?'WhatsApp enviado':'Anotação',d:h.txt,por:h.por}));", 1),
+    # ficha: campo Telefone 2
+    ('<label class="f">WhatsApp / telefone<input class="inp" id="c-tel" name="telefone" value="${esc(c.telefone||\'\')}" placeholder="(11) 90000-0000" ${d}></label>',
+     '<label class="f">WhatsApp / telefone<input class="inp" id="c-tel" name="telefone" value="${esc(c.telefone||\'\')}" placeholder="(11) 90000-0000" ${d}></label>\n   <label class="f">Telefone 2<input class="inp" id="c-tel2" name="telefone2" value="${esc(c.telefone2||\'\')}" placeholder="opcional" ${d}></label>', 1),
     # ---- WhatsApp Web ao lado do sistema ----
     # no computador as conversas abrem no WhatsApp Web; no celular, no aplicativo
     ("return`https://wa.me/${d}${msg?'?text='+encodeURIComponent(msg):''}`}",
@@ -93,24 +96,24 @@ function vEquipe(){""", 1),
 function waSaudacao(c){const n=String(c.contato||'').trim().split(' ')[0];return`Olá${n?' '+n:''}, tudo bem? Aqui é da Draven Sports.`}
 function telLink(tel){let d=String(tel||'').replace(/\\D/g,'');if(!d)return'';if(d.length<=11)d='55'+d;return'tel:+'+d}
 function ligarBtn(c,label){const u=telLink(c.telefone);return u?`<a class="btn sm ligar wa-cli" href="${esc(u)}" aria-label="Ligar para ${esc(c.nome)}" title="Ligar: ${esc(c.telefone)}"><i class="fa-solid fa-phone"></i> ${label||'Ligar'}</a>`:''}
-function waCli(c,label){if(c.semWhats)return ligarBtn(c,label&&'Ligar para o cliente');const u=waLink(c.telefone,waSaudacao(c));return u?`<a class="btn sm wa wa-cli" data-wacli="${esc(c.id)}" href="${esc(u)}" target="_blank" rel="noopener" aria-label="WhatsApp de ${esc(c.nome)}" title="Conversar no WhatsApp: ${esc(c.telefone)}"><i class="fa-brands fa-whatsapp"></i> ${label||'WhatsApp'}</a>`:''}""", 1),
+function waCli(c,label,n){const t=n===2?c.telefone2:c.telefone,sem=n===2?c.semWhats2:c.semWhats;if(!t)return'';if(sem){const u=telLink(t);return u?`<a class="btn sm ligar wa-cli" href="${esc(u)}" aria-label="Ligar para ${esc(c.nome)}" title="Ligar: ${esc(t)}"><i class="fa-solid fa-phone"></i> ${label||(n===2?'Ligar 2':'Ligar')}</a>`:''}const u=waLink(t,waSaudacao(c));return u?`<a class="btn sm wa wa-cli" data-wacli="${esc(c.id)}" data-wafone="${n===2?2:1}" href="${esc(u)}" target="_blank" rel="noopener" aria-label="WhatsApp de ${esc(c.nome)}" title="Conversar no WhatsApp: ${esc(t)}"><i class="fa-brands fa-whatsapp"></i> ${label||(n===2?'WhatsApp 2':'WhatsApp')}</a>`:''}""", 1),
     # funil: botão no card
     ('''<div class="row"><span class="ro">${c.valorEstimado?money(c.valorEstimado):''}</span>${pode('crm')?`<select aria-label="Mover etapa"''',
-     '''<div class="row"><span class="ro">${c.valorEstimado?money(c.valorEstimado):''}</span>${waCli(c)}${pode('crm')?`<select aria-label="Mover etapa"''', 1),
+     '''<div class="row"><span class="ro">${c.valorEstimado?money(c.valorEstimado):''}</span>${waCli(c)}${c.telefone2?waCli(c,'',2):''}${pode('crm')?`<select aria-label="Mover etapa"''', 1),
     # funil em lista: coluna WhatsApp
     ('<th>Responsável</th></tr></thead>', '<th>Responsável</th><th>WhatsApp / Ligar</th></tr></thead>', 1),
-    ('<td>${esc(pessoa(c.responsavel))}</td></tr>', """<td>${esc(pessoa(c.responsavel))}</td><td>${waCli(c)||'<span class="ro">Sem telefone</span>'}</td></tr>""", 1),
+    ('<td>${esc(pessoa(c.responsavel))}</td></tr>', """<td>${esc(pessoa(c.responsavel))}</td><td>${(waCli(c)+(c.telefone2?' '+waCli(c,'',2):''))||'<span class="ro">Sem telefone</span>'}</td></tr>""", 1),
     ('<tr><td colspan="7" class="ro">Nenhum contato encontrado com esse filtro.</td></tr>', '<tr><td colspan="8" class="ro">Nenhum contato encontrado com esse filtro.</td></tr>', 1),
     # Clientes 360°: coluna WhatsApp
     ('<th>Consentimento</th></tr>', '<th>Consentimento</th><th>WhatsApp / Ligar</th></tr>', 1),
-    ("""'<span class="ro">Sem registro</span>':''}</td></tr>""", """'<span class="ro">Sem registro</span>':''}</td><td>${waCli(c)||'<span class="ro">Sem telefone</span>'}</td></tr>""", 1),
+    ("""'<span class="ro">Sem registro</span>':''}</td></tr>""", """'<span class="ro">Sem registro</span>':''}</td><td>${(waCli(c)+(c.telefone2?' '+waCli(c,'',2):''))||'<span class="ro">Sem telefone</span>'}</td></tr>""", 1),
     ('<tr><td colspan="8" class="ro">Nenhum cliente neste filtro.</td></tr>', '<tr><td colspan="9" class="ro">Nenhum cliente neste filtro.</td></tr>', 1),
     # ficha do cliente: já abre com a saudação
-    ("(c.id?waBtn(c.telefone,'','Abrir WhatsApp'):'')", "(c.id?waCli(c,'Abrir WhatsApp'):'')", 1),
+    ("(c.id?waBtn(c.telefone,'','Abrir WhatsApp'):'')", "(c.id?waCli(c,c.semWhats?'Ligar para o cliente':'Abrir WhatsApp')+(c.telefone2?waCli(c,c.semWhats2?'Ligar (telefone 2)':'WhatsApp (telefone 2)',2):''):'')", 1),
     # ficha: marcar quem não tem WhatsApp (mostra o botão Ligar)
     ('<label class="chk"><input type="checkbox" id="c-cw" name="consentWhats"',
-     '<label class="chk"><input type="checkbox" id="c-sw" name="semWhats" ${c.semWhats?\'checked\':\'\'} ${d}> Este número não tem WhatsApp (mostrar o botão Ligar)</label>\n   <label class="chk"><input type="checkbox" id="c-cw" name="consentWhats"', 1),
-    ("consentWhats:cw,consentEmail:ce,atualizadoEm:Date.now()};", "consentWhats:cw,consentEmail:ce,semWhats:!!fd.get('semWhats'),atualizadoEm:Date.now()};", 1),
+     '<label class="chk"><input type="checkbox" id="c-sw" name="semWhats" ${c.semWhats?\'checked\':\'\'} ${d}> Este número não tem WhatsApp (mostrar o botão Ligar)</label>\n   <label class="chk"><input type="checkbox" id="c-sw2" name="semWhats2" ${c.semWhats2?\'checked\':\'\'} ${d}> O telefone 2 não tem WhatsApp</label>\n   <label class="chk"><input type="checkbox" id="c-cw" name="consentWhats"', 1),
+    ("consentWhats:cw,consentEmail:ce,atualizadoEm:Date.now()};", "consentWhats:cw,consentEmail:ce,semWhats:!!fd.get('semWhats'),telefone2:fd.get('telefone2')||'',semWhats2:!!fd.get('semWhats2'),atualizadoEm:Date.now()};", 1),
     # botão WhatsApp no topo
     ('<div class="hact"><button class="btn" id="topLead"',
      '<div class="hact"><button class="btn wa" type="button" data-whatsapp-web title="Abrir o WhatsApp Web ao lado do sistema"><i class="fa-brands fa-whatsapp"></i><span class="lbl">WhatsApp</span></button><button class="btn" id="topLead"', 1),
@@ -139,7 +142,7 @@ window.DRAVEN_WA=(function(){
     const b=e.target.closest&&e.target.closest('[data-whatsapp-web]');
     if(b){e.preventDefault();abrir();return}
     const cl=e.target.closest&&e.target.closest('a[data-wacli]');
-    if(cl&&window.DRAVEN_WAB&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey){e.preventDefault();e.stopPropagation();DRAVEN_WAB.escolher(cl.dataset.wacli);return}
+    if(cl&&window.DRAVEN_WAB&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey){e.preventDefault();e.stopPropagation();DRAVEN_WAB.escolher(cl.dataset.wacli,Number(cl.dataset.wafone)||1);return}
     const a=e.target.closest&&e.target.closest('a[href^="https://web.whatsapp.com/"]');
     if(a&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey){e.preventDefault();abrir(a.href)}
   },true);
@@ -175,5 +178,6 @@ CABECA = """<!doctype html>
 """
 CELULAR = (RAIZ / 'ferramentas' / 'celular.html').read_text(encoding='utf-8')
 WAB = (RAIZ / 'ferramentas' / 'whatsapp-business.html').read_text(encoding='utf-8')
-(RAIZ / 'index.html').write_text(CABECA + WHATSAPP + app.strip() + '\n' + WAB + CELULAR + '</body>\n</html>\n', encoding='utf-8')
+IMPORTAR = (RAIZ / 'ferramentas' / 'importar.html').read_text(encoding='utf-8')
+(RAIZ / 'index.html').write_text(CABECA + WHATSAPP + app.strip() + '\n' + IMPORTAR + WAB + CELULAR + '</body>\n</html>\n', encoding='utf-8')
 print('index.html gerado')

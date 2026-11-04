@@ -1,0 +1,155 @@
+<!-- Importar leads: planilha CSV/colada ou contatos .vcf (Google Contatos, celular).
+     Substitui o importador do sistema (mesmos nomes de função). Entra no index.html pelo ferramentas/montar.py.
+     - reconhece "Telefone 1", "Telefone 2", "Celular"… e arquivos .vcf;
+     - junta os telefones da mesma empresa (no .vcf, "NOME 2" é o segundo número de NOME) em Telefone e Telefone 2;
+     - limpa os números (tira o 55, ignora "55" sozinho e números falsos como 11999999999);
+     - celular (11 dígitos começando com 9) fica com WhatsApp; fixo fica com o botão Ligar;
+     - quem já está no CRM não é duplicado: só ganha o telefone que faltava. -->
+<script>
+(function(){
+  const ALIAS={nome:['nome','empresa','academia','cliente','razao social','nome fantasia','name'],contato:['contato','responsavel','pessoa'],
+    telefone:['telefone','whatsapp','celular','fone','phone','tel'],email:['email','e-mail','mail'],cidade:['cidade','municipio','city'],tipo:['tipo','segmento'],
+    origem:['origem','canal','fonte','source'],instagram:['instagram','ig'],modalidades:['interesse','produto','modalidade','modalidades'],obs:['observacao','obs','nota','notas']};
+  const chave=s=>norm(s).replace(/[^a-z0-9]+/g,' ').trim();
+
+  // número brasileiro só com DDD + número (10 fixo, 11 celular); '' quando inválido
+  function telBR(raw){
+    let d=String(raw||'').replace(/\D/g,'');
+    if(d.startsWith('55')&&d.length>=12)d=d.slice(2);
+    d=d.replace(/^0+/,'');
+    if(d.length!==10&&d.length!==11)return'';
+    const num=d.slice(2);
+    if(/^(\d)\1+$/.test(num))return'';          // 99999999, 00000000…
+    if(/^9?9{8}$/.test(num))return'';           // 999999999 (número de mentira)
+    return d;
+  }
+  const ehCelular=d=>d.length===11&&d[2]==='9';
+  window.telBR=telBR;window.ehCelular=ehCelular;
+
+  function palpiteTipo(nome){
+    const n=' '+chave(nome)+' ';
+    if(/(federa|liga )/.test(n))return'Outro';
+    if(/ (team|equipe|time) /.test(n))return'Equipe/Time';
+    if(/(academia|gym| ct |dojo|studio|centro|escola|thai|box|jiu|judo|karate|krav|kung|capoeira|mma|luta|fight|marcia|bjj|taekwondo|aikido|kickbox)/.test(n))return'Academia';
+    return'Outro';
+  }
+
+  function lerVcf(txt){
+    const linhas=String(txt).replace(/\r/g,'').replace(/\n[ \t]/g,'').split('\n');
+    const rows=[];let cur=null;
+    for(const l of linhas){
+      const u=l.toUpperCase();
+      if(u.startsWith('BEGIN:VCARD')){cur={nome:'',org:'',fones:[],email:''};continue}
+      if(!cur)continue;
+      if(u.startsWith('END:VCARD')){
+        // o Google Contatos chama o segundo contato da mesma empresa de "NOME 2"
+        const nome=String(cur.nome||cur.org).replace(/\s+\d{1,2}$/,'').trim();
+        if(nome)rows.push({nome,fones:cur.fones,email:cur.email});
+        cur=null;continue;
+      }
+      const i=l.indexOf(':');if(i<0)continue;
+      const k=l.slice(0,i).split(';')[0].toUpperCase().replace(/^ITEM\d+\./,'');
+      const v=l.slice(i+1).replace(/\\,/g,',').replace(/\\;/g,';').replace(/\\n/gi,' ').trim();
+      if(k==='FN')cur.nome=v;else if(k==='ORG'&&!cur.org)cur.org=v.split(';')[0];else if(k==='TEL')cur.fones.push(v);else if(k==='EMAIL'&&!cur.email)cur.email=v;
+    }
+    return{rows,cols:['nome','telefone'],formato:'contatos (.vcf)'};
+  }
+
+  function lerCsv(txt){
+    const linhas=String(txt||'').replace(/^﻿/,'').replace(/\r/g,'').split('\n').filter(l=>l.trim());
+    if(linhas.length<2)return{erro:'Cole o cabeçalho e pelo menos uma linha de dados.'};
+    const sep=linhas[0].includes('\t')?'\t':(linhas[0].split(';').length>linhas[0].split(',').length?';':',');
+    const parse=l=>{const out=[];let cur='',q=false;for(let i=0;i<l.length;i++){const ch=l[i];if(ch==='"'){if(q&&l[i+1]==='"'){cur+='"';i++}else q=!q}else if(ch===sep&&!q){out.push(cur);cur=''}else cur+=ch}out.push(cur);return out.map(x=>x.trim())};
+    const cab=parse(linhas[0]).map(chave);
+    const casa=(h,al)=>al.some(a=>{a=chave(a);return h===a||h.startsWith(a+' ')||h.endsWith(' '+a)});
+    const map={},fones=[];
+    cab.forEach((h,i)=>{
+      if(casa(h,ALIAS.telefone)){fones.push(i);return}
+      for(const[k,al]of Object.entries(ALIAS))if(k!=='telefone'&&map[k]==null&&casa(h,al)){map[k]=i;break}
+    });
+    if(map.nome==null)return{erro:'Não encontrei a coluna de nome. Use um cabeçalho como "Nome", "Empresa" ou "Academia".'};
+    const rows=linhas.slice(1).map(parse).map(r=>{const o={fones:fones.map(i=>r[i]||'')};Object.entries(map).forEach(([k,i])=>o[k]=r[i]||'');return o}).filter(o=>String(o.nome||'').trim());
+    return{rows,cols:[...Object.keys(map),...(fones.length?['telefone'+(fones.length>1?' ('+fones.length+' colunas)':'')]:[])],formato:'planilha'};
+  }
+
+  // mesma assinatura do sistema
+  window.lerTabela=function(txt){return /BEGIN:VCARD/i.test(String(txt||''))?lerVcf(txt):lerCsv(txt)};
+
+  function preparar(r){
+    // 1) junta linhas da mesma empresa e os telefones dela
+    const grupos=new Map();
+    for(const o of r.rows){
+      const nome=String(o.nome||'').trim();if(!nome)continue;
+      const k=chave(nome);let g=grupos.get(k);
+      if(!g){g={...o,nome,fones:[]};grupos.set(k,g)}
+      else for(const f of['contato','email','cidade','tipo','origem','instagram','modalidades','obs'])if(!g[f]&&o[f])g[f]=o[f];
+      for(const f of(o.fones||[])){const d=telBR(f);if(d&&!g.fones.includes(d))g.fones.push(d)}
+    }
+    // 2) compara com o CRM
+    const porNome=new Map(),porTel=new Map();
+    for(const c of S.clientes){porNome.set(chave(c.nome),c);for(const t of[c.telefone,c.telefone2]){const d=telBR(t);if(d)porTel.set(d,c)}}
+    const novos=[],atualiza=[],iguais=[];
+    for(const[k,g]of grupos){
+      const c=porNome.get(k)||g.fones.map(f=>porTel.get(f)).find(Boolean);
+      if(!c){novos.push(g);continue}   // empresas diferentes com o mesmo telefone (ex.: federações no mesmo escritório) entram as duas
+      const tem=[telBR(c.telefone),telBR(c.telefone2)].filter(Boolean),extra=g.fones.filter(f=>!tem.includes(f));
+      const patch={},ex=[...extra];
+      if(ex.length&&!telBR(c.telefone)){const f=ex.shift();patch.telefone=fmtTelBR(f);patch.semWhats=!ehCelular(f)}
+      if(ex.length&&!telBR(c.telefone2)){const f=ex.shift();patch.telefone2=fmtTelBR(f);patch.semWhats2=!ehCelular(f)}
+      if(Object.keys(patch).length)atualiza.push({c,patch,g});else iguais.push(g);
+    }
+    return{novos,atualiza,iguais};
+  }
+
+  window.previaImport=function(txt){
+    const box=$('#i-prev');if(!box)return;
+    const r=lerTabela(txt);
+    if(r.erro){IMP=null;box.innerHTML=String(txt||'').trim()?`<p class="err">${esc(r.erro)}</p>`:'';return}
+    const p=preparar(r);IMP={...p,dups:p.iguais};
+    const cel=p.novos.filter(g=>g.fones.some(ehCelular)).length,semTel=p.novos.filter(g=>!g.fones.length).length,fixo=p.novos.length-cel-semTel;
+    const botao=d=>d?(ehCelular(d)?'<span class="pill ok">WhatsApp</span>':'<span class="pill info">Ligar</span>'):'';
+    box.innerHTML=`<div class="notice"><b>${p.novos.length}</b> lead${p.novos.length===1?'':'s'} novo${p.novos.length===1?'':'s'} (${cel} com celular/WhatsApp, ${fixo} só com fixo, ${semTel} sem telefone)${p.atualiza.length?` · <b>${p.atualiza.length}</b> já no CRM ganha${p.atualiza.length===1?'':'m'} o telefone que faltava`:''}${p.iguais.length?` · ${p.iguais.length} já no CRM sem novidade`:''}. Arquivo lido como ${r.formato}.</div>
+    ${p.novos.length||p.atualiza.length?`<div class="tbl-wrap" style="max-height:260px;overflow:auto"><table style="min-width:560px"><thead><tr><th>Nome</th><th>Telefone</th><th>Telefone 2</th><th>Situação</th></tr></thead><tbody>
+    ${p.novos.slice(0,60).map(g=>`<tr><td>${esc(g.nome)}</td><td style="white-space:nowrap">${esc(fmtTelBR(g.fones[0]||''))} ${botao(g.fones[0])}</td><td style="white-space:nowrap">${esc(fmtTelBR(g.fones[1]||''))} ${botao(g.fones[1])}</td><td>Novo lead</td></tr>`).join('')}
+    ${p.atualiza.slice(0,30).map(a=>`<tr><td>${esc(a.c.nome)}</td><td style="white-space:nowrap">${esc(a.patch.telefone||a.c.telefone||'')}</td><td style="white-space:nowrap">${esc(a.patch.telefone2||a.c.telefone2||'')}</td><td>Ganha telefone</td></tr>`).join('')}
+    </tbody></table></div>${p.novos.length>60?`<p class="ro" style="margin:0">Mostrando 60 de ${p.novos.length} novos.</p>`:''}`:''}`;
+  };
+
+  window.formImportar=function(){
+    IMP=null;
+    abrir('Importar leads',`
+    <p class="sub" style="margin:0">Escolha o arquivo exportado (planilha <b>CSV</b> ou contatos <b>.vcf</b> do Google Contatos/celular) ou cole as linhas de uma planilha com o cabeçalho. Basta ter <b>Nome</b> e <b>Telefone</b>; também são reconhecidas Telefone 2, Contato, E-mail, Cidade, Tipo, Canal, Instagram, Interesse e Observação.</p>
+    <label class="f">Arquivo (CSV ou VCF)<input class="inp" id="i-arq" type="file" accept=".csv,.txt,.vcf,text/csv,text/vcard,text/x-vcard"></label>
+    <label class="f">Ou cole aqui<textarea class="inp mono" id="i-txt" rows="6" placeholder="Nome,Telefone 1&#10;CT Exemplo,5511900000000"></textarea></label>
+    <div class="fg"><label class="f">Canal dos leads<select class="inp" id="i-orig" name="origem">${ORIGENS.map(o=>`<option ${o==='Prospecção ativa'?'selected':''}>${o}</option>`).join('')}</select></label>
+    <label class="f">Responsável<select class="inp" id="i-resp" name="responsavel">${membrosOpts(S.myId)}</select></label></div>
+    <label class="chk"><input type="checkbox" name="pularSemTel"> Não importar quem está sem telefone</label>
+    <p class="ro" style="margin:0">Celular (com 9 na frente) entra com o botão <b>WhatsApp</b>; telefone fixo entra com o botão <b>Ligar</b>. Dá para mudar depois na ficha do cliente. Contatos repetidos da mesma empresa viram um lead só, com Telefone e Telefone 2.</p>
+    <div id="i-prev"></div><p class="err" id="v-err" hidden></p>`,
+    async fd=>{
+      if(!IMP||(!IMP.novos.length&&!IMP.atualiza.length)){erro('#v-err','Nenhum lead novo ou telefone novo para importar.');return false}
+      const pular=!!fd.get('pularSemTel');
+      const novos=IMP.novos.filter(g=>!pular||g.fones.length);
+      const btn=$('#dlgForm button[type=submit]'),agora=Date.now(),total=novos.length+IMP.atualiza.length;let n=0;
+      const canal=fd.get('origem'),resp=fd.get('responsavel')||null;
+      for(const g of novos){
+        const[f1,f2,...outros]=g.fones;
+        const origem=ORIGENS.find(o=>norm(o)===norm(g.origem))||(g.origem?'Outro':canal);
+        await salvar('clientes',null,{nome:g.nome,contato:g.contato||'',telefone:f1?fmtTelBR(f1):'',semWhats:!!f1&&!ehCelular(f1),telefone2:f2?fmtTelBR(f2):'',semWhats2:!!f2&&!ehCelular(f2),
+          email:g.email||'',cidade:g.cidade||'',tipo:TIPOS.find(t=>norm(t)===norm(g.tipo))||palpiteTipo(g.nome),origem,origemDetalhe:g.origem&&origem==='Outro'?g.origem:'',
+          instagram:g.instagram||'',modalidades:g.modalidades||'',etapa:'lead',responsavel:resp,proximaAcao:f1?'Fazer primeiro contato':'Encontrar telefone',dataProxima:agora+864e5,
+          consentWhats:false,consentEmail:false,valorEstimado:0,criadoEm:agora,atualizadoEm:agora,criadoPor:S.myId,entradaManual:true,
+          historico:[{txt:`Lead importado de lista · canal: ${origem}${outros.length?' · outros telefones: '+outros.map(fmtTelBR).join(', '):''}${g.obs?' · '+g.obs:''}`,em:agora,por:S.myId}]});
+        n++;if(n%10===0)btn.textContent=`Importando ${n}/${total}…`;
+      }
+      for(const a of IMP.atualiza){
+        const c=cli(a.c.id)||a.c;
+        await salvar('clientes',c.id,{...a.patch,atualizadoEm:agora,historico:[...(c.historico||[]),{txt:`Telefone adicionado pela importação: ${[a.patch.telefone,a.patch.telefone2].filter(Boolean).join(', ')}`,em:agora,por:S.myId}]});
+        n++;if(n%10===0)btn.textContent=`Importando ${n}/${total}…`;
+      }
+      toast(`${novos.length} lead${novos.length===1?'':'s'} importado${novos.length===1?'':'s'}${IMP.atualiza.length?` · ${IMP.atualiza.length} com telefone novo`:''}`);
+      return true;
+    },{submitLabel:'Importar',ctx:{tipo:'importar'}});
+  };
+})();
+</script>

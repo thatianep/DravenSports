@@ -69,6 +69,20 @@ A equipe toda atende pelo **mesmo número do WhatsApp Business** da empresa, cad
 - Botões de WhatsApp de pedidos e campanhas continuam mandando o texto do pedido ou da campanha direto.
 - O WhatsApp Web não pode ficar dentro da página do sistema: o próprio WhatsApp bloqueia ser aberto dentro de outro site. Por isso ele fica numa janela ao lado.
 
+## Importar listas de leads
+No **Funil CRM** (ou em Clientes 360°), clique em **Importar** e escolha o arquivo exportado:
+- **Planilha CSV** (Excel, Google Planilhas): basta ter as colunas **Nome** e **Telefone** (aceita "Telefone 1", "Telefone 2", "Celular", "WhatsApp"…). Também são reconhecidas Contato, E-mail, Cidade, Tipo, Canal, Instagram, Interesse e Observação.
+- **Contatos .vcf** (Google Contatos, celular): nome e telefones de cada contato.
+
+O que o sistema faz sozinho:
+- limpa os números (tira o 55, ignora "55" sem número e números de mentira como 11999999999);
+- **celular** (com 9 na frente) entra com o botão **WhatsApp**; **fixo** entra com o botão **Ligar**;
+- junta a mesma empresa em um lead só, com **Telefone** e **Telefone 2** (no .vcf, "NOME 2" é o segundo número de NOME);
+- não duplica quem já está no CRM: só acrescenta o telefone que faltava;
+- mostra uma prévia (novos, com WhatsApp, só fixo, sem telefone, já existentes) antes de importar.
+
+Pode importar a mesma lista de novo sempre que exportar: só entra o que é novo.
+
 ## Bom saber
 - A sessão do Google dura cerca de 1 hora. Quando expira, aparece uma faixa amarela no canto: clique em **Continuar**. O que foi feito nesse tempo fica guardado e é enviado ao continuar.
 - Quando duas pessoas mexem ao mesmo tempo, as alterações se juntam a cada 15 segundos. Se as duas mudarem **o mesmo registro**, vale a última gravação.
@@ -84,6 +98,7 @@ A equipe toda atende pelo **mesmo número do WhatsApp Business** da empresa, cad
 | `config.js` | ID do login do Google e e-mail da gestão |
 | `versao-claude-ai/sistema-draven.html` | Fonte do sistema (a mesma versão publicada no claude.ai) |
 | `ferramentas/whatsapp-business.html` | WhatsApp Business: número, mensagens prontas e registro dos envios |
+| `ferramentas/importar.html` | Importação de leads (CSV e .vcf), limpeza dos telefones e Telefone 2 |
 | `ferramentas/celular.html` | Ajustes de celular e tablet (barra de menu embaixo, tabelas em cartões) |
 | `ferramentas/montar.py` | Gera o `index.html` a partir da fonte: `python3 ferramentas/montar.py` |
 | `manifest.webmanifest`, `*.png` | Nome e ícones do app instalado |
