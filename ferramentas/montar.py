@@ -27,7 +27,7 @@ TROCAS = [
     # ---- Equipe: e-mails com acesso (compartilha a pasta da base no Drive) ----
     ('<p class="sub">Funcionários, logins e o que cada perfil pode fazer</p></div></div>',
      """<p class="sub">Funcionários, logins e o que cada perfil pode fazer</p></div>${adm&&papel()==='gestao'?'<div class="tools"><button class="btn pri" data-a="lib-email"><i class="fa-solid fa-envelope-circle-check"></i> Adicionar e-mail</button></div>':''}</div>""", 1),
-    ('<section class="panel"><div class="panel-h"><h2>Membros</h2>', '${painelEmails()}<section class="panel"><div class="panel-h"><h2>Membros</h2>', 1),
+    ('<section class="panel"><div class="panel-h"><h2>Membros</h2>', '${painelEmails()}${window.DRAVEN_WAB?DRAVEN_WAB.painel():\'\'}<section class="panel"><div class="panel-h"><h2>Membros</h2>', 1),
     ('Ninguém aguardando. Compartilhe o link desta página com a pessoa (botão Compartilhar do claude.ai, com permissão de Contribuidor ou Editor). Assim que ela abrir, aparece aqui para você escolher o perfil.',
      'Ninguém aguardando. Para dar acesso a alguém, clique em Adicionar e-mail.', 1),
     ("case'nova-senha':trocarSenha(id);break;", "case'nova-senha':trocarSenha(id);break;case'lib-email':formLiberarEmail();break;case'lib-remover':removerEmail(id);break;", 1),
@@ -80,6 +80,9 @@ async function removerEmail(email){
   catch(e){toast(e.message||'Não foi possível remover o acesso.')}
 }
 function vEquipe(){""", 1),
+    # linha do tempo: envios de WhatsApp aparecem como tal
+    ("(c.historico||[]).forEach(h=>ev.push({em:h.em,t:'Anotação',d:h.txt,por:h.por}));",
+     "(c.historico||[]).forEach(h=>ev.push({em:h.em,t:h.tipo==='whatsapp'?'WhatsApp enviado':'Anotação',d:h.txt,por:h.por}));", 1),
     # ---- WhatsApp Web ao lado do sistema ----
     # no computador as conversas abrem no WhatsApp Web; no celular, no aplicativo
     ("return`https://wa.me/${d}${msg?'?text='+encodeURIComponent(msg):''}`}",
@@ -90,7 +93,7 @@ function vEquipe(){""", 1),
 function waSaudacao(c){const n=String(c.contato||'').trim().split(' ')[0];return`Olá${n?' '+n:''}, tudo bem? Aqui é da Draven Sports.`}
 function telLink(tel){let d=String(tel||'').replace(/\\D/g,'');if(!d)return'';if(d.length<=11)d='55'+d;return'tel:+'+d}
 function ligarBtn(c,label){const u=telLink(c.telefone);return u?`<a class="btn sm ligar wa-cli" href="${esc(u)}" aria-label="Ligar para ${esc(c.nome)}" title="Ligar: ${esc(c.telefone)}"><i class="fa-solid fa-phone"></i> ${label||'Ligar'}</a>`:''}
-function waCli(c){if(c.semWhats)return ligarBtn(c);const u=waLink(c.telefone,waSaudacao(c));return u?`<a class="btn sm wa wa-cli" href="${esc(u)}" target="_blank" rel="noopener" aria-label="WhatsApp de ${esc(c.nome)}" title="Conversar no WhatsApp: ${esc(c.telefone)}"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>`:''}""", 1),
+function waCli(c,label){if(c.semWhats)return ligarBtn(c,label&&'Ligar para o cliente');const u=waLink(c.telefone,waSaudacao(c));return u?`<a class="btn sm wa wa-cli" data-wacli="${esc(c.id)}" href="${esc(u)}" target="_blank" rel="noopener" aria-label="WhatsApp de ${esc(c.nome)}" title="Conversar no WhatsApp: ${esc(c.telefone)}"><i class="fa-brands fa-whatsapp"></i> ${label||'WhatsApp'}</a>`:''}""", 1),
     # funil: botão no card
     ('''<div class="row"><span class="ro">${c.valorEstimado?money(c.valorEstimado):''}</span>${pode('crm')?`<select aria-label="Mover etapa"''',
      '''<div class="row"><span class="ro">${c.valorEstimado?money(c.valorEstimado):''}</span>${waCli(c)}${pode('crm')?`<select aria-label="Mover etapa"''', 1),
@@ -103,7 +106,7 @@ function waCli(c){if(c.semWhats)return ligarBtn(c);const u=waLink(c.telefone,waS
     ("""'<span class="ro">Sem registro</span>':''}</td></tr>""", """'<span class="ro">Sem registro</span>':''}</td><td>${waCli(c)||'<span class="ro">Sem telefone</span>'}</td></tr>""", 1),
     ('<tr><td colspan="8" class="ro">Nenhum cliente neste filtro.</td></tr>', '<tr><td colspan="9" class="ro">Nenhum cliente neste filtro.</td></tr>', 1),
     # ficha do cliente: já abre com a saudação
-    ("(c.id?waBtn(c.telefone,'','Abrir WhatsApp'):'')", "(c.id?(c.semWhats?ligarBtn(c,'Ligar para o cliente'):waBtn(c.telefone,waSaudacao(c),'Abrir WhatsApp')):'')", 1),
+    ("(c.id?waBtn(c.telefone,'','Abrir WhatsApp'):'')", "(c.id?waCli(c,'Abrir WhatsApp'):'')", 1),
     # ficha: marcar quem não tem WhatsApp (mostra o botão Ligar)
     ('<label class="chk"><input type="checkbox" id="c-cw" name="consentWhats"',
      '<label class="chk"><input type="checkbox" id="c-sw" name="semWhats" ${c.semWhats?\'checked\':\'\'} ${d}> Este número não tem WhatsApp (mostrar o botão Ligar)</label>\n   <label class="chk"><input type="checkbox" id="c-cw" name="consentWhats"', 1),
@@ -135,6 +138,8 @@ window.DRAVEN_WA=(function(){
     if(noBotao(e))e.stopPropagation();
     const b=e.target.closest&&e.target.closest('[data-whatsapp-web]');
     if(b){e.preventDefault();abrir();return}
+    const cl=e.target.closest&&e.target.closest('a[data-wacli]');
+    if(cl&&window.DRAVEN_WAB&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey){e.preventDefault();e.stopPropagation();DRAVEN_WAB.escolher(cl.dataset.wacli);return}
     const a=e.target.closest&&e.target.closest('a[href^="https://web.whatsapp.com/"]');
     if(a&&!e.ctrlKey&&!e.metaKey&&!e.shiftKey){e.preventDefault();abrir(a.href)}
   },true);
@@ -169,5 +174,6 @@ CABECA = """<!doctype html>
 <body>
 """
 CELULAR = (RAIZ / 'ferramentas' / 'celular.html').read_text(encoding='utf-8')
-(RAIZ / 'index.html').write_text(CABECA + WHATSAPP + app.strip() + '\n' + CELULAR + '</body>\n</html>\n', encoding='utf-8')
+WAB = (RAIZ / 'ferramentas' / 'whatsapp-business.html').read_text(encoding='utf-8')
+(RAIZ / 'index.html').write_text(CABECA + WHATSAPP + app.strip() + '\n' + WAB + CELULAR + '</body>\n</html>\n', encoding='utf-8')
 print('index.html gerado')

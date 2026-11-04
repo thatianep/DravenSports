@@ -51,13 +51,23 @@ Enquanto o login do Google estiver em modo de teste, o e-mail também precisa es
 Na versão do claude.ai, aba **Planilhas no Drive**, clique em **Salvar tudo em planilha agora**. Ela vai para a mesma pasta do Drive.
 No site do GitHub, aba **Planilhas no Drive → Atualizar lista → Restaurar** nessa planilha.
 
-## WhatsApp
-- O botão **WhatsApp**, no topo do sistema, abre o WhatsApp Web numa janela ao lado. Na primeira vez, leia o QR Code com o celular (WhatsApp → Aparelhos conectados → Conectar aparelho). Depois ele continua conectado nesse navegador.
-- Cada cliente com telefone tem um botão **WhatsApp**: nos cards do Funil CRM, na lista do CRM, na tabela de Clientes 360° e na ficha do cliente. Ele abre a conversa já com a saudação "Olá {contato}, tudo bem? Aqui é da Draven Sports.". Clientes sem telefone mostram "Sem telefone".
-- Cliente cujo número **não tem WhatsApp**: na ficha do cliente, aba Dados, marque **Este número não tem WhatsApp**. No lugar do WhatsApp aparece o botão **Ligar**, que liga direto para o número (no celular abre o discador; no computador, o programa de ligação configurado, como o app Telefone do Windows ou o iPhone pelo Mac).
-- Os botões de WhatsApp de clientes, pedidos e campanhas abrem a conversa com a mensagem pronta **nessa mesma janela**, sem abrir abas novas. É só conferir e apertar Enviar.
-- No celular, esses botões abrem o aplicativo do WhatsApp.
-- O WhatsApp Web não pode ficar dentro da página do sistema: o próprio WhatsApp bloqueia ser aberto dentro de outro site.
+## WhatsApp Business
+A equipe toda atende pelo **mesmo número do WhatsApp Business** da empresa, cada um no seu computador.
+
+**Ligar o número (uma vez por computador)**
+1. No celular da empresa, abra o **WhatsApp Business** → ⋮ (ou Configurações) → **Aparelhos conectados** → **Conectar um aparelho**.
+2. No computador, clique no botão **WhatsApp**, no topo do sistema. O WhatsApp Web abre numa janela ao lado: leia o QR Code com o celular da empresa.
+3. Repita em cada computador da equipe. O WhatsApp Business aceita até 4 aparelhos conectados além do celular (mais com o Meta Verified).
+
+**Configurar (gestão):** em **Equipe e permissões → WhatsApp Business → Configurar**, cadastre o número da empresa, o link do catálogo (vazio = catálogo do próprio WhatsApp Business, `wa.me/c/número`) e, se quiser, mude as mensagens prontas. Variáveis: `{contato}` `{nome}` `{cidade}` `{catalogo}` `{vendedor}` `{prazo}`.
+
+**No dia a dia**
+- Cada cliente com telefone tem o botão **WhatsApp** (cards do Funil CRM, lista do CRM, Clientes 360° e ficha do cliente). Ele abre a mensagem pronta da **etapa do funil** do cliente (novo lead, primeiro contato com catálogo, proposta, negociação, cliente ativo, reativar perdido) ou uma saudação; dá para trocar a mensagem e editar o texto antes de abrir.
+- **Abrir no WhatsApp** leva a conversa, com o texto, para a janela do WhatsApp Web ao lado (no celular, para o app). É só conferir e apertar Enviar.
+- O envio fica na **linha do tempo do cliente** como "WhatsApp enviado", com o nome de quem mandou e a data. A ficha mostra o último WhatsApp registrado.
+- Cliente cujo número **não tem WhatsApp**: na ficha, aba Dados, marque **Este número não tem WhatsApp**. No lugar aparece o botão **Ligar**.
+- Botões de WhatsApp de pedidos e campanhas continuam mandando o texto do pedido ou da campanha direto.
+- O WhatsApp Web não pode ficar dentro da página do sistema: o próprio WhatsApp bloqueia ser aberto dentro de outro site. Por isso ele fica numa janela ao lado.
 
 ## Bom saber
 - A sessão do Google dura cerca de 1 hora. Quando expira, aparece uma faixa amarela no canto: clique em **Continuar**. O que foi feito nesse tempo fica guardado e é enviado ao continuar.
@@ -73,6 +83,7 @@ No site do GitHub, aba **Planilhas no Drive → Atualizar lista → Restaurar** 
 | `drive-db.js` | Login Google e banco de dados no Drive |
 | `config.js` | ID do login do Google e e-mail da gestão |
 | `versao-claude-ai/sistema-draven.html` | Fonte do sistema (a mesma versão publicada no claude.ai) |
+| `ferramentas/whatsapp-business.html` | WhatsApp Business: número, mensagens prontas e registro dos envios |
 | `ferramentas/celular.html` | Ajustes de celular e tablet (barra de menu embaixo, tabelas em cartões) |
 | `ferramentas/montar.py` | Gera o `index.html` a partir da fonte: `python3 ferramentas/montar.py` |
 | `manifest.webmanifest`, `*.png` | Nome e ícones do app instalado |

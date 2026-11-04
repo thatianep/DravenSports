@@ -1,0 +1,136 @@
+<!-- WhatsApp Business: número da empresa, mensagens prontas por etapa do funil e registro dos envios.
+     Entra no index.html pelo ferramentas/montar.py, depois do sistema (usa S, abrir, esc, salvar… do sistema). -->
+<style>
+#wamsg{border:1px solid var(--line);padding:0;border-radius:16px;background:var(--surface);color:var(--fg);width:min(560px,calc(100vw - 24px));max-height:calc(100dvh - 24px);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+#wamsg::backdrop{background:rgba(0,0,0,.55)}
+#wamsg form{display:flex;flex-direction:column;max-height:calc(100dvh - 24px)}
+#wamsg .wm-h{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+#wamsg .wm-h i{color:#16A34A;font-size:20px}
+#wamsg .wm-h h2{flex:1;min-width:0;margin:0;font-size:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#wamsg .wm-b{padding:14px 18px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+#wamsg textarea{min-height:150px;resize:vertical;line-height:1.45}
+#wamsg .wm-f{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:12px 18px;border-top:1px solid var(--line);background:var(--surface-2)}
+#wamsg .wm-info{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--muted)}
+#wamsg .btn.envia{background:#16A34A;border-color:#16A34A;color:#fff;font-weight:700}
+#wamsg .btn.envia:hover{background:#15803D}
+.wab-num{font-family:var(--f-mono);font-size:13px}
+.wab-passos{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:var(--fg)}
+@media (max-width:620px){
+  #wamsg{width:100%;max-width:100%;height:100%;max-height:100%;margin:0;border:0;border-radius:0}
+  #wamsg form{height:100%;max-height:100%}
+  #wamsg .wm-h{padding-top:calc(12px + env(safe-area-inset-top,0px))}
+  #wamsg .wm-b{flex:1}
+  #wamsg .wm-f{padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+  #wamsg .wm-f .btn{flex:1 1 auto;justify-content:center}
+  #wamsg textarea{font-size:16px}
+}
+</style>
+<dialog id="wamsg" aria-labelledby="wamsg-t"><form method="dialog"></form></dialog>
+<script>
+window.DRAVEN_WAB=(function(){
+  // mensagens prontas de fábrica; a gestão muda em Equipe e permissões > WhatsApp Business
+  const PADRAO={
+    geral:'Olá {contato}, tudo bem? Aqui é {vendedor}, da Draven Sports.',
+    lead:'Olá {contato}, tudo bem? Aqui é {vendedor}, da Draven Sports. Fabricamos luvas, kimonos e equipamentos de luta, também com a marca de {nome}. Posso te mandar o nosso catálogo?',
+    contato:'Olá {contato}! Segue o nosso catálogo: {catalogo}\nQual linha mais interessa para {nome}? Monto uma proposta sem compromisso.',
+    proposta:'Olá {contato}, tudo bem? Conseguiu ver a proposta que te enviei? Posso ajustar quantidades, cores ou prazo.',
+    negociacao:'Olá {contato}! Consigo manter essa condição até {prazo}. Podemos fechar o pedido de {nome}?',
+    ganho:'Olá {contato}, obrigado pela parceria! Quando precisar de reposição, é só chamar aqui.',
+    perdido:'Olá {contato}, tudo bem? Chegaram novidades no nosso catálogo: {catalogo}\nVale uma olhada!'
+  };
+  const NOMES={geral:'Saudação',lead:'Novo lead',contato:'Primeiro contato (catálogo)',proposta:'Proposta enviada',negociacao:'Negociação',ganho:'Cliente ativo',perdido:'Perdido (reativar)'};
+  const ORDEM=['geral','lead','contato','proposta','negociacao','ganho','perdido'];
+  const $w=s=>document.querySelector(s);
+  const cfg=()=>((S.config||[]).find(x=>x.id==='whatsapp')||{});
+  const soNum=t=>String(t||'').replace(/\D/g,'');
+  function numeroEmpresa(){let d=soNum(cfg().numero);if(d&&d.length<=11)d='55'+d;return d}
+  function catalogo(){const c=cfg();if(c.catalogo)return c.catalogo;const n=numeroEmpresa();return n?'https://wa.me/c/'+n:''}
+  function modelo(k){const m=(cfg().modelos||{})[k];return m!=null&&String(m).trim()?m:PADRAO[k]}
+  const proxSexta=()=>{const d=new Date();d.setDate(d.getDate()+((5-d.getDay()+7)%7||7));return d.toLocaleDateString('pt-BR')};
+  function preencher(txt,c){
+    const v={contato:String(c.contato||c.nome||'').trim().split(' ')[0],nome:c.nome||'',cidade:c.cidade||'',catalogo:catalogo()||'(peça o catálogo)',
+      vendedor:String((S.me&&S.me.name)||'a equipe').split(' ')[0],empresa:'Draven Sports',prazo:proxSexta()};
+    return String(txt||'').replace(/\{(\w+)\}/g,(m,k)=>k in v?v[k]:m).replace(/^Olá ,/,'Olá,').replace(/Olá !/,'Olá!');
+  }
+
+  let atual=null;
+  function escolher(id){
+    const c=typeof cli==='function'?cli(id):null;if(!c){return}
+    atual=c;
+    const etapa=ORDEM.includes(c.etapa)?c.etapa:'geral';
+    const ult=c.ultimoWhatsEm?`Último WhatsApp: ${fmtD(c.ultimoWhatsEm)}${c.ultimoWhatsPor?' por '+esc(pessoa(c.ultimoWhatsPor)):''}`:'Ainda sem WhatsApp registrado';
+    const d=$w('#wamsg'),f=d.querySelector('form');
+    f.innerHTML=`<div class="wm-h"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i><h2 id="wamsg-t">${esc(c.nome)}</h2><button type="button" class="btn ghost sm" data-wm="fechar" aria-label="Fechar">✕</button></div>
+    <div class="wm-b">
+      <div class="wm-info"><span><i class="fa-solid fa-phone"></i> ${esc(c.telefone||'')}</span>${c.contato?`<span><i class="fa-solid fa-user"></i> ${esc(c.contato)}</span>`:''}<span>${etapaPill(c.etapa)}</span></div>
+      <label class="f">Mensagem pronta<select class="inp" id="wm-mod">${ORDEM.map(k=>`<option value="${k}" ${k===etapa?'selected':''}>${esc(NOMES[k])}${k===etapa&&k!=='geral'?' (etapa atual)':''}</option>`).join('')}<option value="livre">Escrever do zero</option></select></label>
+      <label class="f">Texto (pode editar antes de enviar)<textarea class="inp" id="wm-txt"></textarea></label>
+      <p class="ro" style="margin:0">${ult}</p>
+      ${numeroEmpresa()?'':'<p class="ro" style="margin:0">Dica: a gestão pode cadastrar o número e o catálogo do WhatsApp Business em Equipe e permissões.</p>'}
+    </div>
+    <div class="wm-f"><button type="button" class="btn" data-wm="fechar">Cancelar</button><button type="button" class="btn envia" data-wm="enviar"><i class="fa-brands fa-whatsapp"></i> Abrir no WhatsApp</button></div>`;
+    const sel=f.querySelector('#wm-mod'),tx=f.querySelector('#wm-txt');
+    const pinta=()=>{tx.value=sel.value==='livre'?'':preencher(modelo(sel.value),c)};
+    sel.onchange=pinta;pinta();
+    if(!d.open)d.showModal();
+    setTimeout(()=>tx.focus(),30);
+  }
+  function enviar(){
+    const c=atual;if(!c)return;
+    const txt=$w('#wm-txt').value.trim(),mod=$w('#wm-mod').value;
+    const url=waLink(c.telefone,txt);
+    $w('#wamsg').close();
+    if(!url)return;
+    // registra na linha do tempo do cliente: quem mandou, quando e qual mensagem
+    if(typeof pode==='function'&&pode('crm')){
+      const atualC=cli(c.id)||c;
+      const h={tipo:'whatsapp',txt:`${mod==='livre'?'Mensagem livre':NOMES[mod]}: ${txt.slice(0,240)}${txt.length>240?'…':''}`,em:Date.now(),por:S.myId};
+      salvar('clientes',c.id,{historico:[...(atualC.historico||[]),h],ultimoWhatsEm:h.em,ultimoWhatsPor:S.myId}).catch(()=>{});
+    }
+    // no computador: janela do WhatsApp Web ao lado; no celular: app do WhatsApp, sem sair do sistema
+    if(window.DRAVEN_WA&&DRAVEN_WA.computador())DRAVEN_WA.abrir(url);
+    else if(!window.open(url,'_blank'))location.href=url;
+  }
+  document.addEventListener('click',e=>{
+    const b=e.target.closest&&e.target.closest('[data-wm]');if(!b)return;
+    e.preventDefault();if(b.dataset.wm==='fechar')$w('#wamsg').close();else if(b.dataset.wm==='enviar')enviar();
+  });
+
+  // ---- configuração (gestão) ----
+  function painel(){
+    if(typeof papel!=='function'||papel()!=='gestao')return'';
+    const c=cfg(),n=numeroEmpresa();
+    return`<section class="panel"><div class="panel-h"><h2><i class="fa-brands fa-whatsapp" style="color:#16A34A"></i> WhatsApp Business</h2>${S.ro?'':'<button class="btn sm" data-wab="config"><i class="fa-solid fa-gear"></i> Configurar</button>'}</div>
+     <div class="mini"><div><small>Número da empresa</small><b class="sm wab-num">${n?esc('+'+n):'Não cadastrado'}</b></div><div><small>Catálogo</small><b class="sm">${catalogo()?`<a href="${esc(catalogo())}" target="_blank" rel="noopener">Abrir</a>`:'—'}</b></div><div><small>Mensagens prontas</small><b class="sm">${ORDEM.length}${c.modelos?' (personalizadas)':''}</b></div></div>
+     <p class="ro" style="margin:0"><b>Como a equipe usa o mesmo número:</b></p>
+     <ol class="wab-passos">
+      <li>No celular da empresa, abra o <b>WhatsApp Business</b> → ⋮ ou Configurações → <b>Aparelhos conectados</b> → <b>Conectar um aparelho</b>.</li>
+      <li>Em cada computador da equipe, clique no botão <b>WhatsApp</b> no topo do sistema e leia o QR Code com esse celular.</li>
+      <li>Pronto: todos atendem pelo número da empresa. O WhatsApp Business aceita até 4 aparelhos conectados além do celular (mais com o Meta Verified).</li>
+     </ol>
+     <p class="ro" style="margin:0">Ao clicar em WhatsApp num cliente, a pessoa escolhe a mensagem pronta da etapa do funil, ajusta o texto e envia. O envio fica na linha do tempo do cliente com o nome de quem mandou.</p>
+    </section>`;
+  }
+  function configurar(){
+    const c=cfg(),m=c.modelos||{};
+    abrir('WhatsApp Business',`
+     <div class="fg">
+      <label class="f">Número do WhatsApp Business *<input class="inp" id="wab-num" name="numero" inputmode="tel" value="${esc(c.numero||'')}" placeholder="(11) 98578-0370"></label>
+      <label class="f">Link do catálogo<input class="inp" id="wab-cat" name="catalogo" value="${esc(c.catalogo||'')}" placeholder="vazio = catálogo do WhatsApp (wa.me/c/…)"></label>
+     </div>
+     <p class="ro" style="margin:0">Nas mensagens você pode usar: {contato} {nome} {cidade} {catalogo} {vendedor} {prazo}. Deixe um campo vazio para voltar ao texto padrão.</p>
+     ${ORDEM.map(k=>`<label class="f">${esc(NOMES[k])}<textarea class="inp" name="m_${k}" rows="3" placeholder="${esc(PADRAO[k])}">${esc(m[k]||'')}</textarea></label>`).join('')}
+     <p class="err" id="v-err" hidden></p>`,
+    async fd=>{
+      const numero=String(fd.get('numero')||'').trim();
+      if(numero&&soNum(numero).length<10){erro('#v-err','Confira o número: coloque o DDD.');return false}
+      const modelos={};ORDEM.forEach(k=>{const v=String(fd.get('m_'+k)||'').trim();if(v)modelos[k]=v});
+      try{await S.db.doc('config/whatsapp').set({numero,catalogo:String(fd.get('catalogo')||'').trim(),modelos,atualizadoEm:Date.now(),atualizadoPor:S.myId});toast('WhatsApp Business salvo');return true}
+      catch(e){erro('#v-err','Não foi possível salvar.');return false}
+    },{submitLabel:'Salvar'});
+  }
+  document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-wab="config"]');if(b){e.preventDefault();configurar()}});
+
+  return{escolher,painel,numeroEmpresa,catalogo};
+})();
+</script>
