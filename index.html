@@ -12,9 +12,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="DRAVEN">
 <!-- Gerado por ferramentas/montar.py a partir de versao-claude-ai/sistema-draven.html. Não edite à mão. -->
-<script src="config.js?v=202611041805"></script>
+<script src="config.js?v=202611041812"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="drive-db.js?v=202611041805"></script>
+<script src="drive-db.js?v=202611041812"></script>
 </head>
 <body>
 <style>.btn.ligar{color:#1E3A8A;border-color:#BFDBFE;text-decoration:none}.btn.ligar:hover{border-color:#1E3A8A}.btn.wa{text-decoration:none}</style>
@@ -917,7 +917,7 @@ function vEstoque(){
   return`<div class="head"><div><h1>Estoque</h1><p class="sub">${S.produtos.length} produto${S.produtos.length===1?'':'s'} · ${n0.format(sum(S.produtos,p=>p.estoque))} unidades${pode('custo')?' · '+money(sum(S.produtos,p=>(p.estoque>0?p.estoque:0)*(p.custo||0)))+' a custo':''}</p></div>
   <div class="tools">${t==='produtos'?`<input class="inp search" id="q-e" data-f="qe" placeholder="Buscar produto ou SKU" value="${esc(S.f.qe||'')}"><select class="inp" id="c-e" data-f="ce"><option value="">Todas as categorias</option>${CATS.map(c=>`<option ${S.f.ce===c?'selected':''}>${c}</option>`).join('')}</select>`:''}
   ${S.dl&&t==='produtos'?'<button class="btn" data-a="csv-estoque">Exportar CSV</button>':''}
-  ${pode('produtos')?'<button class="btn" data-a="importar-produtos"><i class="fa-solid fa-file-import"></i> Importar produtos</button><button class="btn pri" data-a="novo-produto">Novo produto</button>':''}</div></div>
+  ${pode('excluir')&&S.produtos.length?'<button class="btn danger" data-a="excluir-estoque"><i class="fa-solid fa-trash"></i> Excluir todo o estoque</button>':''}${pode('produtos')?'<button class="btn" data-a="importar-produtos"><i class="fa-solid fa-file-import"></i> Importar produtos</button><button class="btn pri" data-a="novo-produto">Novo produto</button>':''}</div></div>
   <div class="tabs" role="tablist"><button role="tab" aria-selected="${t==='produtos'}" data-a="est-tab" data-v="produtos">Produtos</button><button role="tab" aria-selected="${t==='mov'}" data-a="est-tab" data-v="mov">Movimentações</button></div>
   <div id="body">${t==='produtos'?estoqueBody():movBody()}</div>`;
 }
@@ -2880,7 +2880,47 @@ window.DRAVEN_PROD=(function(){
     });
   }
   document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-a="importar-produtos"]');if(b){e.preventDefault();e.stopPropagation();formImportar()}},true);
-  return{formImportar,lerCsv,preparar};
+  // ---------------- excluir todo o estoque (produtos e movimentações), só a gestão ----------------
+  const celCsv=v=>{const t=String(v??'');return /[;"\n]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t};
+  const numCsv=n=>String(Number(n)||0).replace('.',',');
+  async function baixarCopia(produtos,movs){
+    const hoje=new Date().toISOString().slice(0,10);
+    const p=['SKU;Produto;Variacao;Categoria;Unidade;Estoque;Minimo;Custo;Preco atacado;Preco varejo;Ativo',
+      ...produtos.map(x=>[x.sku,x.nome,x.variacao,x.categoria,x.unidade,numCsv(x.estoque),numCsv(x.minimo),numCsv(x.custo),numCsv(x.precoAtacado),numCsv(x.preco),x.ativo===false?'Não':'Sim'].map(celCsv).join(';'))].join('\n');
+    const nomeP=id=>{const x=produtos.find(y=>y.id===id);return x?`${x.sku||''} ${x.nome}${x.variacao?' · '+x.variacao:''}`.trim():id};
+    const m=['Data;Produto;Tipo;Quantidade;Saldo;Origem;Referencia',
+      ...movs.sort((a,b)=>(a.em||0)-(b.em||0)).map(x=>[x.em?new Date(x.em).toLocaleString('pt-BR'):'',nomeP(x.produtoId),x.tipo,numCsv(x.delta),numCsv(x.saldo),x.origem,x.ref].map(celCsv).join(';'))].join('\n');
+    const salvarArq=async(nome,txt)=>{const blob=new Blob(['﻿'+txt],{type:'text/csv'});if(S.dl)await S.dl.save({filename:nome,data:blob})};
+    await salvarArq(`draven-estoque-copia-${hoje}.csv`,p);
+    if(movs.length)await salvarArq(`draven-movimentacoes-copia-${hoje}.csv`,m);
+  }
+  function formExcluirTudo(){
+    if(!pode('excluir')){toast('Só a gestão pode excluir o estoque.');return}
+    const n=S.produtos.length;
+    abrir('Excluir todo o estoque',`
+     <div class="notice warn"><b>Isto apaga ${n} produto${n===1?'':'s'} e todo o histórico de movimentações de estoque.</b> Não tem como desfazer pelo sistema. Pedidos e lotes antigos continuam, mas os itens deles passam a aparecer como "Produto removido".</div>
+     <label class="chk"><input type="checkbox" name="copia" checked> Baixar uma cópia antes (planilhas de produtos e de movimentações)</label>
+     <label class="f">Para confirmar, digite <b>EXCLUIR</b><input class="inp" id="ex-conf" name="conf" autocomplete="off" autocapitalize="characters"></label>
+     <p class="err" id="v-err" hidden></p>`,
+    async fd=>{
+      if(String(fd.get('conf')||'').trim().toUpperCase()!=='EXCLUIR'){erro('#v-err','Digite EXCLUIR para confirmar.');return false}
+      const btn=document.querySelector('#dlgForm button[type=submit]');
+      try{
+        const produtos=S.produtos.slice();
+        const movs=(await S.db.collection('movimentos').get()).docs.map(d=>({id:d.id,...d.data()}));
+        if(fd.get('copia')){btn.textContent='Baixando a cópia…';try{await baixarCopia(produtos,movs)}catch(e){if(!confirm('Não foi possível baixar a cópia. Excluir mesmo assim?'))return false}}
+        let k=0;const total=produtos.length+movs.length;
+        for(const m of movs){await S.db.doc('movimentos/'+m.id).delete();if(++k%20===0)btn.textContent=`Excluindo ${k}/${total}…`}
+        for(const p of produtos){await S.db.doc('produtos/'+p.id).delete();if(++k%20===0)btn.textContent=`Excluindo ${k}/${total}…`}
+        toast(`Estoque excluído: ${produtos.length} produto${produtos.length===1?'':'s'} e ${movs.length} movimentaç${movs.length===1?'ão':'ões'}`);
+        return true;
+      }catch(e){erro('#v-err','Não foi possível excluir tudo: '+(e.message||'erro')+'. Tente de novo.');return false}
+    },{submitLabel:'Excluir tudo'});
+    const b=document.querySelector('#dlgForm button[type=submit]');if(b)b.classList.add('danger');
+  }
+  document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-a="excluir-estoque"]');if(b){e.preventDefault();e.stopPropagation();formExcluirTudo()}},true);
+
+  return{formImportar,lerCsv,preparar,formExcluirTudo};
 })();
 </script>
 <!-- Ajustes de celular e tablet. Entra no index.html pelo ferramentas/montar.py, depois do sistema.

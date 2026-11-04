@@ -155,6 +155,7 @@ function crmFiltrados(){const q=norm(S.f.qcrm);return S.clientes.filter(c=>filtr
     # ---- Pedidos no mesmo padrão da aba Tarefas (o Funil fica no layout original) ----
     ('style="grid-template-columns:repeat(5,minmax(270px,1fr));min-width:1420px"', 'style="grid-template-columns:repeat(5,minmax(0,1fr));min-width:0"', 1),
     ('style="grid-template-columns:repeat(4,minmax(260px,1fr));min-width:1100px"', 'style="grid-template-columns:repeat(4,minmax(0,1fr));min-width:0"', 1),
+    ("${pode('produtos')?'<button class=\"btn\" data-a=\"importar-produtos\">", "${pode('excluir')&&S.produtos.length?'<button class=\"btn danger\" data-a=\"excluir-estoque\"><i class=\"fa-solid fa-trash\"></i> Excluir todo o estoque</button>':''}${pode('produtos')?'<button class=\"btn\" data-a=\"importar-produtos\">", 1),
 ]
 
 # Abre o WhatsApp Web numa janela ao lado e manda para ela as conversas abertas pelo sistema.
