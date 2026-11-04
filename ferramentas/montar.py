@@ -140,6 +140,18 @@ function waCli(c,label,n){const t=n===2?c.telefone2:c.telefone,sem=n===2?c.semWh
      """function filtroContato(c,f){if(!f)return true;const dig=t=>String(t||'').replace(/\\D/g,'');const whats=n=>!!dig(n===2?c.telefone2:c.telefone)&&!(n===2?c.semWhats2:c.semWhats);const tel=!!dig(c.telefone)||!!dig(c.telefone2);
   if(f==='whats')return whats(1)||whats(2);if(f==='ligar')return tel&&!whats(1)&&!whats(2);if(f==='sem')return!tel;return true}
 function crmFiltrados(){const q=norm(S.f.qcrm);return S.clientes.filter(c=>filtroContato(c,S.f.wcrm)&&(!S.f.tcrm||c.tipo===S.f.tcrm)&&""", 1),
+    # ---- produtos: categorias do catálogo, preço de atacado e importação ----
+    ("const CATS=['Luvas de luta','Luvas de goleiro','Kimonos e faixas','Protetores','Vestuário','Acessórios','Outro']",
+     "const CATS=['Luvas de luta','Luvas de goleiro','Kimonos e faixas','Protetores','Equipamentos de treino','Vestuário','Bolsas','Acessórios','Outro']", 1),
+    ("""<label class="f">Preço de venda (R$)<input class="inp" id="p-preco" name="preco" inputmode="decimal" value="${p.preco??''}" ${d}></label>""",
+     """<label class="f">Preço atacado (R$)<input class="inp" id="p-patac" name="precoAtacado" inputmode="decimal" value="${p.precoAtacado??''}" ${d}></label>
+   <label class="f">Preço varejo (R$)<input class="inp" id="p-preco" name="preco" inputmode="decimal" value="${p.preco??''}" ${d}></label>""", 1),
+    ("preco:num(fd.get('preco')),minimo:num(fd.get('minimo'))", "preco:num(fd.get('preco')),precoAtacado:num(fd.get('precoAtacado')),minimo:num(fd.get('minimo'))", 1),
+    ('<th class="num">Preço</th>', '<th class="num">Atacado</th><th class="num">Varejo</th>', 1),
+    ("""<td class="num">${p.preco?money(p.preco):'—'}</td>""", """<td class="num">${p.precoAtacado?money(p.precoAtacado):'—'}</td><td class="num">${p.preco?money(p.preco):'—'}</td>""", 1),
+    ("""${pode('produtos')?'<button class="btn pri" data-a="novo-produto">Novo produto</button>'""",
+     """${pode('produtos')?'<button class="btn" data-a="importar-produtos"><i class="fa-solid fa-file-import"></i> Importar produtos</button><button class="btn pri" data-a="novo-produto">Novo produto</button>'""", 1),
+    ('<tr><td colspan="9" class="ro">Nenhum produto com esse filtro.</td></tr>', '<tr><td colspan="10" class="ro">Nenhum produto com esse filtro.</td></tr>', 1),
 ]
 
 # Abre o WhatsApp Web numa janela ao lado e manda para ela as conversas abertas pelo sistema.
@@ -204,5 +216,6 @@ WAB = (RAIZ / 'ferramentas' / 'whatsapp-business.html').read_text(encoding='utf-
 IMPORTAR = (RAIZ / 'ferramentas' / 'importar.html').read_text(encoding='utf-8')
 VISITA = (RAIZ / 'ferramentas' / 'visita.html').read_text(encoding='utf-8')
 QUADROS = (RAIZ / 'ferramentas' / 'quadros.html').read_text(encoding='utf-8')
-(RAIZ / 'index.html').write_text(CABECA + WHATSAPP + app.strip() + '\n' + IMPORTAR + VISITA + WAB + QUADROS + CELULAR + '</body>\n</html>\n', encoding='utf-8')
+PRODUTOS = (RAIZ / 'ferramentas' / 'produtos.html').read_text(encoding='utf-8')
+(RAIZ / 'index.html').write_text(CABECA + WHATSAPP + app.strip() + '\n' + IMPORTAR + VISITA + WAB + QUADROS + PRODUTOS + CELULAR + '</body>\n</html>\n', encoding='utf-8')
 print('index.html gerado')

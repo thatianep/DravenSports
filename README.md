@@ -94,6 +94,13 @@ Combina com a busca e com os filtros de tipo e canal.
 ## Rolagem do funil
 No computador, os quadros (Funil, Tarefas e Pedidos) rolam **para os lados só pela barra do topo**, logo acima das colunas: ela fica presa abaixo do menu enquanto você desce a página. Arraste o pegador dourado, clique na trilha ou use as setas **◀ ▶**; ao lado aparece "colunas 1–5 de 7". **Para baixo, a página rola direto**: as colunas mostram todos os leads, sem barra no rodapé. No celular, deslize o quadro com o dedo.
 
+## Produtos e catálogo
+- Em **Estoque e custos → Importar produtos → Usar o catálogo Draven 2026**, o sistema cadastra os **60 itens** do catálogo de preços 2026 (`catalogo-2026.csv`): Angry, The Mist preta e vermelha, protetor de canela branco, Shark, The Eagle, pera de velocidade, raquete de foco, bastão de treino, saco de pancada, mochila, bolsa duffle e luvas de goleiro Astro, Lotus, Alpha I e Alpha II, cada cor com o seu **SKU (Art. DE-…)**, **preço de atacado** e **preço de varejo**.
+- Itens marcados como **Indisponível** no catálogo (pera de velocidade preta e saco de pancada) entram inativos; a pera de velocidade está com preço **sob consulta** (R$ 0).
+- O estoque começa em zero: dê entrada com **Ajustar** em cada produto (ou importe uma planilha com a coluna Estoque). Custo de produção e estoque mínimo também ficam para preencher.
+- Também dá para importar uma planilha CSV própria (Nome, Variação, SKU, Categoria, Unidade, Preço atacado, Preço varejo, Custo, Estoque, Mínimo, Ativo). Produto com o mesmo SKU **não duplica**: só atualiza preços e dados, sem mexer no estoque. Serve para atualizar a tabela de preços quando sair um catálogo novo.
+- Cada produto tem agora **Preço atacado** e **Preço varejo**; a tabela do estoque mostra as duas colunas. Novas categorias: **Equipamentos de treino** e **Bolsas**.
+
 ## Importar listas de leads
 No **Funil CRM** (ou em Clientes 360°), clique em **Importar** e escolha o arquivo exportado:
 - **Planilha CSV** (Excel, Google Planilhas): basta ter as colunas **Nome** e **Telefone** (aceita "Telefone 1", "Telefone 2", "Celular", "WhatsApp"…). Também são reconhecidas Contato, E-mail, Cidade, Tipo, Canal, Instagram, Interesse e Observação.
@@ -124,6 +131,8 @@ Pode importar a mesma lista de novo sempre que exportar: só entra o que é novo
 | `versao-claude-ai/sistema-draven.html` | Fonte do sistema (a mesma versão publicada no claude.ai) |
 | `ferramentas/whatsapp-business.html` | WhatsApp Business: número, mensagens prontas e registro dos envios |
 | `ferramentas/visita.html` | Visita agendada (local, endereço, dia e hora) e última ação de cada lead |
+| `ferramentas/produtos.html` | Importação de produtos (catálogo 2026 ou CSV) e preço de atacado |
+| `catalogo-2026.csv` | Catálogo de preços Draven 2026 (60 itens, atacado e varejo) |
 | `ferramentas/quadros.html` | Barra de rolagem lateral dos quadros e rolagem de cada coluna |
 | `ferramentas/importar.html` | Importação de leads (CSV e .vcf), limpeza dos telefones e Telefone 2 |
 | `ferramentas/celular.html` | Ajustes de celular e tablet (barra de menu embaixo, tabelas em cartões) |

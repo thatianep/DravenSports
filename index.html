@@ -520,7 +520,7 @@ const ETAPAS=[{id:'lead',nome:'Novo lead'},{id:'contato',nome:'Primeiro contato'
 const ATIVAS=['lead','contato','proposta','negociacao'];
 const TIPOS=['Academia','Equipe/Time','Escolinha de futebol','Loja','Distribuidor','Atleta','Outro'];
 const ORIGENS=['Instagram','WhatsApp','Indicação','Prospecção ativa','Visita à loja','Loja virtual / site','Ligação recebida','E-mail','Feira/Evento','Facebook','TikTok','Google','LinkedIn','Mercado Livre','Outro'];
-const CATS=['Luvas de luta','Luvas de goleiro','Kimonos e faixas','Protetores','Vestuário','Acessórios','Outro'];
+const CATS=['Luvas de luta','Luvas de goleiro','Kimonos e faixas','Protetores','Equipamentos de treino','Vestuário','Bolsas','Acessórios','Outro'];
 const UNID=['un','par','kit','m','kg'];
 const PAGTO=['Pix','Boleto','Cartão de crédito','Dinheiro','Faturado 28 dias','Faturado 30/60'];
 const PAPEIS={gestao:'Gestão',vendedor:'Vendas',estoque:'Estoque'};
@@ -917,7 +917,7 @@ function vEstoque(){
   return`<div class="head"><div><h1>Estoque</h1><p class="sub">${S.produtos.length} produto${S.produtos.length===1?'':'s'} · ${n0.format(sum(S.produtos,p=>p.estoque))} unidades${pode('custo')?' · '+money(sum(S.produtos,p=>(p.estoque>0?p.estoque:0)*(p.custo||0)))+' a custo':''}</p></div>
   <div class="tools">${t==='produtos'?`<input class="inp search" id="q-e" data-f="qe" placeholder="Buscar produto ou SKU" value="${esc(S.f.qe||'')}"><select class="inp" id="c-e" data-f="ce"><option value="">Todas as categorias</option>${CATS.map(c=>`<option ${S.f.ce===c?'selected':''}>${c}</option>`).join('')}</select>`:''}
   ${S.dl&&t==='produtos'?'<button class="btn" data-a="csv-estoque">Exportar CSV</button>':''}
-  ${pode('produtos')?'<button class="btn pri" data-a="novo-produto">Novo produto</button>':''}</div></div>
+  ${pode('produtos')?'<button class="btn" data-a="importar-produtos"><i class="fa-solid fa-file-import"></i> Importar produtos</button><button class="btn pri" data-a="novo-produto">Novo produto</button>':''}</div></div>
   <div class="tabs" role="tablist"><button role="tab" aria-selected="${t==='produtos'}" data-a="est-tab" data-v="produtos">Produtos</button><button role="tab" aria-selected="${t==='mov'}" data-a="est-tab" data-v="mov">Movimentações</button></div>
   <div id="body">${t==='produtos'?estoqueBody():movBody()}</div>`;
 }
@@ -925,12 +925,12 @@ function estoqueBody(){
   if(!S.produtos.length)return`<div class="empty"><strong>Nenhum produto cadastrado</strong><span>Cadastre cada variação vendável como um produto: Luva de boxe 14oz preta, Kimono A2 branco, Luva de goleiro tam. 9.</span>${pode('produtos')?'<button class="btn pri" data-a="novo-produto">Cadastrar primeiro produto</button>':''}</div>`;
   const q=norm(S.f.qe);const custo=pode('custo');
   const l=S.produtos.filter(p=>(!S.f.ce||p.categoria===S.f.ce)&&(!q||norm(prodNome(p)+' '+(p.sku||'')).includes(q))).sort((a,b)=>prodNome(a).localeCompare(prodNome(b)));
-  return`<div class="tbl-wrap"><table><thead><tr><th>SKU</th><th>Produto</th><th>Categoria</th><th class="num">Em estoque</th><th class="num">Mínimo</th>${custo?'<th class="num">Custo</th>':''}<th class="num">Preço</th>${custo?'<th class="num">Margem</th>':''}<th></th></tr></thead><tbody>
+  return`<div class="tbl-wrap"><table><thead><tr><th>SKU</th><th>Produto</th><th>Categoria</th><th class="num">Em estoque</th><th class="num">Mínimo</th>${custo?'<th class="num">Custo</th>':''}<th class="num">Atacado</th><th class="num">Varejo</th>${custo?'<th class="num">Margem</th>':''}<th></th></tr></thead><tbody>
   ${l.map(p=>{const baixo=(Number(p.minimo)||0)>0&&(Number(p.estoque)||0)<=p.minimo;const mg=p.preco>0&&p.custo>0?((p.preco-p.custo)/p.preco*100):null;
    return`<tr class="${baixo?'low':''} click" data-a="edit-produto" data-id="${p.id}"><td class="mono">${esc(p.sku||'—')}</td><td><b>${esc(p.nome)}</b>${p.variacao?`<div class="ro">${esc(p.variacao)}</div>`:''}${p.ativo===false?' <span class="pill">Inativo</span>':''}</td><td>${esc(p.categoria||'')}</td>
    <td class="num est">${n0.format(p.estoque||0)} ${esc(p.unidade||'un')}${baixo?' <span class="pill bad">Repor</span>':''}</td><td class="num">${p.minimo?n0.format(p.minimo):'—'}</td>
-   ${custo?`<td class="num">${p.custo?money(p.custo):'—'}</td>`:''}<td class="num">${p.preco?money(p.preco):'—'}</td>${custo?`<td class="num">${mg==null?'—':mg.toFixed(0)+'%'}</td>`:''}
-   <td>${pode('produtos')?`<button class="btn sm" data-a="ajustar" data-id="${p.id}">Ajustar</button>`:''}</td></tr>`}).join('')||'<tr><td colspan="9" class="ro">Nenhum produto com esse filtro.</td></tr>'}
+   ${custo?`<td class="num">${p.custo?money(p.custo):'—'}</td>`:''}<td class="num">${p.precoAtacado?money(p.precoAtacado):'—'}</td><td class="num">${p.preco?money(p.preco):'—'}</td>${custo?`<td class="num">${mg==null?'—':mg.toFixed(0)+'%'}</td>`:''}
+   <td>${pode('produtos')?`<button class="btn sm" data-a="ajustar" data-id="${p.id}">Ajustar</button>`:''}</td></tr>`}).join('')||'<tr><td colspan="10" class="ro">Nenhum produto com esse filtro.</td></tr>'}
   </tbody></table></div>`;
 }
 function movBody(){
@@ -950,13 +950,14 @@ function formProduto(p={}){
    <label class="f">Categoria<select class="inp" id="p-cat" name="categoria" ${d}>${CATS.map(c=>`<option ${p.categoria===c?'selected':''}>${c}</option>`).join('')}</select></label>
    <label class="f">Unidade<select class="inp" id="p-un" name="unidade" ${d}>${UNID.map(u=>`<option ${(p.unidade||(p.id?'un':'par'))===u?'selected':''}>${u}</option>`).join('')}</select></label>
    ${custo?`<label class="f">Custo de produção por unidade (R$)<input class="inp" id="p-custo" name="custo" inputmode="decimal" value="${p.custo??''}" ${d}></label>`:''}
-   <label class="f">Preço de venda (R$)<input class="inp" id="p-preco" name="preco" inputmode="decimal" value="${p.preco??''}" ${d}></label>
+   <label class="f">Preço atacado (R$)<input class="inp" id="p-patac" name="precoAtacado" inputmode="decimal" value="${p.precoAtacado??''}" ${d}></label>
+   <label class="f">Preço varejo (R$)<input class="inp" id="p-preco" name="preco" inputmode="decimal" value="${p.preco??''}" ${d}></label>
    <label class="f">Estoque mínimo<input class="inp" id="p-min" name="minimo" inputmode="numeric" value="${p.minimo??''}" ${d}></label>
    ${p.id?`<label class="f">Em estoque<input class="inp" id="p-est" value="${n0.format(p.estoque||0)} ${esc(p.unidade||'')}" disabled></label>`:`<label class="f">Estoque inicial<input class="inp" id="p-ini" name="inicial" inputmode="numeric" value="0" ${d}></label>`}
    <label class="chk"><input type="checkbox" id="p-ativo" name="ativo" ${p.ativo!==false?'checked':''} ${d}> Ativo para venda</label>
   </div>${p.id?'<p class="ro">Para mudar a quantidade em estoque, use o botão Ajustar na lista. Assim a alteração fica registrada nas movimentações.</p>':''}`,
   ed?async fd=>{
-    const dados={nome:fd.get('nome').trim(),variacao:fd.get('variacao'),sku:fd.get('sku'),categoria:fd.get('categoria'),unidade:fd.get('unidade'),preco:num(fd.get('preco')),minimo:num(fd.get('minimo')),ativo:!!fd.get('ativo'),atualizadoEm:Date.now()};
+    const dados={nome:fd.get('nome').trim(),variacao:fd.get('variacao'),sku:fd.get('sku'),categoria:fd.get('categoria'),unidade:fd.get('unidade'),preco:num(fd.get('preco')),precoAtacado:num(fd.get('precoAtacado')),minimo:num(fd.get('minimo')),ativo:!!fd.get('ativo'),atualizadoEm:Date.now()};
     if(custo)dados.custo=num(fd.get('custo'));
     if(p.id){await salvar('produtos',p.id,dados);toast('Produto atualizado');return true}
     const ini=num(fd.get('inicial'));dados.estoque=0;dados.criadoEm=Date.now();
@@ -2827,6 +2828,99 @@ window.DRAVEN_WAB=(function(){
   const agendar=()=>{if(!marcado){marcado=true;requestAnimationFrame(()=>{marcado=false;varrer()})}};
   function iniciar(){const m=document.getElementById('main');if(m)new MutationObserver(agendar).observe(m,{childList:true,subtree:true});agendar()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',iniciar);else iniciar();
+})();
+</script>
+<!-- Produtos: preço de atacado e importação de produtos (catálogo Draven 2026 ou planilha CSV).
+     Entra no index.html pelo ferramentas/montar.py, depois do sistema (usa S, salvar, abrir… do sistema). -->
+<style>.tbl-wrap td.mono{white-space:nowrap}</style>
+<script>
+window.DRAVEN_PROD=(function(){
+  const ALIAS={nome:['nome','produto','descricao','item'],variacao:['variacao','cor','cores','modelo'],sku:['sku','codigo','art','artigo','referencia','ref'],
+    categoria:['categoria','linha','grupo'],unidade:['unidade','un','und'],precoAtacado:['preco atacado','atacado','valor atacado'],preco:['preco varejo','varejo','preco','valor','preco de venda'],
+    custo:['custo','custo unitario'],estoque:['estoque','quantidade','qtd','saldo'],minimo:['minimo','estoque minimo'],ativo:['ativo','disponivel','situacao'],obs:['observacao','obs']};
+  const chave=s=>norm(s).replace(/[^a-z0-9]+/g,' ').trim();
+  const numBR=v=>{const t=String(v??'').replace(/[^\d,.-]/g,'');if(!t)return 0;const n=Number(t.includes(',')?t.replace(/\./g,'').replace(',','.'):t);return isFinite(n)?n:0};
+  const sim=v=>!/^(nao|não|n|0|false|inativo|indisponivel|indisponível)$/i.test(String(v??'').trim()||'sim');
+
+  function lerCsv(txt){
+    const linhas=String(txt||'').replace(/^﻿/,'').replace(/\r/g,'').split('\n').filter(l=>l.trim());
+    if(linhas.length<2)return{erro:'Cole o cabeçalho e pelo menos uma linha de produto.'};
+    const sep=linhas[0].includes('\t')?'\t':(linhas[0].split(';').length>linhas[0].split(',').length?';':',');
+    const parse=l=>{const out=[];let cur='',q=false;for(let i=0;i<l.length;i++){const ch=l[i];if(ch==='"'){if(q&&l[i+1]==='"'){cur+='"';i++}else q=!q}else if(ch===sep&&!q){out.push(cur);cur=''}else cur+=ch}out.push(cur);return out.map(x=>x.trim())};
+    const cab=parse(linhas[0]).map(chave),map={};
+    // primeiro os nomes de coluna mais específicos (ex.: "preço atacado" antes de "preço")
+    const ordem=['precoAtacado','preco','custo','minimo','estoque','sku','variacao','categoria','unidade','ativo','obs','nome'];
+    for(const k of ordem){const i=cab.findIndex((h,ix)=>!Object.values(map).includes(ix)&&ALIAS[k].some(a=>h===chave(a)||h.startsWith(chave(a)+' ')));if(i>=0)map[k]=i}
+    if(map.nome==null)return{erro:'Não encontrei a coluna de nome do produto ("Nome" ou "Produto").'};
+    const rows=linhas.slice(1).map(parse).map(r=>{const o={};for(const[k,i]of Object.entries(map))o[k]=r[i]??'';return o}).filter(o=>String(o.nome).trim());
+    return{rows,cols:Object.keys(map)};
+  }
+  function categoria(c){const n=chave(c);return CATS.find(x=>chave(x)===n)||(c?'Outro':'Outro')}
+
+  let IMPP=null;
+  function preparar(rows){
+    const porSku=new Map(S.produtos.filter(p=>p.sku).map(p=>[chave(p.sku),p]));
+    const porNome=new Map(S.produtos.map(p=>[chave(p.nome+' '+(p.variacao||'')),p]));
+    const novos=[],atualiza=[],iguais=[];
+    for(const r of rows){
+      const d={nome:String(r.nome).trim(),variacao:String(r.variacao||'').trim(),sku:String(r.sku||'').trim().toUpperCase(),categoria:categoria(r.categoria),unidade:String(r.unidade||'un').trim()||'un',
+        preco:numBR(r.preco),precoAtacado:numBR(r.precoAtacado),ativo:r.ativo==null||r.ativo===''?true:sim(r.ativo),obs:String(r.obs||'').trim()};
+      if(r.custo!=null&&r.custo!=='')d.custo=numBR(r.custo);
+      if(r.minimo!=null&&r.minimo!=='')d.minimo=numBR(r.minimo);
+      const ini=r.estoque!=null&&r.estoque!==''?numBR(r.estoque):0;
+      const p=(d.sku&&porSku.get(chave(d.sku)))||porNome.get(chave(d.nome+' '+d.variacao));
+      if(!p){novos.push({d,ini});continue}
+      const muda={};for(const k of['nome','variacao','sku','categoria','unidade','preco','precoAtacado','ativo','custo','minimo'])if(k in d&&d[k]!==''&&d[k]!==p[k])muda[k]=d[k];
+      if(d.obs&&d.obs!==p.obs)muda.obs=d.obs;
+      Object.keys(muda).length?atualiza.push({p,muda}):iguais.push(p);
+    }
+    return{novos,atualiza,iguais};
+  }
+  function previa(txt){
+    const box=document.getElementById('ip-prev');if(!box)return;
+    const r=lerCsv(txt);
+    if(r.erro){IMPP=null;box.innerHTML=String(txt||'').trim()?`<p class="err">${esc(r.erro)}</p>`:'';return}
+    const p=preparar(r.rows);IMPP=p;
+    const inat=p.novos.filter(x=>!x.d.ativo).length;
+    box.innerHTML=`<div class="notice"><b>${p.novos.length}</b> produto${p.novos.length===1?'':'s'} novo${p.novos.length===1?'':'s'}${inat?` (${inat} marcado${inat===1?'':'s'} como indisponível)`:''}${p.atualiza.length?` · <b>${p.atualiza.length}</b> já cadastrado${p.atualiza.length===1?'':'s'} com preço ou dado atualizado`:''}${p.iguais.length?` · ${p.iguais.length} já ${p.iguais.length===1?'está igual':'estão iguais'}`:''}. O estoque atual dos produtos já cadastrados não muda.</div>
+    ${p.novos.length||p.atualiza.length?`<div class="tbl-wrap" style="max-height:280px;overflow:auto"><table style="min-width:640px"><thead><tr><th>SKU</th><th>Produto</th><th>Categoria</th><th class="num">Atacado</th><th class="num">Varejo</th><th>Situação</th></tr></thead><tbody>
+    ${[...p.novos.map(x=>[x.d,'Novo'+(x.d.ativo?'':' · indisponível')]),...p.atualiza.map(x=>[{...x.p,...x.muda},'Atualiza: '+Object.keys(x.muda).map(k=>({preco:'varejo',precoAtacado:'atacado'}[k]||k)).join(', ')])].slice(0,80).map(([d,s])=>`<tr><td class="mono">${esc(d.sku||'—')}</td><td>${esc(d.nome)}${d.variacao?`<div class="ro">${esc(d.variacao)}</div>`:''}</td><td>${esc(d.categoria)}</td><td class="num">${d.precoAtacado?money(d.precoAtacado):'—'}</td><td class="num">${d.preco?money(d.preco):(d.obs||'—')}</td><td>${esc(s)}</td></tr>`).join('')}
+    </tbody></table></div>`:''}`;
+  }
+  function formImportar(){
+    IMPP=null;
+    abrir('Importar produtos',`
+     <p class="sub" style="margin:0">Carregue o <b>catálogo Draven 2026</b> (60 itens: Angry, The Mist preta e vermelha, Shark, The Eagle, treino, bolsas e luvas de goleiro, com preço de atacado e varejo) ou uma planilha CSV sua. Produtos com o mesmo SKU (Art.) não são duplicados: só têm preço e dados atualizados.</p>
+     <div class="tools"><button type="button" class="btn pri" id="ip-cat"><i class="fa-solid fa-book-open"></i> Usar o catálogo Draven 2026</button></div>
+     <label class="f">Ou arquivo CSV<input class="inp" id="ip-arq" type="file" accept=".csv,.txt,text/csv"></label>
+     <label class="f">Ou cole aqui<textarea class="inp mono" id="ip-txt" rows="5" placeholder="Nome;Variação;SKU;Categoria;Unidade;Preço atacado;Preço varejo;Estoque"></textarea></label>
+     <div id="ip-prev"></div><p class="err" id="v-err" hidden></p>`,
+    async()=>{
+      if(!IMPP||(!IMPP.novos.length&&!IMPP.atualiza.length)){erro('#v-err','Nenhum produto novo ou alterado para importar.');return false}
+      const btn=document.querySelector('#dlgForm button[type=submit]'),agora=Date.now(),total=IMPP.novos.length+IMPP.atualiza.length;let n=0;
+      for(const{d,ini}of IMPP.novos){
+        const dados={...d,minimo:d.minimo||0,estoque:0,criadoEm:agora,atualizadoEm:agora,criadoPor:S.myId,origem:'Importação de produtos'};
+        if(!dados.obs)delete dados.obs;
+        const id=await salvar('produtos',null,dados);
+        if(ini){S.produtos.push({id,...dados});try{await moverEstoque(id,ini,'inicial','Importação','')}catch(e){}}
+        n++;if(n%10===0)btn.textContent=`Importando ${n}/${total}…`;
+      }
+      for(const{p,muda}of IMPP.atualiza){await salvar('produtos',p.id,{...muda,atualizadoEm:agora});n++;if(n%10===0)btn.textContent=`Importando ${n}/${total}…`}
+      toast(`${IMPP.novos.length} produto${IMPP.novos.length===1?'':'s'} cadastrado${IMPP.novos.length===1?'':'s'}${IMPP.atualiza.length?` · ${IMPP.atualiza.length} atualizado${IMPP.atualiza.length===1?'':'s'}`:''}`);
+      return true;
+    },{submitLabel:'Importar produtos'});
+    const txt=document.getElementById('ip-txt');
+    txt.addEventListener('input',()=>previa(txt.value));
+    document.getElementById('ip-arq').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{txt.value=fr.result;previa(fr.result)};fr.readAsText(f)});
+    document.getElementById('ip-cat').addEventListener('click',async e=>{
+      e.target.disabled=true;
+      try{const r=await fetch('catalogo-2026.csv',{cache:'no-cache'});if(!r.ok)throw 0;txt.value=await r.text();previa(txt.value)}
+      catch(x){erro('#v-err','Não consegui carregar o catálogo. Recarregue a página e tente de novo.')}
+      finally{e.target.disabled=false}
+    });
+  }
+  document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-a="importar-produtos"]');if(b){e.preventDefault();e.stopPropagation();formImportar()}},true);
+  return{formImportar,lerCsv,preparar};
 })();
 </script>
 <!-- Ajustes de celular e tablet. Entra no index.html pelo ferramentas/montar.py, depois do sistema.

@@ -1,0 +1,61 @@
+Nome;Variação;SKU;Categoria;Unidade;Preço atacado;Preço varejo;Ativo;Observação
+Luva de boxe Angry;Toda preta;DE-6819;Luvas de luta;par;92;175;Sim;
+Luva de boxe Angry;Preto / Vermelho;DE-6820;Luvas de luta;par;92;175;Sim;
+Luva de boxe Angry;Preto / Prateado;DE-6821;Luvas de luta;par;92;175;Sim;
+Luva de boxe Angry;Branco / Preto / Vermelho;DE-6823;Luvas de luta;par;92;175;Sim;
+Luva de boxe Angry;Branco / Vermelho / Preto;DE-6822;Luvas de luta;par;92;175;Sim;
+Luva de boxe The Mist Preta;Preto / Dourado / Branco;DE-6824;Luvas de luta;par;102;185;Sim;
+Luva de grappling The Mist Preta;Preto / Dourado / Branco;DE-6825;Luvas de luta;par;85;165;Sim;
+Luva de MMA The Mist Preta;Preto / Dourado / Branco;DE-6829;Luvas de luta;par;85;165;Sim;
+Manopla The Mist Preta;Preto / Dourado / Branco;DE-6826;Equipamentos de treino;par;98;190;Sim;
+Capacete The Mist Preta;Preto / Dourado / Branco;DE-6828;Protetores;un;101;195;Sim;
+Protetor de canela The Mist Preta;Preto / Dourado / Branco;DE-6830;Protetores;par;138;235;Sim;
+Escudo de chute curvo redondo The Mist Preta;Preto / Dourado / Branco;DE-6827;Equipamentos de treino;un;122;230;Sim;
+Escudo de chute curvo The Mist Preta;Preto / Dourado / Branco;DE-6831;Equipamentos de treino;un;243;360;Sim;
+Escudo de treinamento The Mist Preta;Preto / Dourado / Branco;DE-6832;Equipamentos de treino;un;196;325;Sim;
+Manga curta The Mist Preta;Preto / Dourado / Branco;DE-6833;Vestuário;un;65;120;Sim;
+Bermuda de boxe The Mist Preta;Preto / Dourado / Branco;DE-6834;Vestuário;un;65;120;Sim;
+Luva de boxe The Mist Vermelha;Vermelho / Dourado / Branco;DE-6935;Luvas de luta;par;102;185;Sim;
+Luva de grappling The Mist Vermelha;Vermelho / Dourado / Branco;DE-6936;Luvas de luta;par;85;165;Sim;
+Luva de MMA The Mist Vermelha;Vermelho / Dourado / Branco;DE-6939;Luvas de luta;par;85;165;Sim;
+Manopla The Mist Vermelha;Vermelho / Dourado / Branco;DE-6940;Equipamentos de treino;par;98;190;Sim;
+Capacete The Mist Vermelha;Vermelho / Dourado / Branco;DE-6938;Protetores;un;101;195;Sim;
+Protetor de canela The Mist Vermelha;Vermelho / Dourado / Branco;DE-6937;Protetores;par;138;235;Sim;
+Escudo de chute curvo redondo The Mist Vermelha;Vermelho / Dourado / Branco;DE-6941;Equipamentos de treino;un;122;230;Sim;
+Escudo de chute curvo The Mist Vermelha;Vermelho / Dourado / Branco;DE-6942;Equipamentos de treino;un;243;360;Sim;
+Escudo de treinamento The Mist Vermelha;Vermelho / Dourado / Branco;DE-6943;Equipamentos de treino;un;196;325;Sim;
+Protetor de canela (versão branca);Branco / Dourado / Preto;DE-6991;Protetores;par;138;235;Sim;
+Luva de boxe Shark;Marinho;DE-7044;Luvas de luta;par;128;215;Sim;
+Luva de boxe Shark;Preta;DE-7045;Luvas de luta;par;128;215;Sim;
+Luva de boxe Shark;Vermelha;DE-7046;Luvas de luta;par;128;215;Sim;
+Luva de boxe The Eagle;Preto / Dourado;DE-7147;Luvas de luta;par;115;195;Sim;
+Luva de boxe The Eagle;Vermelho / Dourado;DE-7148;Luvas de luta;par;115;195;Sim;
+Luva de boxe The Eagle;Azul marinho / Dourado;DE-7149;Luvas de luta;par;115;195;Sim;
+Pera de velocidade;Preta;DE-7232;Equipamentos de treino;un;0;0;Não;Indisponível no catálogo 2026
+Pera de velocidade;Vermelha;DE-7233;Equipamentos de treino;un;0;0;Sim;Preço sob consulta
+Pera de velocidade;Branca;DE-7234;Equipamentos de treino;un;0;0;Sim;Preço sob consulta
+Raquete de foco;Preto / Branco / Dourado;DE-9110;Equipamentos de treino;par;93;170;Sim;
+Raquete de foco;Branco / Preto / Dourado (faixas);DE-9111;Equipamentos de treino;par;93;170;Sim;
+Raquete de foco;Branco / Preto / Dourado (águia);DE-9112;Equipamentos de treino;par;93;170;Sim;
+Raquete de foco;Vermelho / Branco / Dourado;DE-9113;Equipamentos de treino;par;93;170;Sim;
+Bastão de treino;Preto / Branco;DE-7441;Equipamentos de treino;un;93;170;Sim;
+Bastão de treino;Vermelho / Preto;DE-7442;Equipamentos de treino;un;93;170;Sim;
+Bastão de treino;Branco / Preto;DE-7443;Equipamentos de treino;un;93;170;Sim;
+Saco de pancada;Preto;DE-7350;Equipamentos de treino;un;0;0;Não;Indisponível no catálogo 2026
+Mochila casual;Azul / Preto;DE-8141;Bolsas;un;75;135;Sim;
+Bolsa duffle;Preta / Marrom;DE-8142;Bolsas;un;120;198;Sim;
+Luva de goleiro Astro;Preto / Amarelo;DE-9011;Luvas de goleiro;par;29;75;Sim;
+Luva de goleiro Astro;Azul / Preto;DE-9012;Luvas de goleiro;par;29;75;Sim;
+Luva de goleiro Astro;Vermelho / Preto;DE-9013;Luvas de goleiro;par;29;75;Sim;
+Luva de goleiro infantil Lotus;Preto / Cinza / Branco;DE-9116;Luvas de goleiro;par;29;75;Sim;
+Luva de goleiro infantil Lotus;Cinza / Lima / Preto;DE-9117;Luvas de goleiro;par;29;75;Sim;
+Luva de goleiro infantil Lotus;Preto / Vermelho / Branco;DE-9118;Luvas de goleiro;par;29;75;Sim;
+Luva de goleiro Alpha I;Preto / Lima;DE-9232;Luvas de goleiro;par;42;98;Sim;
+Luva de goleiro Alpha I;Preto / Dourado;DE-9233;Luvas de goleiro;par;42;98;Sim;
+Luva de goleiro Alpha I;Azul marinho / Ciano;DE-9236;Luvas de goleiro;par;42;98;Sim;
+Luva de goleiro Alpha I;Preto / Cinza;DE-9234;Luvas de goleiro;par;42;98;Sim;
+Luva de goleiro Alpha I;Preto / Vermelho;DE-9235;Luvas de goleiro;par;42;98;Sim;
+Luva de goleiro Alpha II;Preto / Verde-limão;DE-9321;Luvas de goleiro;par;42;98;Sim;
+Luva de goleiro Alpha II;Preto / Branco;DE-9322;Luvas de goleiro;par;42;98;Sim;
+Luva de goleiro Alpha II;Branco / Preto;DE-9323;Luvas de goleiro;par;42;98;Sim;
+Luva de goleiro Alpha II;Preto / Vermelho;DE-9324;Luvas de goleiro;par;42;98;Sim;
