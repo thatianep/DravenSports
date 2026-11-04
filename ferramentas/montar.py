@@ -122,6 +122,17 @@ function waCli(c,label,n){const t=n===2?c.telefone2:c.telefone,sem=n===2?c.semWh
     # botão WhatsApp no topo
     ('<div class="hact"><button class="btn" id="topLead"',
      '<div class="hact"><button class="btn wa" type="button" data-whatsapp-web title="Abrir o WhatsApp Web ao lado do sistema"><i class="fa-brands fa-whatsapp"></i><span class="lbl">WhatsApp</span></button><button class="btn" id="topLead"', 1),
+    # ---- visita agendada (local, endereço, dia e hora) e última ação ----
+    ("""<label class="f">Cidade / UF<input class="inp" id="c-cid" name="cidade" value="${esc(c.cidade||'')}" placeholder="São Paulo/SP" ${d}></label>""",
+     """<label class="f">Cidade / UF<input class="inp" id="c-cid" name="cidade" value="${esc(c.cidade||'')}" placeholder="São Paulo/SP" ${d}></label>${window.DRAVEN_VIS?DRAVEN_VIS.camposFicha(c,d):''}""", 1),
+    ("semWhats2:!!fd.get('semWhats2'),atualizadoEm:Date.now()};", "semWhats2:!!fd.get('semWhats2'),...(window.DRAVEN_VIS?DRAVEN_VIS.lerFicha(fd,c):{}),atualizadoEm:Date.now()};", 1),
+    ("if(nota||!c.id)dados.historico=[...(c.historico||[]),", "if(nota||!c.id)dados.historico=[...(dados.historico||c.historico||[]),", 1),
+    ("""tabindex="0"${pode('crm')?` data-drag="lead" data-from="${c.etapa||'lead'}"`:''}><div class="t">${esc(c.nome)}</div>""",
+     """tabindex="0"${pode('crm')?` data-drag="lead" data-from="${c.etapa||'lead'}"`:''}><div class="t">${esc(c.nome)}</div>${window.DRAVEN_VIS?DRAVEN_VIS.visCard(c)+DRAVEN_VIS.uaCard(c):''}""", 1),
+    ('<th>Próxima ação</th>', '<th>Próxima ação</th><th>Última ação</th>', 1),
+    ("""<td>${esc(c.proximaAcao||'')} ${due(c.dataProxima,ini,fim)}</td>""", """<td>${esc(c.proximaAcao||'')} ${due(c.dataProxima,ini,fim)}</td><td>${window.DRAVEN_VIS?DRAVEN_VIS.uaCol(c):''}</td>""", 1),
+    ('<tr><td colspan="8" class="ro">Nenhum contato encontrado com esse filtro.</td></tr>', '<tr><td colspan="9" class="ro">Nenhum contato encontrado com esse filtro.</td></tr>', 1),
+    ("""if(sem){const u=telLink(t);return u?`<a class="btn sm ligar wa-cli" href""", """if(sem){const u=telLink(t);return u?`<a class="btn sm ligar wa-cli" data-ligcli="${esc(c.id)}" data-tel="${esc(t)}" href""", 1),
 ]
 
 # Abre o WhatsApp Web numa janela ao lado e manda para ela as conversas abertas pelo sistema.
@@ -184,5 +195,6 @@ CABECA = """<!doctype html>
 CELULAR = (RAIZ / 'ferramentas' / 'celular.html').read_text(encoding='utf-8')
 WAB = (RAIZ / 'ferramentas' / 'whatsapp-business.html').read_text(encoding='utf-8')
 IMPORTAR = (RAIZ / 'ferramentas' / 'importar.html').read_text(encoding='utf-8')
-(RAIZ / 'index.html').write_text(CABECA + WHATSAPP + app.strip() + '\n' + IMPORTAR + WAB + CELULAR + '</body>\n</html>\n', encoding='utf-8')
+VISITA = (RAIZ / 'ferramentas' / 'visita.html').read_text(encoding='utf-8')
+(RAIZ / 'index.html').write_text(CABECA + WHATSAPP + app.strip() + '\n' + IMPORTAR + VISITA + WAB + CELULAR + '</body>\n</html>\n', encoding='utf-8')
 print('index.html gerado')

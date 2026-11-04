@@ -69,6 +69,13 @@ A equipe toda atende pelo **mesmo número do WhatsApp Business** da empresa, cad
 - Botões de WhatsApp de pedidos e campanhas continuam mandando o texto do pedido ou da campanha direto.
 - O WhatsApp Web não pode ficar dentro da página do sistema: o próprio WhatsApp bloqueia ser aberto dentro de outro site. Por isso ele fica numa janela ao lado.
 
+## Visitas e última ação
+- **Visita agendada:** ao levar um lead para a etapa **Visita agendada** (arrastando ou pela caixa do card), abre a janela **Agendar visita**: escolha **Na nossa loja** ou **Na academia do lead**, o endereço, o dia e a hora. O endereço da loja fica salvo para as próximas; o da academia vai para a ficha do lead.
+- O card mostra o dia, a hora, o local e o link **rota** (Google Maps). Visita que já passou fica em vermelho, para remarcar ou concluir.
+- Ao agendar, o sistema cria uma **tarefa de visita** (aba Tarefas e Painel) e põe a visita como **próxima ação** do lead.
+- Na ficha do lead (aba Dados) ficam o **Endereço** da academia e os campos da visita (onde, endereço, dia e hora), que também podem ser alterados por lá.
+- **Última ação:** cada card do funil e a lista do CRM mostram a ação mais recente com o lead, quando foi e quem fez: WhatsApp enviado, ligação, visita, troca de etapa, tarefa concluída, orçamento ou pedido. Atualiza sozinho. Clicar em **Ligar** também fica registrado.
+
 ## Importar listas de leads
 No **Funil CRM** (ou em Clientes 360°), clique em **Importar** e escolha o arquivo exportado:
 - **Planilha CSV** (Excel, Google Planilhas): basta ter as colunas **Nome** e **Telefone** (aceita "Telefone 1", "Telefone 2", "Celular", "WhatsApp"…). Também são reconhecidas Contato, E-mail, Cidade, Tipo, Canal, Instagram, Interesse e Observação.
@@ -98,6 +105,7 @@ Pode importar a mesma lista de novo sempre que exportar: só entra o que é novo
 | `config.js` | ID do login do Google e e-mail da gestão |
 | `versao-claude-ai/sistema-draven.html` | Fonte do sistema (a mesma versão publicada no claude.ai) |
 | `ferramentas/whatsapp-business.html` | WhatsApp Business: número, mensagens prontas e registro dos envios |
+| `ferramentas/visita.html` | Visita agendada (local, endereço, dia e hora) e última ação de cada lead |
 | `ferramentas/importar.html` | Importação de leads (CSV e .vcf), limpeza dos telefones e Telefone 2 |
 | `ferramentas/celular.html` | Ajustes de celular e tablet (barra de menu embaixo, tabelas em cartões) |
 | `ferramentas/montar.py` | Gera o `index.html` a partir da fonte: `python3 ferramentas/montar.py` |
