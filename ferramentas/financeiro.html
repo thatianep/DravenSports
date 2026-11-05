@@ -114,7 +114,7 @@ window.DRAVEN_FIN=(function(){
      <div class="fin-card"><div class="fin-mh"><span class="fin-mt">Margem de Contribuição</span><div class="fin-mi purple"><i class="fa-solid fa-chart-pie"></i></div></div><div class="fin-mv">${bruto?pct(margem):'—'}</div>
       <div class="fin-tr">${semCusto?'<i class="fa-solid fa-triangle-exclamation"></i> sem custo dos produtos: preencha o custo no Estoque':'após taxas, impostos e custo dos produtos'}</div></div>
     </div>
-    <div class="fin-sh"><h3>Últimas transações</h3><button class="btn sm" data-fin-tab="conciliacao"><i class="fa-solid fa-list-check"></i> Ver conciliação</button></div>
+    <div class="fin-sh"><h3>Últimas transações</h3><div class="tools">${S.dl?'<button class="btn sm" data-fin-exportar><i class="fa-solid fa-file-export"></i> Exportar relatório</button>':''}<button class="btn sm" data-fin-tab="conciliacao"><i class="fa-solid fa-list-check"></i> Ver conciliação</button></div></div>
     ${tabela(l.slice(0,12),false)}`;
   }
   function statusBadge(x){
@@ -361,13 +361,20 @@ window.DRAVEN_FIN=(function(){
 
   function exportarVendas(){
     const ano=S.finMes.slice(0,4),nomeMes=new Date(S.finMes+'-15').toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
-    abrir('Exportar vendas',`<p class="sub" style="margin:0">Planilha (CSV, abre no Excel e no Google Planilhas) com as vendas registradas no Financeiro e os pedidos confirmados ou entregues do sistema.</p>
-     <label class="f">Período<select class="inp" id="fx-per" name="periodo"><option value="mes">${esc(nomeMes)}</option><option value="ano">Ano de ${ano}</option><option value="tudo">Todas as vendas</option></select></label>
-     <label class="f">Canal<select class="inp" id="fx-canal" name="canal"><option value="">Todos os canais</option>${canais().map(c=>`<option value="${esc(c.id)}">${esc(c.nome)}</option>`).join('')}</select></label>
+    abrir('Exportar relatório de vendas',`<p class="sub" style="margin:0">Escolha o período e o local da venda. Planilha (CSV, abre no Excel e no Google Planilhas) com as vendas registradas no Financeiro e os pedidos confirmados ou entregues do sistema.</p>
+     <div class="fg">
+      <label class="f">Período<select class="inp" id="fx-per" name="periodo"><option value="dia">Um dia</option><option value="mes" selected>Um mês</option><option value="ano">Um ano</option><option value="intervalo">De uma data até outra</option><option value="tudo">Todas as vendas</option></select></label>
+      <label class="f" data-fx="dia" hidden>Dia<input class="inp" id="fx-dia" name="dia" type="date" value="${toInp(Date.now())}"></label>
+      <label class="f" data-fx="mes">Mês<input class="inp" id="fx-mes" name="mes" type="month" value="${S.finMes}"></label>
+      <label class="f" data-fx="ano" hidden>Ano<input class="inp" id="fx-ano" name="ano" inputmode="numeric" value="${ano}"></label>
+      <label class="f" data-fx="intervalo" hidden>De<input class="inp" id="fx-de" name="de" type="date" value="${S.finMes}-01"></label>
+      <label class="f" data-fx="intervalo" hidden>Até<input class="inp" id="fx-ate" name="ate" type="date" value="${toInp(Date.now())}"></label>
+      <label class="f full">Local da venda<select class="inp" id="fx-canal" name="canal"><option value="">Todos os locais (todos os canais)</option>${canais().map(c=>`<option value="${esc(c.id)}">${esc(c.nome)}</option>`).join('')}</select></label>
+     </div>
      <p class="ro" id="fx-qtd" style="margin:0"></p>`,
     async fd=>{
-      const l=filtrar(fd.get('periodo'),fd.get('canal'));
-      if(!l.length){erro('#fx-qtd','Nenhuma venda nesse período.');return false}
+      const l=filtrar(fd,fd.get('canal'));
+      if(!l.length){erro('#fx-qtd','Nenhuma venda nesse período e local.');return false}
       const c=v=>{const t=String(v??'');return/[;"\n]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t};
       const nb=v=>String((Number(v)||0).toFixed(2)).replace('.',',');
       const st=x=>x.origem==='pedido'?(x.status==='entregue'?'Pedido entregue':'Pedido confirmado'):x.status==='recebido'?'Conciliado':x.status==='divergente'?'Divergente':'Aguardando repasse';
@@ -375,16 +382,32 @@ window.DRAVEN_FIN=(function(){
       const linhasCsv=l.map(x=>[fmtD(x.data),canal(x.canal).nome,x.numero||'',x.cliente||'',nb(x.valorBruto),nb(x.taxaPct),nb(x.taxa),nb(x.frete),nb(x.liquido),nb(x.custo),nb((Number(x.liquido)||0)-(Number(x.custo)||0)),
         x.previsao?fmtD(x.previsao):'',st(x),x.recebidoEm?fmtD(x.recebidoEm):'',x.valorRecebido!=null?nb(x.valorRecebido):'',x.pagamento||'',x.itens||'',x.obs||'',x.origem==='pedido'?'Pedido do sistema':'Lançamento do financeiro'].map(c).join(';'));
       const tot=['TOTAL','','','',nb(soma(l,x=>x.valorBruto)),'',nb(soma(l,x=>x.taxa)),nb(soma(l,x=>x.frete)),nb(soma(l,x=>x.liquido)),nb(soma(l,x=>x.custo)),nb(soma(l,x=>(Number(x.liquido)||0)-(Number(x.custo)||0)))].map(c).join(';');
-      const per=fd.get('periodo')==='mes'?S.finMes:fd.get('periodo')==='ano'?ano:'todas';
+      const per=nomePeriodo(fd);
       try{await S.dl.save({filename:`draven-vendas-${per}${fd.get('canal')?'-'+fd.get('canal'):''}.csv`,data:new Blob(['﻿'+[cab.join(';'),...linhasCsv,tot].join('\n')],{type:'text/csv'})});toast(`${l.length} venda${l.length===1?'':'s'} exportada${l.length===1?'':'s'}`);return true}
       catch(e){erro('#fx-qtd','Não foi possível baixar o arquivo.');return false}
     },{submitLabel:'Baixar planilha'});
-    const atual=()=>{const fd=new FormData(document.getElementById('dlgForm')),q=document.getElementById('fx-qtd'),l=filtrar(fd.get('periodo'),fd.get('canal'));if(q){q.hidden=false;q.className='ro';q.textContent=`${l.length} venda${l.length===1?'':'s'} · ${money(soma(l,x=>x.valorBruto))} de faturamento bruto`}};
-    ['fx-per','fx-canal'].forEach(id=>document.getElementById(id).addEventListener('change',atual));atual();
+    const atual=()=>{const fd=new FormData(document.getElementById('dlgForm')),per=fd.get('periodo');
+      document.querySelectorAll('#dlgForm [data-fx]').forEach(el=>{el.hidden=el.dataset.fx!==per});
+      const q=document.getElementById('fx-qtd'),l=filtrar(fd,fd.get('canal'));if(q){q.hidden=false;q.className='ro';q.textContent=`${l.length} venda${l.length===1?'':'s'} · ${money(soma(l,x=>x.valorBruto))} de faturamento bruto · ${money(soma(l,x=>x.liquido))} líquido`}};
+    document.querySelectorAll('#dlgForm select,#dlgForm input').forEach(el=>{el.addEventListener('change',atual);el.addEventListener('input',atual)});atual();
   }
-  function filtrar(per,can){
-    const ano=S.finMes.slice(0,4),chave=ms=>{const d=new Date(ms);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`};
-    return todasVendas().filter(x=>x.data&&(per==='tudo'||(per==='ano'?chave(x.data).slice(0,4)===ano:chave(x.data)===S.finMes))&&(!can||x.canal===can));
+  // período escolhido na janela: dia, mês, ano, intervalo ou tudo (datas no fuso do computador)
+  const ini=s=>s?new Date(s+'T00:00:00').getTime():null,fimDia=s=>s?new Date(s+'T23:59:59.999').getTime():null;
+  function faixa(fd){
+    const per=fd.get('periodo')||'mes';
+    if(per==='dia'){const d=fd.get('dia');return[ini(d),fimDia(d)]}
+    if(per==='mes'){const m=fd.get('mes')||S.finMes;const[a,mm]=m.split('-').map(Number);return[new Date(a,mm-1,1).getTime(),new Date(a,mm,0,23,59,59,999).getTime()]}
+    if(per==='ano'){const a=Number(fd.get('ano'))||new Date().getFullYear();return[new Date(a,0,1).getTime(),new Date(a,11,31,23,59,59,999).getTime()]}
+    if(per==='intervalo'){let a=ini(fd.get('de')),b=fimDia(fd.get('ate'));if(a&&b&&a>b)[a,b]=[ini(fd.get('ate')),fimDia(fd.get('de'))];return[a,b]}
+    return[null,null];
+  }
+  function nomePeriodo(fd){
+    const per=fd.get('periodo');
+    return per==='dia'?fd.get('dia'):per==='mes'?(fd.get('mes')||S.finMes):per==='ano'?String(fd.get('ano')):per==='intervalo'?`${fd.get('de')}_a_${fd.get('ate')}`:'todas';
+  }
+  function filtrar(fd,can){
+    const[a,b]=faixa(fd);
+    return todasVendas().filter(x=>x.data&&(a==null||x.data>=a)&&(b==null||x.data<=b)&&(!can||x.canal===can));
   }
 
   function exportarDre(){
