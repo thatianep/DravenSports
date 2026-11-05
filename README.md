@@ -106,6 +106,7 @@ Aba **Financeiro** no menu, no layout "Draven Finance", com o mês escolhido no 
 - **Conciliação de Repasses:** cada venda de marketplace fica **Aguardando** até a data prevista (vermelho quando atrasa). Ao conferir o extrato, clique em **Recebido** e informe a data e o valor que caiu; se for diferente do esperado, fica **Divergente**.
 - **Registrar Nova Venda:** canal, cliente (sugere os do CRM), nº do pedido, data, valor bruto, taxa (preenchida pelo canal), frete e custo dos produtos; mostra na hora a taxa, o repasse líquido e a previsão.
 - **DRE por Canal:** receita bruta, impostos, receita líquida, comissões, fretes, custo dos produtos e margem, por canal e total. **Exportar relatório** baixa em CSV.
+- **Exportar vendas** (no topo do Financeiro): baixa uma planilha CSV com as vendas do **mês escolhido, do ano ou de todo o período**, de todos os canais ou de um só. Cada linha traz data, canal, nº do pedido, cliente, valor bruto, taxa (% e R$), frete, repasse líquido, custo, margem, previsão do repasse, situação da conciliação, data e valor recebidos, forma de pagamento, itens e observações; a última linha soma os totais.
 - Os **pedidos confirmados ou entregues** do sistema entram sozinhos como **Venda direta** (custo pelo custo dos produtos no Estoque).
 - Não há integração automática com Mercado Livre, Shopee, Amazon ou banco: as vendas desses canais são registradas aqui e os repasses conferidos à mão.
 

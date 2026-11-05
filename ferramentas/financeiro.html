@@ -188,7 +188,7 @@ window.DRAVEN_FIN=(function(){
     const aba=ABAS.find(a=>a[0]===S.finTab)||ABAS[0];
     const sub={geral:'Controle financeiro das vendas em todos os canais',canais:'Taxas, comissões e prazos de repasse de cada plataforma',conciliacao:'Conferência entre as vendas e o que caiu no banco',registrar:'Cadastre uma venda de marketplace ou site',dre:'Rentabilidade e margem de contribuição por canal'}[aba[0]];
     return`<div class="head"><div><h1>${esc(aba[1])}</h1><p class="sub">${sub}</p></div>
-     <div class="tools fin-mes"><select class="inp" id="fin-mes" aria-label="Mês">${nomesMes.map(([v,n])=>`<option value="${v}" ${v===S.finMes?'selected':''}>${n}</option>`).join('')}</select><button class="btn pri" data-fin-tab="registrar"><i class="fa-solid fa-plus"></i> Registrar venda</button></div></div>
+     <div class="tools fin-mes"><select class="inp" id="fin-mes" aria-label="Mês">${nomesMes.map(([v,n])=>`<option value="${v}" ${v===S.finMes?'selected':''}>${n}</option>`).join('')}</select>${S.dl?'<button class="btn" data-fin-exportar><i class="fa-solid fa-file-export"></i> Exportar vendas</button>':''}<button class="btn pri" data-fin-tab="registrar"><i class="fa-solid fa-plus"></i> Registrar venda</button></div></div>
     <div class="fin">
      <nav class="fin-menu" aria-label="Financeiro"><div class="fin-marca"><i class="fa-solid fa-shield-halved"></i><b>Draven Finance</b></div>
       ${ABAS.map(([id,n,ic])=>`<button type="button" data-fin-tab="${id}" ${id===aba[0]?'aria-current="page"':''}><i class="fa-solid ${ic}"></i> ${n}</button>`).join('')}
@@ -252,6 +252,44 @@ window.DRAVEN_FIN=(function(){
     async fd=>{const novos=l.map((c,i)=>({...c,nome:String(fd.get('nome_'+i)||c.nome).trim()||c.nome,desc:String(fd.get('desc_'+i)||'').trim(),taxa:n(fd.get('taxa_'+i)),prazo:Math.max(0,Math.round(n(fd.get('prazo_'+i))))}));
       await S.db.doc('config/financeiro').set({...cfg(),canais:novos,impostoPct:n(fd.get('imposto')),atualizadoEm:Date.now()});toast('Canais atualizados');return true},{submitLabel:'Salvar'});
   }
+  // ---------------- exportar vendas (planilha CSV) ----------------
+  function todasVendas(){
+    const fin=S.financeiro.map(l=>({...l,origem:'lancamento'}));
+    const ped=(S.vendas||[]).filter(v=>v.status==='confirmado'||v.status==='entregue').map(v=>({
+      origem:'pedido',canal:'direta',numero:v.numero,cliente:(cli(v.clienteId)||{}).nome||'Cliente',data:v.confirmadoEm||v.data,
+      valorBruto:Number(v.total)||0,taxaPct:0,taxa:0,frete:Number(v.frete)||0,custo:custoPedido(v),liquido:Number(v.total)||0,
+      status:v.status==='entregue'?'entregue':'confirmado',pagamento:v.pagamento||'',vendedor:v.criadoPor,
+      itens:(v.itens||[]).map(i=>`${i.qtd}x ${prodNome(prod(i.produtoId))}`).join(' | '),obs:v.obs||''}));
+    return[...fin,...ped].sort((a,b)=>(a.data||0)-(b.data||0));
+  }
+  function exportarVendas(){
+    const ano=S.finMes.slice(0,4),nomeMes=new Date(S.finMes+'-15').toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+    abrir('Exportar vendas',`<p class="sub" style="margin:0">Planilha (CSV, abre no Excel e no Google Planilhas) com as vendas registradas no Financeiro e os pedidos confirmados ou entregues do sistema.</p>
+     <label class="f">Período<select class="inp" id="fx-per" name="periodo"><option value="mes">${esc(nomeMes)}</option><option value="ano">Ano de ${ano}</option><option value="tudo">Todas as vendas</option></select></label>
+     <label class="f">Canal<select class="inp" id="fx-canal" name="canal"><option value="">Todos os canais</option>${canais().map(c=>`<option value="${esc(c.id)}">${esc(c.nome)}</option>`).join('')}</select></label>
+     <p class="ro" id="fx-qtd" style="margin:0"></p>`,
+    async fd=>{
+      const l=filtrar(fd.get('periodo'),fd.get('canal'));
+      if(!l.length){erro('#fx-qtd','Nenhuma venda nesse período.');return false}
+      const c=v=>{const t=String(v??'');return/[;"\n]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t};
+      const nb=v=>String((Number(v)||0).toFixed(2)).replace('.',',');
+      const st=x=>x.origem==='pedido'?(x.status==='entregue'?'Pedido entregue':'Pedido confirmado'):x.status==='recebido'?'Conciliado':x.status==='divergente'?'Divergente':'Aguardando repasse';
+      const cab=['Data','Canal','Nº pedido','Cliente / academia','Valor bruto','Taxa (%)','Taxa (R$)','Frete (R$)','Repasse líquido','Custo dos produtos','Margem (R$)','Previsão do repasse','Situação','Recebido em','Valor recebido','Forma de pagamento','Itens','Observações','Origem'];
+      const linhasCsv=l.map(x=>[fmtD(x.data),canal(x.canal).nome,x.numero||'',x.cliente||'',nb(x.valorBruto),nb(x.taxaPct),nb(x.taxa),nb(x.frete),nb(x.liquido),nb(x.custo),nb((Number(x.liquido)||0)-(Number(x.custo)||0)),
+        x.previsao?fmtD(x.previsao):'',st(x),x.recebidoEm?fmtD(x.recebidoEm):'',x.valorRecebido!=null?nb(x.valorRecebido):'',x.pagamento||'',x.itens||'',x.obs||'',x.origem==='pedido'?'Pedido do sistema':'Lançamento do financeiro'].map(c).join(';'));
+      const tot=['TOTAL','','','',nb(soma(l,x=>x.valorBruto)),'',nb(soma(l,x=>x.taxa)),nb(soma(l,x=>x.frete)),nb(soma(l,x=>x.liquido)),nb(soma(l,x=>x.custo)),nb(soma(l,x=>(Number(x.liquido)||0)-(Number(x.custo)||0)))].map(c).join(';');
+      const per=fd.get('periodo')==='mes'?S.finMes:fd.get('periodo')==='ano'?ano:'todas';
+      try{await S.dl.save({filename:`draven-vendas-${per}${fd.get('canal')?'-'+fd.get('canal'):''}.csv`,data:new Blob(['﻿'+[cab.join(';'),...linhasCsv,tot].join('\n')],{type:'text/csv'})});toast(`${l.length} venda${l.length===1?'':'s'} exportada${l.length===1?'':'s'}`);return true}
+      catch(e){erro('#fx-qtd','Não foi possível baixar o arquivo.');return false}
+    },{submitLabel:'Baixar planilha'});
+    const atual=()=>{const fd=new FormData(document.getElementById('dlgForm')),q=document.getElementById('fx-qtd'),l=filtrar(fd.get('periodo'),fd.get('canal'));if(q){q.hidden=false;q.className='ro';q.textContent=`${l.length} venda${l.length===1?'':'s'} · ${money(soma(l,x=>x.valorBruto))} de faturamento bruto`}};
+    ['fx-per','fx-canal'].forEach(id=>document.getElementById(id).addEventListener('change',atual));atual();
+  }
+  function filtrar(per,can){
+    const ano=S.finMes.slice(0,4),chave=ms=>{const d=new Date(ms);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`};
+    return todasVendas().filter(x=>x.data&&(per==='tudo'||(per==='ano'?chave(x.data).slice(0,4)===ano:chave(x.data)===S.finMes))&&(!can||x.canal===can));
+  }
+
   function exportarDre(){
     const{cs,rows}=dreDados();if(!cs.length||!S.dl)return;
     const c=v=>{const t=String(v);return/[;"\n]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t};
@@ -259,7 +297,7 @@ window.DRAVEN_FIN=(function(){
     S.dl.save({filename:`draven-dre-${S.finMes}.csv`,data:new Blob(['﻿'+csv],{type:'text/csv'})}).catch(()=>{});
   }
   document.addEventListener('click',e=>{
-    const t=e.target.closest&&e.target.closest('[data-fin-tab],[data-fin-receber],[data-fin-desfazer],[data-fin-editar],[data-fin-canais],[data-fin-csv]');if(!t)return;
+    const t=e.target.closest&&e.target.closest('[data-fin-tab],[data-fin-receber],[data-fin-desfazer],[data-fin-editar],[data-fin-canais],[data-fin-csv],[data-fin-exportar]');if(!t)return;
     e.preventDefault();e.stopPropagation();
     if(t.dataset.finTab){S.finTab=t.dataset.finTab;render();window.scrollTo(0,0)}
     else if(t.dataset.finReceber)receber(t.dataset.finReceber);
@@ -267,6 +305,7 @@ window.DRAVEN_FIN=(function(){
     else if(t.dataset.finEditar)editar(t.dataset.finEditar);
     else if('finCanais' in t.dataset)editarCanais();
     else if('finCsv' in t.dataset)exportarDre();
+    else if('finExportar' in t.dataset)exportarVendas();
   },true);
   document.addEventListener('change',e=>{
     if(e.target.id==='fin-mes'){S.finMes=e.target.value;render();return}
