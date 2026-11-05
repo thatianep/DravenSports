@@ -12,9 +12,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="DRAVEN">
 <!-- Gerado por ferramentas/montar.py a partir de versao-claude-ai/sistema-draven.html. Não edite à mão. -->
-<script src="config.js?v=202611051707"></script>
+<script src="config.js?v=202611051746"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="drive-db.js?v=202611051707"></script>
+<script src="drive-db.js?v=202611051746"></script>
 </head>
 <body>
 <style>.btn.ligar{color:#1E3A8A;border-color:#BFDBFE;text-decoration:none}.btn.ligar:hover{border-color:#1E3A8A}.btn.wa{text-decoration:none}</style>
@@ -596,7 +596,7 @@ function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTi
 function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
 
 // ---------- domínio ----------
-const ETAPAS=[{id:'lead',nome:'Novo lead'},{id:'contato',nome:'Primeiro contato'},{id:'visita',nome:'Visita agendada'},{id:'proposta',nome:'Proposta enviada'},{id:'negociacao',nome:'Negociação'},{id:'ganho',nome:'Cliente ativo'},{id:'perdido',nome:'Perdido'}];
+const ETAPAS=[{id:'lead',nome:'Primeiro contato'},{id:'contato',nome:'Conversando'},{id:'visita',nome:'Visita agendada'},{id:'proposta',nome:'Proposta enviada'},{id:'negociacao',nome:'Negociação'},{id:'ganho',nome:'Cliente ativo'},{id:'perdido',nome:'Perdido'}];
 const ATIVAS=['lead','contato','proposta','negociacao'];
 const TIPOS=['Academia','Equipe/Time','Escolinha de futebol','Loja','Distribuidor','Atleta','Outro'];
 const ORIGENS=['Instagram','WhatsApp','Indicação','Prospecção ativa','Visita à loja','Loja virtual / site','Ligação recebida','E-mail','Feira/Evento','Facebook','TikTok','Google','LinkedIn','Mercado Livre','Outro'];
@@ -1805,7 +1805,7 @@ function duplicados(d){
 function formLead(){
   const amanha=Date.now()+864e5;
   abrir('Novo lead',`
-  <p class="sub" style="margin:0">Cadastre um contato que chegou por outro canal. Ele entra no funil como <b>Novo lead</b>, com o canal registrado.</p>
+  <p class="sub" style="margin:0">Cadastre um contato que chegou por outro canal. Ele entra no funil em <b>Primeiro contato</b>, com o canal registrado.</p>
   <div class="fg">
    <label class="f full">Nome da academia, equipe, loja ou pessoa *<input class="inp" id="l-nome" name="nome" required></label>
    <label class="f">Canal de entrada *<select class="inp" id="l-orig" name="origem" required><option value="">Escolha o canal</option>${ORIGENS.map(o=>`<option>${o}</option>`).join('')}</select></label>
@@ -1895,7 +1895,7 @@ function vWhatsapp(){
   return`<div class="head"><div><h1>WhatsApp</h1><p class="sub">Conecte os celulares da equipe lendo o QR Code, como no WhatsApp Web. Quem conversar com esses números entra no funil como lead do responsável.</p></div>
   <div class="tools"><button class="btn pri" data-a="wa-novo"><i class="fa-solid fa-qrcode"></i> Conectar número</button></div></div>
   <div class="notice warn">A conexão por QR Code não é a API oficial do WhatsApp. Use números dedicados ao comercial, evite disparos em massa para quem não conhece a Draven e mantenha o celular com internet. Envios em excesso podem levar o WhatsApp a bloquear o número.</div>
-  ${!l.length?`<div class="empty"><strong>Nenhum número conectado</strong><span>Conecte o WhatsApp do comercial. A partir daí, cada pessoa que mandar mensagem vira um lead em "Novo lead", com canal WhatsApp, tipo de cliente e interesse identificados pela mensagem.</span><button class="btn pri" data-a="wa-novo">Conectar primeiro número</button></div>`:
+  ${!l.length?`<div class="empty"><strong>Nenhum número conectado</strong><span>Conecte o WhatsApp do comercial. A partir daí, cada pessoa que mandar mensagem vira um lead em "Primeiro contato", com canal WhatsApp, tipo de cliente e interesse identificados pela mensagem.</span><button class="btn pri" data-a="wa-novo">Conectar primeiro número</button></div>`:
   `<div class="wa-grid">${l.map(w=>{const st=ST_WA[w.status]||[w.status||'—',''];const leads=S.clientes.filter(c=>c.whatsConexao===w.id);const conv=S.conversas.filter(c=>c.conexaoId===w.id);const hoje=leads.filter(c=>(c.criadoEm||0)>=new Date().setHours(0,0,0,0)).length;
    return`<section class="panel"><div class="panel-h"><h2>${esc(w.nome)}</h2><span class="pill ${st[1]}">${esc(st[0])}</span></div>
    <div class="mini"><div><small>Número</small><b class="sm">${w.numero?esc(fmtTelBR(w.numero)):'—'}</b></div><div><small>Leads gerados</small><b>${leads.length}</b></div><div><small>Leads hoje</small><b>${hoje}</b></div></div>
@@ -1907,10 +1907,10 @@ function vWhatsapp(){
    ${w.status==='conectado'?`<button class="btn danger" data-a="wa-desc" data-id="${w.id}">Desconectar</button>`:''}<button class="btn ghost" data-a="wa-del" data-id="${w.id}">Remover</button></div></section>`}).join('')}</div>`}
   <section class="panel"><div class="panel-h"><h2>Como os contatos são classificados</h2></div>
    <div class="list">
-    <div class="li"><div class="grow"><div class="t">Número novo</div><div class="d">Vira lead em "Novo lead", canal WhatsApp, com o responsável do número e a próxima ação "Responder mensagem recebida". Tipo de cliente e interesse saem do nome do perfil e da mensagem (ex.: "CT", "academia", "escolinha", "luva 14oz", "kimono", "logo").</div></div></div>
+    <div class="li"><div class="grow"><div class="t">Número novo</div><div class="d">Vira lead em "Primeiro contato", canal WhatsApp, com o responsável do número e a próxima ação "Responder mensagem recebida". Tipo de cliente e interesse saem do nome do perfil e da mensagem (ex.: "CT", "academia", "escolinha", "luva 14oz", "kimono", "logo").</div></div></div>
     <div class="li"><div class="grow"><div class="t">Lead ou contato que já está no CRM</div><div class="d">A mensagem entra na linha do tempo e a próxima ação passa a ser responder. Ninguém é cadastrado duas vezes: o telefone é comparado com e sem o nono dígito.</div></div></div>
     <div class="li"><div class="grow"><div class="t">Cliente ativo</div><div class="d">Continua como cliente ativo e ganha a próxima ação "verificar novo pedido".</div></div></div>
-    <div class="li"><div class="grow"><div class="t">Marcado como perdido</div><div class="d">Volta para "Primeiro contato", com a anotação de que retomou a conversa.</div></div></div>
+    <div class="li"><div class="grow"><div class="t">Marcado como perdido</div><div class="d">Volta para "Conversando", com a anotação de que retomou a conversa.</div></div></div>
     <div class="li"><div class="grow"><div class="t">Grupos, status e canais</div><div class="d">São ignorados. Só conversas individuais entram no CRM.</div></div></div>
    </div>${S.sample?'<p class="ro">A IA está ativa no servidor: cada lead novo também recebe uma classificação automática, com resumo do pedido e estimativa de potencial.</p>':''}</section>`;
 }
@@ -2256,7 +2256,7 @@ document.addEventListener('click',async e=>{
       try{const cid=await salvar('clientes',null,{nome:c.nome||fmtTelBR(c.telefone),telefone:fmtTelBR(c.telefone),tipo:'Outro',origem:'WhatsApp',origemDetalhe:c.conexaoNome||'',whatsConexao:c.conexaoId,etapa:'lead',responsavel:c.responsavel||S.myId,valorEstimado:0,
         proximaAcao:'Acompanhar conversa no WhatsApp',dataProxima:agora,consentWhats:false,consentEmail:false,criadoEm:agora,atualizadoEm:agora,ultimaWhatsEm:c.ultimaEm||agora,entradaWhats:true,criadoPor:S.myId,
         historico:[{txt:'Adicionado ao funil a partir de uma conversa do WhatsApp iniciada pela equipe',em:agora,por:S.myId}]});
-        await col('conversas').doc(id).update({clienteId:cid});toast('Contato adicionado ao funil como Novo lead')}catch(err){el.disabled=false}break}
+        await col('conversas').doc(id).update({clienteId:cid});toast('Contato adicionado ao funil em Primeiro contato')}catch(err){el.disabled=false}break}
     case'novo-func':formFuncionario();break;
     case'nova-senha':trocarSenha(id);break;case'lib-email':formLiberarEmail();break;case'lib-remover':removerEmail(id);break;
     case'fechar-conv':S.convSel=null;if(MSGS_UNSUB){MSGS_UNSUB();MSGS_UNSUB=null}render();break;
@@ -2718,7 +2718,7 @@ window.DRAVEN_WAB=(function(){
     ganho:'Olá {contato}, obrigado pela parceria! Quando precisar de reposição, é só chamar aqui.',
     perdido:'Olá {contato}, tudo bem? Chegaram novidades no nosso catálogo: {catalogo}\nVale uma olhada!'
   };
-  const NOMES={geral:'Saudação',lead_resp:'1. Falar com o responsável pelas compras',lead:'2. Apresentação e catálogo',contato:'Primeiro contato (catálogo)',visita_pos:'1. Pós-agendamento (logo após marcar)',visita_conf:'2. Confirmação de agendamento',visita_material:'3. Confirmação de material para apresentação',visita_sede:'4. Visita à sede (cliente vem até a Draven)',visita_externa:'5. Visita externa (vamos até a academia)',proposta:'Proposta enviada',negociacao:'Negociação',ganho:'Cliente ativo',perdido:'Perdido (reativar)'};
+  const NOMES={geral:'Saudação',lead_resp:'1. Falar com o responsável pelas compras',lead:'2. Apresentação e catálogo',contato:'Conversando (catálogo)',visita_pos:'1. Pós-agendamento (logo após marcar)',visita_conf:'2. Confirmação de agendamento',visita_material:'3. Confirmação de material para apresentação',visita_sede:'4. Visita à sede (cliente vem até a Draven)',visita_externa:'5. Visita externa (vamos até a academia)',proposta:'Proposta enviada',negociacao:'Negociação',ganho:'Cliente ativo',perdido:'Perdido (reativar)'};
   const VISITA=['visita_pos','visita_conf','visita_material','visita_sede','visita_externa'];
   const LEAD=['lead_resp','lead'];
   const ORDEM=['geral',...LEAD,'contato',...VISITA,'proposta','negociacao','ganho','perdido'];
@@ -2763,7 +2763,7 @@ window.DRAVEN_WAB=(function(){
     <div class="wm-b">
       <div class="wm-info"><span><i class="fa-solid fa-phone"></i> ${esc(atualTel||'')}${n===2?' (telefone 2)':''}</span>${c.contato?`<span><i class="fa-solid fa-user"></i> ${esc(c.contato)}</span>`:''}<span>${etapaPill(c.etapa)}</span></div>
       <label class="f">Mensagem pronta<select class="inp" id="wm-mod">${(()=>{const op=k=>`<option value="${k}" ${k===etapa?'selected':''}>${esc(NOMES[k])}${atualEtapa(k)?' (sugerida)':''}</option>`;
-        const resto=ORDEM.filter(k=>!VISITA.includes(k)&&!LEAD.includes(k));return op('geral')+`<optgroup label="Novo lead">${LEAD.map(op).join('')}</optgroup>`+op('contato')+`<optgroup label="Visita agendada">${VISITA.map(op).join('')}</optgroup>`+resto.filter(k=>k!=='geral'&&k!=='contato').map(op).join('')})()}<option value="livre">Escrever do zero</option></select></label>
+        const resto=ORDEM.filter(k=>!VISITA.includes(k)&&!LEAD.includes(k));return op('geral')+`<optgroup label="Primeiro contato">${LEAD.map(op).join('')}</optgroup>`+op('contato')+`<optgroup label="Visita agendada">${VISITA.map(op).join('')}</optgroup>`+resto.filter(k=>k!=='geral'&&k!=='contato').map(op).join('')})()}<option value="livre">Escrever do zero</option></select></label>
       <label class="f">Texto (pode editar antes de enviar)<textarea class="inp" id="wm-txt"></textarea></label>
       <p class="ro" style="margin:0">${ult}</p>
       ${numeroEmpresa()?'':'<p class="ro" style="margin:0">Dica: a gestão pode cadastrar o número e o catálogo do WhatsApp Business em Equipe e permissões.</p>'}
@@ -3431,7 +3431,7 @@ window.DRAVEN_FIN=(function(){
   return{linhas,canais};
 })();
 </script>
-<!-- Funil CRM: selecionar e excluir leads da coluna "Novo lead" (só a gestão).
+<!-- Funil CRM: selecionar e excluir leads da primeira coluna (etapa "lead", hoje chamada "Primeiro contato") (só a gestão).
      Respeita a busca e os filtros do funil; antes de excluir baixa uma cópia em CSV (pode ser importada de volta).
      Entra no index.html pelo ferramentas/montar.py, depois do sistema. -->
 <style>
@@ -3486,7 +3486,7 @@ window.DRAVEN_SEL=(function(){
     const ls=[...st.ids].map(id=>cli(id)).filter(Boolean);if(!ls.length)return;
     const n=ls.length,pedeTexto=n>=10;
     abrir(`Excluir ${n} lead${n===1?'':'s'}`,`
-     <div class="notice warn"><b>Isto apaga ${n} lead${n===1?'':'s'} da coluna Novo lead</b>${n<=5?': '+ls.map(c=>esc(c.nome)).join(', '):''}. Não tem como desfazer pelo sistema. Tarefas e pedidos ligados a eles continuam, sem o cliente.</div>
+     <div class="notice warn"><b>Isto apaga ${n} lead${n===1?'':'s'} da coluna Primeiro contato</b>${n<=5?': '+ls.map(c=>esc(c.nome)).join(', '):''}. Não tem como desfazer pelo sistema. Tarefas e pedidos ligados a eles continuam, sem o cliente.</div>
      <label class="chk"><input type="checkbox" name="copia" checked> Baixar uma cópia antes (planilha que pode ser importada de volta no funil)</label>
      ${pedeTexto?'<label class="f">Para confirmar, digite <b>EXCLUIR</b><input class="inp" id="sel-conf" name="conf" autocomplete="off" autocapitalize="characters"></label>':''}
      <p class="err" id="v-err" hidden></p>`,

@@ -156,6 +156,13 @@ function crmFiltrados(){const q=norm(S.f.qcrm);return S.clientes.filter(c=>filtr
     ('style="grid-template-columns:repeat(5,minmax(270px,1fr));min-width:1420px"', 'style="grid-template-columns:repeat(5,minmax(0,1fr));min-width:0"', 1),
     ('style="grid-template-columns:repeat(4,minmax(260px,1fr));min-width:1100px"', 'style="grid-template-columns:repeat(4,minmax(0,1fr));min-width:0"', 1),
     ("${pode('produtos')?'<button class=\"btn\" data-a=\"importar-produtos\">", "${pode('excluir')&&S.produtos.length?'<button class=\"btn danger\" data-a=\"excluir-estoque\"><i class=\"fa-solid fa-trash\"></i> Excluir todo o estoque</button>':''}${pode('produtos')?'<button class=\"btn\" data-a=\"importar-produtos\">", 1),
+    # ---- nomes das etapas: Novo lead → "Primeiro contato"; Primeiro contato → "Conversando" (ids lead/contato iguais, dados intactos) ----
+    ("{id:'lead',nome:'Novo lead'},{id:'contato',nome:'Primeiro contato'},{id:'visita'", "{id:'lead',nome:'Primeiro contato'},{id:'contato',nome:'Conversando'},{id:'visita'", 1),
+    ('vira um lead em "Novo lead"', 'vira um lead em "Primeiro contato"', 1),
+    ('Vira lead em "Novo lead"', 'Vira lead em "Primeiro contato"', 1),
+    ('Volta para "Primeiro contato", com a anotação', 'Volta para "Conversando", com a anotação', 1),
+    ('Ele entra no funil como <b>Novo lead</b>, com o canal registrado.', 'Ele entra no funil em <b>Primeiro contato</b>, com o canal registrado.', 1),
+    ("toast('Contato adicionado ao funil como Novo lead')", "toast('Contato adicionado ao funil em Primeiro contato')", 1),
 ]
 
 # Abre o WhatsApp Web numa janela ao lado e manda para ela as conversas abertas pelo sistema.

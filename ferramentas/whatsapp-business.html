@@ -44,7 +44,7 @@ window.DRAVEN_WAB=(function(){
     ganho:'Olá {contato}, obrigado pela parceria! Quando precisar de reposição, é só chamar aqui.',
     perdido:'Olá {contato}, tudo bem? Chegaram novidades no nosso catálogo: {catalogo}\nVale uma olhada!'
   };
-  const NOMES={geral:'Saudação',lead_resp:'1. Falar com o responsável pelas compras',lead:'2. Apresentação e catálogo',contato:'Primeiro contato (catálogo)',visita_pos:'1. Pós-agendamento (logo após marcar)',visita_conf:'2. Confirmação de agendamento',visita_material:'3. Confirmação de material para apresentação',visita_sede:'4. Visita à sede (cliente vem até a Draven)',visita_externa:'5. Visita externa (vamos até a academia)',proposta:'Proposta enviada',negociacao:'Negociação',ganho:'Cliente ativo',perdido:'Perdido (reativar)'};
+  const NOMES={geral:'Saudação',lead_resp:'1. Falar com o responsável pelas compras',lead:'2. Apresentação e catálogo',contato:'Conversando (catálogo)',visita_pos:'1. Pós-agendamento (logo após marcar)',visita_conf:'2. Confirmação de agendamento',visita_material:'3. Confirmação de material para apresentação',visita_sede:'4. Visita à sede (cliente vem até a Draven)',visita_externa:'5. Visita externa (vamos até a academia)',proposta:'Proposta enviada',negociacao:'Negociação',ganho:'Cliente ativo',perdido:'Perdido (reativar)'};
   const VISITA=['visita_pos','visita_conf','visita_material','visita_sede','visita_externa'];
   const LEAD=['lead_resp','lead'];
   const ORDEM=['geral',...LEAD,'contato',...VISITA,'proposta','negociacao','ganho','perdido'];
@@ -89,7 +89,7 @@ window.DRAVEN_WAB=(function(){
     <div class="wm-b">
       <div class="wm-info"><span><i class="fa-solid fa-phone"></i> ${esc(atualTel||'')}${n===2?' (telefone 2)':''}</span>${c.contato?`<span><i class="fa-solid fa-user"></i> ${esc(c.contato)}</span>`:''}<span>${etapaPill(c.etapa)}</span></div>
       <label class="f">Mensagem pronta<select class="inp" id="wm-mod">${(()=>{const op=k=>`<option value="${k}" ${k===etapa?'selected':''}>${esc(NOMES[k])}${atualEtapa(k)?' (sugerida)':''}</option>`;
-        const resto=ORDEM.filter(k=>!VISITA.includes(k)&&!LEAD.includes(k));return op('geral')+`<optgroup label="Novo lead">${LEAD.map(op).join('')}</optgroup>`+op('contato')+`<optgroup label="Visita agendada">${VISITA.map(op).join('')}</optgroup>`+resto.filter(k=>k!=='geral'&&k!=='contato').map(op).join('')})()}<option value="livre">Escrever do zero</option></select></label>
+        const resto=ORDEM.filter(k=>!VISITA.includes(k)&&!LEAD.includes(k));return op('geral')+`<optgroup label="Primeiro contato">${LEAD.map(op).join('')}</optgroup>`+op('contato')+`<optgroup label="Visita agendada">${VISITA.map(op).join('')}</optgroup>`+resto.filter(k=>k!=='geral'&&k!=='contato').map(op).join('')})()}<option value="livre">Escrever do zero</option></select></label>
       <label class="f">Texto (pode editar antes de enviar)<textarea class="inp" id="wm-txt"></textarea></label>
       <p class="ro" style="margin:0">${ult}</p>
       ${numeroEmpresa()?'':'<p class="ro" style="margin:0">Dica: a gestão pode cadastrar o número e o catálogo do WhatsApp Business em Equipe e permissões.</p>'}

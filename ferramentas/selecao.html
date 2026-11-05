@@ -1,4 +1,4 @@
-<!-- Funil CRM: selecionar e excluir leads da coluna "Novo lead" (só a gestão).
+<!-- Funil CRM: selecionar e excluir leads da primeira coluna (etapa "lead", hoje chamada "Primeiro contato") (só a gestão).
      Respeita a busca e os filtros do funil; antes de excluir baixa uma cópia em CSV (pode ser importada de volta).
      Entra no index.html pelo ferramentas/montar.py, depois do sistema. -->
 <style>
@@ -53,7 +53,7 @@ window.DRAVEN_SEL=(function(){
     const ls=[...st.ids].map(id=>cli(id)).filter(Boolean);if(!ls.length)return;
     const n=ls.length,pedeTexto=n>=10;
     abrir(`Excluir ${n} lead${n===1?'':'s'}`,`
-     <div class="notice warn"><b>Isto apaga ${n} lead${n===1?'':'s'} da coluna Novo lead</b>${n<=5?': '+ls.map(c=>esc(c.nome)).join(', '):''}. Não tem como desfazer pelo sistema. Tarefas e pedidos ligados a eles continuam, sem o cliente.</div>
+     <div class="notice warn"><b>Isto apaga ${n} lead${n===1?'':'s'} da coluna Primeiro contato</b>${n<=5?': '+ls.map(c=>esc(c.nome)).join(', '):''}. Não tem como desfazer pelo sistema. Tarefas e pedidos ligados a eles continuam, sem o cliente.</div>
      <label class="chk"><input type="checkbox" name="copia" checked> Baixar uma cópia antes (planilha que pode ser importada de volta no funil)</label>
      ${pedeTexto?'<label class="f">Para confirmar, digite <b>EXCLUIR</b><input class="inp" id="sel-conf" name="conf" autocomplete="off" autocapitalize="characters"></label>':''}
      <p class="err" id="v-err" hidden></p>`,

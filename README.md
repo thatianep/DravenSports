@@ -67,7 +67,7 @@ A equipe toda atende pelo **mesmo número do WhatsApp Business** da empresa, cad
 - O envio fica na **linha do tempo do cliente** como "WhatsApp enviado", com o nome de quem mandou e a data. A ficha mostra o último WhatsApp registrado.
 - Cliente cujo número **não tem WhatsApp**: na ficha, aba Dados, marque **Este número não tem WhatsApp**. No lugar aparece o botão **Ligar**.
 - Botões de WhatsApp de pedidos e campanhas continuam mandando o texto do pedido ou da campanha direto.
-- **Mensagens do Novo lead:** 1. Falar com o responsável pelas compras ("Olá, tudo bem? 🥰 Sou a {vendedor}, da Draven Sports. Gostaria de falar com a pessoa responsável pelas compras…") — é a sugerida para leads em Novo lead; 2. Apresentação e catálogo. {vendedor} vira o primeiro nome de quem envia.
+- **Mensagens do Primeiro contato** (primeira coluna): 1. Falar com o responsável pelas compras ("Olá, tudo bem? 🥰 Sou a {vendedor}, da Draven Sports. Gostaria de falar com a pessoa responsável pelas compras…") — é a sugerida para leads na primeira coluna; 2. Apresentação e catálogo. {vendedor} vira o primeiro nome de quem envia.
 - **Mensagens da Visita agendada** (5 modelos, com dia, hora e endereço preenchidos sozinhos a partir da visita):
   1. Pós-agendamento: abre sozinho logo depois de agendar a visita;
   2. Confirmação de agendamento;
@@ -79,7 +79,7 @@ A equipe toda atende pelo **mesmo número do WhatsApp Business** da empresa, cad
 - O WhatsApp Web não pode ficar dentro da página do sistema: o próprio WhatsApp bloqueia ser aberto dentro de outro site. Por isso ele fica numa janela ao lado.
 
 ## Excluir novos leads (só a gestão)
-No **Funil CRM**, a coluna **Novo lead** tem o botão **Selecionar**: aparece uma caixa em cada card (clicar no card marca ou desmarca), **Todos (N)** marca todos os que estão aparecendo (respeita a busca e os filtros, ex.: só os sem telefone) e **Excluir (N)** apaga os marcados. Pede confirmação (a partir de 10 leads, digitar **EXCLUIR**) e, antes, baixa uma cópia em planilha que pode ser importada de volta pelo **Importar** do funil. Os outros leads e colunas não mudam. **Cancelar** ou Esc sai do modo seleção.
+No **Funil CRM**, a primeira coluna (**Primeiro contato**) tem o botão **Selecionar**: aparece uma caixa em cada card (clicar no card marca ou desmarca), **Todos (N)** marca todos os que estão aparecendo (respeita a busca e os filtros, ex.: só os sem telefone) e **Excluir (N)** apaga os marcados. Pede confirmação (a partir de 10 leads, digitar **EXCLUIR**) e, antes, baixa uma cópia em planilha que pode ser importada de volta pelo **Importar** do funil. Os outros leads e colunas não mudam. **Cancelar** ou Esc sai do modo seleção.
 
 ## Filtro por forma de contato
 No **Funil CRM**, a caixa **Todos os contatos** filtra os leads (no quadro e na lista):
@@ -95,6 +95,9 @@ Combina com a busca e com os filtros de tipo e canal.
 - Cada visita nova cria uma **tarefa de visita** (aba Tarefas e Painel). A próxima visita agendada vira a **próxima ação** do lead e é a usada nas mensagens de WhatsApp.
 - Na ficha do lead (aba Dados) ficam o **Endereço** da academia, a lista de **Visitas** e o botão **Agendar nova visita**.
 - **Última ação:** cada card do funil e a lista do CRM mostram a ação mais recente com o lead, quando foi e quem fez: WhatsApp enviado, ligação, visita, troca de etapa, tarefa concluída, orçamento ou pedido. Atualiza sozinho. Clicar em **Ligar** também fica registrado.
+
+## Etapas do funil
+Primeiro contato → Conversando → Visita agendada → Proposta enviada → Negociação → Cliente ativo → Perdido. (As duas primeiras se chamavam "Novo lead" e "Primeiro contato"; só o nome mudou, os leads continuaram nas mesmas colunas.)
 
 ## Funil no layout original
 O **Funil CRM** está no layout original do sistema: colunas largas, rolagem para os lados com a barra dourada embaixo do quadro e o card original (com os botões WhatsApp/Ligar, as visitas e a última ação). O quadro de **Tarefas** e o de **Pedidos** cabem na largura da tela.
