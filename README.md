@@ -99,6 +99,16 @@ O **Funil CRM** está no layout original do sistema: colunas largas, rolagem par
 ## Barras de rolagem
 O sistema esconde as barras de rolagem (página, menu, tabelas e janelas); rolar continua funcionando com a roda do mouse, o touchpad ou o dedo. As exceções são o **Funil CRM**, que mostra a barra para os lados embaixo do quadro, e o **menu de abas**, que fica numa linha com a barra de rolagem embaixo. No celular, os quadros deslizam com o dedo, uma coluna por vez.
 
+## Financeiro (só a gestão)
+Aba **Financeiro** no menu, no layout "Draven Finance", com o mês escolhido no topo:
+- **Visão Geral:** faturamento bruto (com a variação sobre o mês anterior), taxas de marketplaces e fretes, recebível líquido (quanto ainda falta receber) e margem de contribuição, mais as últimas transações.
+- **Canais & Marketplaces:** Venda direta/WhatsApp, Site próprio, Mercado Livre, Shopee e Amazon, com vendas do mês, comissão real × padrão e prazo de repasse. Em **Editar canais, taxas e prazos** a gestão ajusta a taxa e o prazo de cada canal (os padrões são só ponto de partida: confira o seu contrato) e o % de impostos usado no DRE.
+- **Conciliação de Repasses:** cada venda de marketplace fica **Aguardando** até a data prevista (vermelho quando atrasa). Ao conferir o extrato, clique em **Recebido** e informe a data e o valor que caiu; se for diferente do esperado, fica **Divergente**.
+- **Registrar Nova Venda:** canal, cliente (sugere os do CRM), nº do pedido, data, valor bruto, taxa (preenchida pelo canal), frete e custo dos produtos; mostra na hora a taxa, o repasse líquido e a previsão.
+- **DRE por Canal:** receita bruta, impostos, receita líquida, comissões, fretes, custo dos produtos e margem, por canal e total. **Exportar relatório** baixa em CSV.
+- Os **pedidos confirmados ou entregues** do sistema entram sozinhos como **Venda direta** (custo pelo custo dos produtos no Estoque).
+- Não há integração automática com Mercado Livre, Shopee, Amazon ou banco: as vendas desses canais são registradas aqui e os repasses conferidos à mão.
+
 ## Produtos e catálogo
 - Em **Estoque e custos → Importar produtos → Usar o catálogo Draven 2026**, o sistema cadastra os **60 itens** do catálogo de preços 2026 (`catalogo-2026.csv`): Angry, The Mist preta e vermelha, protetor de canela branco, Shark, The Eagle, pera de velocidade, raquete de foco, bastão de treino, saco de pancada, mochila, bolsa duffle e luvas de goleiro Astro, Lotus, Alpha I e Alpha II, cada cor com o seu **SKU (Art. DE-…)**, **preço de atacado** e **preço de varejo**.
 - Itens marcados como **Indisponível** no catálogo (pera de velocidade preta e saco de pancada) entram inativos; a pera de velocidade está com preço **sob consulta** (R$ 0).
@@ -138,6 +148,7 @@ Pode importar a mesma lista de novo sempre que exportar: só entra o que é novo
 | `versao-claude-ai/sistema-draven.html` | Fonte do sistema (a mesma versão publicada no claude.ai) |
 | `ferramentas/whatsapp-business.html` | WhatsApp Business: número, mensagens prontas e registro dos envios |
 | `ferramentas/visita.html` | Visita agendada (local, endereço, dia e hora) e última ação de cada lead |
+| `ferramentas/financeiro.html` | Aba Financeiro (visão geral, canais, conciliação, registrar venda, DRE) |
 | `ferramentas/produtos.html` | Importação de produtos (catálogo 2026 ou CSV) e preço de atacado |
 | `catalogo-2026.csv` | Catálogo de preços Draven 2026 (60 itens, atacado e varejo) |
 | `ferramentas/quadros.html` | Barras de rolagem escondidas (menos a do Funil) e quadros de Tarefas/Pedidos na largura da tela |

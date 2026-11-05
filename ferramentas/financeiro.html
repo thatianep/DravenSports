@@ -1,0 +1,289 @@
+<!-- Financeiro (Gestão): visão geral, canais e marketplaces, conciliação de repasses, registrar venda e DRE por canal.
+     Layout a partir do modelo enviado (Draven Finance). Os números vêm dos lançamentos registrados aqui e dos
+     pedidos confirmados do próprio sistema; não há integração automática com marketplaces nem com banco.
+     Dados: coleção "financeiro" (lançamentos) e config/financeiro (canais, taxas, prazos e impostos).
+     Entra no index.html pelo ferramentas/montar.py, depois do sistema. -->
+<style>
+.fin{display:grid;grid-template-columns:230px minmax(0,1fr);gap:20px;align-items:start}
+.fin-menu{background:#1e293b;color:#fff;border-radius:16px;padding:14px 10px;display:flex;flex-direction:column;gap:4px;position:sticky;top:150px}
+.fin-menu .fin-marca{display:flex;align-items:center;gap:10px;padding:6px 10px 14px;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:8px}
+.fin-menu .fin-marca i{color:#60a5fa;font-size:20px}
+.fin-menu .fin-marca b{font-size:15px;letter-spacing:.3px}
+.fin-menu button{all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:8px;color:#94a3b8;font-size:13.5px;font-weight:500}
+.fin-menu button i{width:18px;text-align:center}
+.fin-menu button:hover,.fin-menu button[aria-current="page"]{background:#334155;color:#fff}
+.fin-menu button:focus-visible{outline:2px solid #60a5fa}
+.fin-menu small{color:#64748b;font-size:11px;padding:12px 10px 2px;border-top:1px solid rgba(255,255,255,.1);margin-top:8px}
+.fin-corpo{display:flex;flex-direction:column;gap:18px;min-width:0}
+.fin-aviso{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;color:#1e40af;font-size:13px;display:flex;gap:10px;align-items:center}
+.fin-aviso.ok{background:#f0fdf4;border-color:#bbf7d0;color:#166534}
+.fin-aviso.warn{background:#fffbeb;border-color:#fde68a;color:#92400e}
+.fin-metricas{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.fin-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.fin-mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.fin-mt{font-size:13px;font-weight:500;color:var(--muted)}
+.fin-mi{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;font-size:16px}
+.fin-mi.blue{background:#eff6ff;color:#2563eb}.fin-mi.green{background:#f0fdf4;color:#16a34a}.fin-mi.amber{background:#fffbeb;color:#d97706}.fin-mi.purple{background:#f5f3ff;color:#7c3aed}
+.fin-mv{font-size:24px;font-weight:700;margin-bottom:4px;font-variant-numeric:tabular-nums;font-family:var(--f-body)}
+.fin-tr{font-size:12px;font-weight:500;display:flex;gap:5px;align-items:center;color:var(--muted)}
+.fin-tr.pos{color:#16a34a}.fin-tr.neg{color:#dc2626}
+.fin-sh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.fin-sh h3{margin:0;font-size:16px;font-weight:600;font-family:var(--f-body);text-transform:none;letter-spacing:0}
+.fin-canais{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.fin-canal{display:flex;flex-direction:column;gap:10px}
+.fin-ci{display:flex;align-items:center;gap:12px}
+.fin-cic{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;font-size:20px;color:#fff;flex:none}
+.fin-cic.ml{background:#ffe600;color:#333}.fin-cic.shopee{background:#ee4d2d}.fin-cic.amazon{background:#ff9900;color:#111}.fin-cic.site{background:#2563eb}.fin-cic.direta{background:#16a34a}.fin-cic.outro{background:#64748b}
+.fin-ci h4{margin:0;font-size:15px;font-weight:600}.fin-ci p{margin:0;font-size:12px;color:var(--muted)}
+.fin-cs{display:flex;justify-content:space-between;padding-top:10px;border-top:1px solid var(--line);font-size:13px}
+.fin-cs span:last-child{font-weight:600;font-variant-numeric:tabular-nums}
+.fin-badge{padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600;display:inline-block;white-space:nowrap}
+.fin-badge.success{background:#f0fdf4;color:#16a34a}.fin-badge.warning{background:#fffbeb;color:#d97706}.fin-badge.info{background:#eff6ff;color:#2563eb}.fin-badge.danger{background:#fef2f2;color:#dc2626}.fin-badge.muted{background:#f1f5f9;color:#475569}
+.fin table td,.fin table th{font-size:13px}
+.fin .tbl-wrap table{min-width:0;table-layout:auto}
+.fin .tbl-wrap th,.fin .tbl-wrap td{padding:10px 8px;white-space:normal}
+.fin .tbl-wrap td.num,.fin .tbl-wrap th.num,.fin .tbl-wrap td.mono{white-space:nowrap}
+.fin .dre td:first-child{white-space:normal}
+.fin .dre tr.tot td{font-weight:700;background:#f8fafc}
+.fin-form{max-width:820px}
+.fin-calc{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;background:var(--surface-2);border-radius:10px;padding:10px 14px}
+.fin-calc b{font-variant-numeric:tabular-nums}
+.fin-mes{display:flex;gap:8px;align-items:center}
+@media (max-width:900px){
+  .fin{grid-template-columns:1fr}
+  .fin-menu{position:static;flex-direction:row;overflow-x:auto;padding:8px}
+  .fin-menu .fin-marca,.fin-menu small{display:none}
+  .fin-menu button{white-space:nowrap;flex:none}
+}
+</style>
+<script>
+window.DRAVEN_FIN=(function(){
+  // canais padrão (taxas e prazos são só um ponto de partida: a gestão ajusta em "Editar canais")
+  const CANAIS_PADRAO=[
+    {id:'direta',nome:'Venda direta / WhatsApp',desc:'Pedidos fechados pela equipe',taxa:0,prazo:0,classe:'direta',icone:'fa-brands fa-whatsapp'},
+    {id:'site',nome:'Site próprio',desc:'Loja virtual (Pix / cartão)',taxa:3.2,prazo:1,classe:'site',icone:'fa-solid fa-globe'},
+    {id:'ml',nome:'Mercado Livre',desc:'Conta Draven',taxa:16.5,prazo:2,classe:'ml',icone:'fa-solid fa-handshake'},
+    {id:'shopee',nome:'Shopee',desc:'Loja Draven',taxa:18,prazo:7,classe:'shopee',icone:'fa-solid fa-bag-shopping'},
+    {id:'amazon',nome:'Amazon Brasil',desc:'Draven Sports',taxa:14,prazo:14,classe:'amazon',icone:'fa-brands fa-amazon'}
+  ];
+  const ABAS=[['geral','Visão Geral','fa-chart-pie'],['canais','Canais & Marketplaces','fa-store'],['conciliacao','Conciliação de Repasses','fa-file-invoice-dollar'],['registrar','Registrar Nova Venda','fa-circle-plus'],['dre','DRE por Canal','fa-chart-line']];
+  const cfg=()=>((S.config||[]).find(x=>x.id==='financeiro')||{});
+  const canais=()=>{const c=cfg().canais;return Array.isArray(c)&&c.length?c:CANAIS_PADRAO};
+  const canal=id=>canais().find(c=>c.id===id)||{id,nome:id||'Outro',taxa:0,prazo:0,classe:'outro',icone:'fa-solid fa-store'};
+  const impostoPct=()=>Number(cfg().impostoPct)||0;
+  const pct=n=>`${String((Number(n)||0).toFixed(1)).replace('.',',')}%`;
+  const fmtRepasse=d=>Number(d)?`D+${d} dia${Number(d)===1?'':'s'}`:'Na hora (D+0)';
+  if(!S.finTab)S.finTab='geral';
+  if(!S.finMes){const d=new Date();S.finMes=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`}
+  S.financeiro=S.financeiro||[];
+
+  // ---------------- dados do mês ----------------
+  const noMes=ms=>{if(!ms)return false;const d=new Date(ms);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`===S.finMes};
+  const mesAnterior=()=>{const[a,m]=S.finMes.split('-').map(Number);const d=new Date(a,m-2,1);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`};
+  const custoPedido=v=>(v.itens||[]).reduce((t,i)=>t+(Number((prod(i.produtoId)||{}).custo)||0)*(Number(i.qtd)||0),0);
+  // linhas no mesmo formato: lançamentos do financeiro + pedidos confirmados/entregues do sistema (canal Venda direta)
+  function linhas(mes){
+    const m=mes||S.finMes,dentro=ms=>{if(!ms)return false;const d=new Date(ms);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`===m};
+    const fin=S.financeiro.filter(l=>dentro(l.data)).map(l=>({...l,origem:'lancamento'}));
+    const ped=(S.vendas||[]).filter(v=>(v.status==='confirmado'||v.status==='entregue')&&dentro(v.confirmadoEm||v.data)).map(v=>({
+      id:'ped-'+v.id,origem:'pedido',canal:'direta',numero:v.numero,cliente:(cli(v.clienteId)||{}).nome||'Cliente',data:v.confirmadoEm||v.data,
+      valorBruto:Number(v.total)||0,taxa:0,frete:0,liquido:Number(v.total)||0,custo:custoPedido(v),status:'pedido'}));
+    return[...fin,...ped].sort((a,b)=>(b.data||0)-(a.data||0));
+  }
+  const soma=(l,f)=>l.reduce((t,x)=>t+(Number(f(x))||0),0);
+
+  // ---------------- telas ----------------
+  function topo(){
+    const l=linhas(),bruto=soma(l,x=>x.valorBruto),ant=soma(linhas(mesAnterior()),x=>x.valorBruto);
+    return{l,bruto,var:ant?((bruto-ant)/ant*100):null};
+  }
+  function vGeral(){
+    const{l,bruto,var:vr}=topo(),taxas=soma(l,x=>x.taxa)+soma(l,x=>x.frete),liq=soma(l,x=>x.liquido);
+    const pend=l.filter(x=>x.origem==='lancamento'&&x.status!=='recebido'),aReceber=soma(pend,x=>x.liquido);
+    const custo=soma(l,x=>x.custo),imp=bruto*impostoPct()/100,margem=bruto?((liq-imp-custo)/bruto*100):0;
+    const semCusto=l.length&&!custo;
+    return`${l.length?'':`<div class="fin-aviso"><i class="fa-solid fa-circle-info fa-lg"></i><div>Nenhuma venda neste mês ainda. Registre as vendas dos marketplaces em <b>Registrar Nova Venda</b>; os pedidos confirmados do sistema entram sozinhos como <b>Venda direta</b>.</div></div>`}
+    ${pend.length?`<div class="fin-aviso warn"><i class="fa-solid fa-hourglass-half fa-lg"></i><div>${pend.length} repasse${pend.length===1?'':'s'} a receber neste mês (${money(aReceber)}). Confira em <b>Conciliação de Repasses</b>.</div></div>`:''}
+    <div class="fin-metricas">
+     <div class="fin-card"><div class="fin-mh"><span class="fin-mt">Faturamento Bruto Total</span><div class="fin-mi blue"><i class="fa-solid fa-wallet"></i></div></div><div class="fin-mv">${money(bruto)}</div>
+      <div class="fin-tr ${vr==null?'':vr>=0?'pos':'neg'}">${vr==null?'sem dados do mês anterior':`<i class="fa-solid ${vr>=0?'fa-arrow-trend-up':'fa-arrow-trend-down'}"></i> ${vr>=0?'+':''}${pct(vr)} vs. mês anterior`}</div></div>
+     <div class="fin-card"><div class="fin-mh"><span class="fin-mt">Taxas de Marketplaces e Fretes</span><div class="fin-mi amber"><i class="fa-solid fa-percent"></i></div></div><div class="fin-mv">${money(taxas)}</div>
+      <div class="fin-tr ${taxas?'neg':''}">${bruto?pct(taxas/bruto*100)+' do faturamento':'—'}</div></div>
+     <div class="fin-card"><div class="fin-mh"><span class="fin-mt">Recebível Líquido</span><div class="fin-mi green"><i class="fa-solid fa-hand-holding-dollar"></i></div></div><div class="fin-mv">${money(liq)}</div>
+      <div class="fin-tr ${pend.length?'':'pos'}">${pend.length?`<i class="fa-solid fa-clock"></i> ${money(aReceber)} ainda a receber`:`<i class="fa-solid fa-circle-check"></i> repasses do mês conferidos`}</div></div>
+     <div class="fin-card"><div class="fin-mh"><span class="fin-mt">Margem de Contribuição</span><div class="fin-mi purple"><i class="fa-solid fa-chart-pie"></i></div></div><div class="fin-mv">${bruto?pct(margem):'—'}</div>
+      <div class="fin-tr">${semCusto?'<i class="fa-solid fa-triangle-exclamation"></i> sem custo dos produtos: preencha o custo no Estoque':'após taxas, impostos e custo dos produtos'}</div></div>
+    </div>
+    <div class="fin-sh"><h3>Últimas transações</h3><button class="btn sm" data-fin-tab="conciliacao"><i class="fa-solid fa-list-check"></i> Ver conciliação</button></div>
+    ${tabela(l.slice(0,12),false)}`;
+  }
+  function statusBadge(x){
+    if(x.origem==='pedido')return'<span class="fin-badge info">Pedido do sistema</span>';
+    if(x.status==='recebido')return'<span class="fin-badge success">Conciliado</span>';
+    if(x.status==='divergente')return`<span class="fin-badge danger">Divergente${x.valorRecebido!=null?' ('+money(x.valorRecebido)+')':''}</span>`;
+    const prev=x.previsao,late=prev&&prev<new Date().setHours(0,0,0,0);
+    return`<span class="fin-badge ${late?'danger':'warning'}">${late?'Atrasado':'Aguardando'} ${prev?fmtD(prev):''}</span>`;
+  }
+  function tabela(l,acoes){
+    if(!l.length)return'<p class="ro" style="margin:0">Nenhuma transação neste mês.</p>';
+    return`<div class="tbl-wrap"><table><thead><tr><th>Data</th><th>Pedido</th><th>Plataforma</th><th>Cliente / Academia</th><th class="num">Valor bruto</th><th class="num">Taxas / Frete</th><th class="num">Repasse líquido</th><th>Status</th>${acoes?'<th></th>':''}</tr></thead><tbody>
+    ${l.map(x=>`<tr><td>${fmtD(x.data)}</td><td class="mono">${esc(x.numero||'—')}</td><td><span class="fin-badge info">${esc(canal(x.canal).nome)}</span></td><td>${esc(x.cliente||'—')}</td>
+      <td class="num">${money(x.valorBruto)}</td><td class="num">${money((Number(x.taxa)||0)+(Number(x.frete)||0))}</td><td class="num"><b>${money(x.liquido)}</b></td><td>${statusBadge(x)}</td>
+      ${acoes?`<td>${x.origem==='lancamento'?`<div class="tools" style="flex-wrap:nowrap">${x.status!=='recebido'?`<button class="btn sm" data-fin-receber="${esc(x.id)}">Recebido</button>`:`<button class="btn sm" data-fin-desfazer="${esc(x.id)}">Desfazer</button>`}<button class="btn sm ghost" data-fin-editar="${esc(x.id)}" aria-label="Editar"><i class="fa-solid fa-pen"></i></button></div>`:''}</td>`:''}</tr>`).join('')}
+    </tbody></table></div>`;
+  }
+  function vCanais(){
+    const l=linhas();
+    return`<div class="fin-sh"><h3>Desempenho por plataforma de venda</h3><button class="btn sm" data-fin-canais><i class="fa-solid fa-sliders"></i> Editar canais, taxas e prazos</button></div>
+    <div class="fin-canais">${canais().map(c=>{const lc=l.filter(x=>x.canal===c.id),b=soma(lc,x=>x.valorBruto),t=soma(lc,x=>x.taxa);
+      return`<div class="fin-card fin-canal"><div class="fin-ci"><div class="fin-cic ${esc(c.classe||'outro')}"><i class="${esc(c.icone||'fa-solid fa-store')}"></i></div><div><h4>${esc(c.nome)}</h4><p>${esc(c.desc||'')}</p></div></div>
+       <div class="fin-cs"><span>Vendas no mês:</span><span>${money(b)}</span></div>
+       <div class="fin-cs"><span>${c.id==='site'?'Taxa gateway':'Comissão'}:</span><span>${b?pct(t/b*100)+' real · ':''}${pct(c.taxa)} padrão</span></div>
+       <div class="fin-cs"><span>Repasse:</span><span>${fmtRepasse(c.prazo)}</span></div>
+       <div class="fin-cs"><span>Vendas registradas:</span><span>${lc.length}</span></div></div>`}).join('')}</div>`;
+  }
+  function vConciliacao(){
+    const l=linhas().filter(x=>x.origem==='lancamento'),pend=l.filter(x=>x.status!=='recebido');
+    return`<div class="fin-aviso"><i class="fa-solid fa-circle-info fa-lg"></i><div>Confira o extrato do banco ou do marketplace e marque cada repasse como <b>Recebido</b>, com a data e o valor que caiu. Se o valor for diferente do esperado, a venda fica como <b>Divergente</b>.</div></div>
+    <div class="fin-sh"><h3>Conciliação de repasses</h3><span class="ro">${pend.length} a receber · ${money(soma(pend,x=>x.liquido))}</span></div>
+    ${tabela(l,true)}`;
+  }
+  function vRegistrar(){
+    const c0=canais().find(c=>c.id!=='direta')||canais()[0];
+    return`<div class="fin-sh"><h3>Lançamento de venda</h3></div>
+    <div class="fin-card fin-form"><form id="fin-form" novalidate><div class="fg">
+      <label class="f">Canal de venda<select class="inp" id="fin-canal" name="canal">${canais().map(c=>`<option value="${esc(c.id)}" ${c.id===c0.id?'selected':''}>${esc(c.nome)}</option>`).join('')}</select></label>
+      <label class="f">Nome do cliente / academia<input class="inp" id="fin-cli" name="cliente" list="fin-clis" placeholder="Ex: Ladies Fight" required><datalist id="fin-clis">${S.clientes.slice(0,500).map(c=>`<option value="${esc(c.nome)}">`).join('')}</datalist></label>
+      <label class="f">Nº do pedido na plataforma<input class="inp" id="fin-num" name="numero" placeholder="Ex: 2000012345678"></label>
+      <label class="f">Data da venda<input class="inp" id="fin-data" name="data" type="date" value="${toInp(Date.now())}"></label>
+      <label class="f">Valor bruto da venda (R$)<input class="inp" id="fin-valor" name="valor" inputmode="decimal" placeholder="Ex: 2500,00" required></label>
+      <label class="f">Taxa da plataforma (%)<input class="inp" id="fin-taxa" name="taxa" inputmode="decimal" value="${String(c0.taxa).replace('.',',')}"></label>
+      <label class="f">Frete pago pela Draven (R$)<input class="inp" id="fin-frete" name="frete" inputmode="decimal" value="0"></label>
+      <label class="f">Custo dos produtos (R$)<input class="inp" id="fin-custo" name="custo" inputmode="decimal" placeholder="opcional, para a margem"></label>
+      <label class="f full">Observações / produtos<textarea class="inp" id="fin-obs" name="obs" rows="3" placeholder="Ex: 5x Luvas Angry + 10x Caneleiras"></textarea></label>
+    </div>
+    <div class="fin-calc" id="fin-calc"></div>
+    <p class="err" id="fin-err" hidden></p>
+    <div class="tools" style="margin-top:12px"><button type="submit" class="btn pri"><i class="fa-solid fa-floppy-disk"></i> Salvar venda</button></div></form></div>`;
+  }
+  function dreDados(){
+    const l=linhas(),cs=canais().filter(c=>l.some(x=>x.canal===c.id));
+    const linha=(f)=>[...cs.map(c=>f(l.filter(x=>x.canal===c.id))),f(l)];
+    const bruto=linha(g=>soma(g,x=>x.valorBruto)),imp=bruto.map(b=>b*impostoPct()/100),liqR=bruto.map((b,i)=>b-imp[i]);
+    const taxas=linha(g=>soma(g,x=>x.taxa)),frete=linha(g=>soma(g,x=>x.frete)),cpv=linha(g=>soma(g,x=>x.custo));
+    const margem=liqR.map((v,i)=>v-taxas[i]-frete[i]-cpv[i]);
+    return{cs,rows:[['(+) Receita bruta',bruto,1],[`(-) Impostos sobre a venda (${pct(impostoPct())})`,imp],['(=) Receita líquida',liqR,1],['(-) Comissões e taxas das plataformas',taxas],['(-) Fretes pagos',frete],['(-) Custo dos produtos vendidos (CPV)',cpv],['(=) Lucro bruto / margem de contribuição',margem,2]]};
+  }
+  function vDre(){
+    const{cs,rows}=dreDados();
+    return`<div class="fin-sh"><h3>DRE gerencial por canal</h3><div class="tools"><button class="btn sm" data-fin-canais><i class="fa-solid fa-sliders"></i> Imposto e canais</button>${S.dl?'<button class="btn sm" data-fin-csv><i class="fa-solid fa-download"></i> Exportar relatório</button>':''}</div></div>
+    ${cs.length?`<div class="tbl-wrap"><table class="dre"><thead><tr><th>Conta / indicador</th>${cs.map(c=>`<th class="num">${esc(c.nome)}</th>`).join('')}<th class="num">Total consolidado</th></tr></thead><tbody>
+    ${rows.map(([n,v,t])=>`<tr class="${t?'tot':''}"><td>${t?`<strong>${esc(n)}</strong>`:esc(n)}</td>${v.map((x,i)=>`<td class="num">${t===2?`<span class="fin-badge ${x>=0?'success':'danger'}">${money(x)}</span>`:t?`<strong>${money(x)}</strong>`:money(x)}</td>`).join('')}</tr>`).join('')}
+    </tbody></table></div>
+    <p class="ro" style="margin:0">Custo dos produtos: dos pedidos do sistema vem do custo cadastrado no Estoque; das vendas de marketplace, do campo "Custo dos produtos" no lançamento.</p>`:'<p class="ro" style="margin:0">Nenhuma venda neste mês para montar o DRE.</p>'}`;
+  }
+
+  function vFinanceiro(){
+    const nomesMes=(()=>{const op=[];const d=new Date();d.setDate(1);for(let i=0;i<12;i++){const v=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;op.push([v,d.toLocaleDateString('pt-BR',{month:'long',year:'numeric'})]);d.setMonth(d.getMonth()-1)}return op})();
+    const aba=ABAS.find(a=>a[0]===S.finTab)||ABAS[0];
+    const sub={geral:'Controle financeiro das vendas em todos os canais',canais:'Taxas, comissões e prazos de repasse de cada plataforma',conciliacao:'Conferência entre as vendas e o que caiu no banco',registrar:'Cadastre uma venda de marketplace ou site',dre:'Rentabilidade e margem de contribuição por canal'}[aba[0]];
+    return`<div class="head"><div><h1>${esc(aba[1])}</h1><p class="sub">${sub}</p></div>
+     <div class="tools fin-mes"><select class="inp" id="fin-mes" aria-label="Mês">${nomesMes.map(([v,n])=>`<option value="${v}" ${v===S.finMes?'selected':''}>${n}</option>`).join('')}</select><button class="btn pri" data-fin-tab="registrar"><i class="fa-solid fa-plus"></i> Registrar venda</button></div></div>
+    <div class="fin">
+     <nav class="fin-menu" aria-label="Financeiro"><div class="fin-marca"><i class="fa-solid fa-shield-halved"></i><b>Draven Finance</b></div>
+      ${ABAS.map(([id,n,ic])=>`<button type="button" data-fin-tab="${id}" ${id===aba[0]?'aria-current="page"':''}><i class="fa-solid ${ic}"></i> ${n}</button>`).join('')}
+      <small>Draven Sports © ${new Date().getFullYear()}</small></nav>
+     <div class="fin-corpo">${({geral:vGeral,canais:vCanais,conciliacao:vConciliacao,registrar:vRegistrar,dre:vDre})[aba[0]]()}</div>
+    </div>`;
+  }
+
+  // ---------------- ações ----------------
+  const n=v=>{const t=String(v??'').trim().replace(/\s/g,'');if(!t)return 0;const x=Number(t.includes(',')?t.replace(/\./g,'').replace(',','.'):t);return isFinite(x)?x:0};
+  function calcForm(){
+    const f=document.getElementById('fin-form');if(!f)return null;
+    const c=canal(f.canal.value),bruto=n(f.valor.value),taxaPct=n(f.taxa.value),taxa=Math.round(bruto*taxaPct)/100,frete=n(f.frete.value),liq=bruto-taxa-frete;
+    const data=fromInp(f.data.value)||Date.now(),prev=data+(Number(c.prazo)||0)*864e5;
+    const box=document.getElementById('fin-calc');
+    if(box)box.innerHTML=`<span>Taxa: <b>${money(taxa)}</b></span><span>Frete: <b>${money(frete)}</b></span><span>Repasse líquido: <b>${money(liq)}</b></span><span>Previsão: <b>${fmtD(prev)}</b> (${fmtRepasse(c.prazo)})</span>`;
+    return{c,bruto,taxaPct,taxa,frete,liq,data,prev};
+  }
+  async function salvarForm(f){
+    const k=calcForm(),cliente=f.cliente.value.trim(),err=document.getElementById('fin-err');
+    if(!cliente||!k.bruto){err.textContent='Preencha o cliente e o valor bruto da venda.';err.hidden=false;return}
+    const cl=S.clientes.find(c=>norm(c.nome).trim()===norm(cliente).trim());
+    const d={canal:k.c.id,cliente,clienteId:cl?cl.id:null,numero:f.numero.value.trim(),data:k.data,valorBruto:k.bruto,taxaPct:k.taxaPct,taxa:k.taxa,frete:k.frete,liquido:k.liq,
+      custo:n(f.custo.value),obs:f.obs.value.trim(),previsao:k.prev,status:k.c.prazo?'pendente':'recebido',criadoEm:Date.now(),criadoPor:S.myId};
+    if(!k.c.prazo){d.recebidoEm=k.data;d.valorRecebido=k.liq}
+    try{await salvar('financeiro',null,d);toast('Venda registrada no financeiro');S.finTab='geral';render()}catch(e){}
+  }
+  function receber(id){
+    const x=S.financeiro.find(l=>l.id===id);if(!x)return;
+    abrir('Repasse recebido',`<p class="sub" style="margin:0">${esc(canal(x.canal).nome)} · ${esc(x.cliente||'')} · esperado <b>${money(x.liquido)}</b></p>
+     <div class="fg"><label class="f">Data em que caiu<input class="inp" id="fr-data" name="data" type="date" value="${toInp(Date.now())}"></label>
+     <label class="f">Valor recebido (R$)<input class="inp" id="fr-valor" name="valor" inputmode="decimal" value="${String((Number(x.liquido)||0).toFixed(2)).replace('.',',')}"></label>
+     <label class="f full">Forma / observação<input class="inp" id="fr-obs" name="obs" placeholder="Pix, TED, saldo do Mercado Pago…"></label></div>`,
+    async fd=>{const v=n(fd.get('valor')),dif=Math.abs(v-(Number(x.liquido)||0))>0.05;
+      await salvar('financeiro',id,{status:dif?'divergente':'recebido',recebidoEm:fromInp(fd.get('data'))||Date.now(),valorRecebido:v,obsRecebimento:fd.get('obs')||'',conferidoPor:S.myId});
+      toast(dif?'Valor diferente do esperado: marcado como divergente':'Repasse conciliado');return true},{submitLabel:'Confirmar recebimento'});
+  }
+  function editar(id){
+    const x=S.financeiro.find(l=>l.id===id);if(!x)return;
+    abrir('Editar lançamento',`<div class="fg">
+     <label class="f">Canal<select class="inp" name="canal">${canais().map(c=>`<option value="${esc(c.id)}" ${c.id===x.canal?'selected':''}>${esc(c.nome)}</option>`).join('')}</select></label>
+     <label class="f">Cliente<input class="inp" name="cliente" value="${esc(x.cliente||'')}"></label>
+     <label class="f">Nº do pedido<input class="inp" name="numero" value="${esc(x.numero||'')}"></label>
+     <label class="f">Data<input class="inp" name="data" type="date" value="${toInp(x.data)}"></label>
+     <label class="f">Valor bruto (R$)<input class="inp" name="valor" inputmode="decimal" value="${String(x.valorBruto).replace('.',',')}"></label>
+     <label class="f">Taxa (%)<input class="inp" name="taxa" inputmode="decimal" value="${String(x.taxaPct??0).replace('.',',')}"></label>
+     <label class="f">Frete (R$)<input class="inp" name="frete" inputmode="decimal" value="${String(x.frete||0).replace('.',',')}"></label>
+     <label class="f">Custo dos produtos (R$)<input class="inp" name="custo" inputmode="decimal" value="${String(x.custo||0).replace('.',',')}"></label>
+     <label class="f full">Observações<textarea class="inp" name="obs" rows="2">${esc(x.obs||'')}</textarea></label></div>`,
+    async fd=>{const c=canal(fd.get('canal')),b=n(fd.get('valor')),tp=n(fd.get('taxa')),t=Math.round(b*tp)/100,fr=n(fd.get('frete')),data=fromInp(fd.get('data'))||x.data;
+      await salvar('financeiro',id,{canal:c.id,cliente:fd.get('cliente'),numero:fd.get('numero'),data,valorBruto:b,taxaPct:tp,taxa:t,frete:fr,liquido:b-t-fr,custo:n(fd.get('custo')),obs:fd.get('obs'),previsao:data+(Number(c.prazo)||0)*864e5,atualizadoEm:Date.now()});
+      toast('Lançamento atualizado');return true},
+    {submitLabel:'Salvar',excluir:pode('excluir')?async()=>{if(await confirmar('Excluir este lançamento do financeiro?','Excluir')){await remover('financeiro',id);toast('Lançamento excluído');return true}}:null});
+  }
+  function editarCanais(){
+    const l=canais();
+    abrir('Canais, taxas e prazos',`<p class="sub" style="margin:0">Taxa padrão sugerida ao registrar a venda e prazo do repasse (dias depois da venda). Confira os valores do seu contrato com cada plataforma.</p>
+     ${l.map((c,i)=>`<fieldset><legend>${esc(c.nome)}</legend><div class="fg"><label class="f">Nome<input class="inp" name="nome_${i}" value="${esc(c.nome)}"></label><label class="f">Descrição<input class="inp" name="desc_${i}" value="${esc(c.desc||'')}"></label>
+      <label class="f">Taxa / comissão (%)<input class="inp" name="taxa_${i}" inputmode="decimal" value="${String(c.taxa).replace('.',',')}"></label><label class="f">Repasse em (dias)<input class="inp" name="prazo_${i}" inputmode="numeric" value="${c.prazo}"></label></div></fieldset>`).join('')}
+     <label class="f">Impostos sobre a venda (%), usado no DRE<input class="inp" name="imposto" inputmode="decimal" value="${String(impostoPct()).replace('.',',')}" placeholder="Ex: 6 (Simples Nacional)"></label>`,
+    async fd=>{const novos=l.map((c,i)=>({...c,nome:String(fd.get('nome_'+i)||c.nome).trim()||c.nome,desc:String(fd.get('desc_'+i)||'').trim(),taxa:n(fd.get('taxa_'+i)),prazo:Math.max(0,Math.round(n(fd.get('prazo_'+i))))}));
+      await S.db.doc('config/financeiro').set({...cfg(),canais:novos,impostoPct:n(fd.get('imposto')),atualizadoEm:Date.now()});toast('Canais atualizados');return true},{submitLabel:'Salvar'});
+  }
+  function exportarDre(){
+    const{cs,rows}=dreDados();if(!cs.length||!S.dl)return;
+    const c=v=>{const t=String(v);return/[;"\n]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t};
+    const csv=['Conta;'+cs.map(x=>c(x.nome)).join(';')+';Total',...rows.map(([nm,v])=>c(nm)+';'+v.map(x=>String((Number(x)||0).toFixed(2)).replace('.',',')).join(';'))].join('\n');
+    S.dl.save({filename:`draven-dre-${S.finMes}.csv`,data:new Blob(['﻿'+csv],{type:'text/csv'})}).catch(()=>{});
+  }
+  document.addEventListener('click',e=>{
+    const t=e.target.closest&&e.target.closest('[data-fin-tab],[data-fin-receber],[data-fin-desfazer],[data-fin-editar],[data-fin-canais],[data-fin-csv]');if(!t)return;
+    e.preventDefault();e.stopPropagation();
+    if(t.dataset.finTab){S.finTab=t.dataset.finTab;render();window.scrollTo(0,0)}
+    else if(t.dataset.finReceber)receber(t.dataset.finReceber);
+    else if(t.dataset.finDesfazer)salvar('financeiro',t.dataset.finDesfazer,{status:'pendente',recebidoEm:null,valorRecebido:null}).then(()=>toast('Voltou para a receber')).catch(()=>{});
+    else if(t.dataset.finEditar)editar(t.dataset.finEditar);
+    else if('finCanais' in t.dataset)editarCanais();
+    else if('finCsv' in t.dataset)exportarDre();
+  },true);
+  document.addEventListener('change',e=>{
+    if(e.target.id==='fin-mes'){S.finMes=e.target.value;render();return}
+    if(e.target.id==='fin-canal'){const c=canal(e.target.value),tx=document.getElementById('fin-taxa');if(tx)tx.value=String(c.taxa).replace('.',',')}
+    if(e.target.closest&&e.target.closest('#fin-form'))calcForm();
+  });
+  document.addEventListener('input',e=>{if(e.target.closest&&e.target.closest('#fin-form'))calcForm()});
+  document.addEventListener('submit',e=>{if(e.target.id==='fin-form'){e.preventDefault();salvarForm(e.target)}},true);
+  new MutationObserver(()=>{if(document.getElementById('fin-form')&&!document.getElementById('fin-calc').innerHTML)calcForm()}).observe(document.documentElement,{childList:true,subtree:true});
+
+  // entra no menu do sistema (só a gestão vê) e passa a ler a coleção "financeiro"
+  const iRel=VIEWS.findIndex(v=>v.id==='relatorios');
+  VIEWS.splice(iRel>=0?iRel+1:VIEWS.length,0,{id:'financeiro',nome:'Financeiro',p:['gestao']});
+  ICO.financeiro='fa-sack-dollar';
+  VIEWFN.financeiro=vFinanceiro;
+  (async()=>{try{const db=await claude.use('db');if(!db)return;
+    db.collection('financeiro').onSnapshot(s=>{S.financeiro=s.docs.map(d=>({id:d.id,...d.data()}));if(S.view==='financeiro'&&!document.querySelector('#dlg[open]'))render()})}catch(e){}})();
+  return{linhas,canais};
+})();
+</script>
