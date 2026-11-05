@@ -1,0 +1,92 @@
+<!-- Funil CRM: selecionar e excluir leads da coluna "Novo lead" (só a gestão).
+     Respeita a busca e os filtros do funil; antes de excluir baixa uma cópia em CSV (pode ser importada de volta).
+     Entra no index.html pelo ferramentas/montar.py, depois do sistema. -->
+<style>
+.sel-bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 2px 2px}
+.sel-bar .btn{padding:5px 10px;font-size:12px}
+.sel-bar label{display:flex;gap:6px;align-items:center;font-size:12.5px;font-weight:600;cursor:pointer}
+.sel-on .card{cursor:pointer}
+.sel-on .card .sel-chk{display:flex}
+.card .sel-chk{display:none;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--muted)}
+.card .sel-chk input{width:18px;height:18px;accent-color:var(--red)}
+.sel-on .card.sel-marcado{outline:2px solid var(--red);outline-offset:-2px;background:#FEF2F2}
+</style>
+<script>
+window.DRAVEN_SEL=(function(){
+  const st={on:false,ids:new Set()};
+  const col=()=>document.querySelector('#main .col[data-col="lead"]');
+  const cardsVisiveis=()=>[...(col()?.querySelectorAll('.card[data-id]')||[])].map(c=>c.dataset.id);
+  const podeUsar=()=>typeof pode==='function'&&pode('excluir')&&S.view==='crm'&&S.crmModo!=='lista';
+  function desenhar(){
+    const c=col();if(!c)return;
+    c.classList.toggle('sel-on',st.on);
+    const h=c.querySelector('.col-h');
+    let bar=c.querySelector('.sel-bar');
+    if(!podeUsar()){if(bar)bar.remove();return}
+    const vis=cardsVisiveis();
+    // tira da seleção quem saiu da coluna ou do filtro
+    for(const id of[...st.ids])if(!vis.includes(id))st.ids.delete(id);
+    if(!bar){bar=document.createElement('div');bar.className='sel-bar';h.after(bar)}
+    const todos=vis.length&&vis.every(id=>st.ids.has(id));
+    const html=!st.on?(vis.length?`<button type="button" class="btn" data-sel="on"><i class="fa-regular fa-square-check"></i> Selecionar</button>`:'')
+      :`<label><input type="checkbox" data-sel="todos" ${todos?'checked':''}> Todos (${vis.length})</label>
+        <button type="button" class="btn danger" data-sel="excluir" ${st.ids.size?'':'disabled'}><i class="fa-solid fa-trash"></i> Excluir (${st.ids.size})</button>
+        <button type="button" class="btn" data-sel="off">Cancelar</button>`;
+    if(bar.dataset.h!==html){bar.innerHTML=html;bar.dataset.h=html}   // só redesenha quando mudou (evita ciclo com o observador)
+    c.querySelectorAll('.card[data-id]').forEach(k=>{
+      let ch=k.querySelector('.sel-chk');
+      if(!ch){ch=document.createElement('label');ch.className='sel-chk';ch.innerHTML='<input type="checkbox" tabindex="-1"> Selecionar';k.prepend(ch)}
+      const on=st.ids.has(k.dataset.id);ch.querySelector('input').checked=on;k.classList.toggle('sel-marcado',on);
+    });
+  }
+  let marcado=false;const agendar=()=>{if(!marcado){marcado=true;requestAnimationFrame(()=>{marcado=false;desenhar()})}};
+  function sair(){st.on=false;st.ids.clear();desenhar()}
+
+  const celCsv=v=>{const t=String(v??'');return/[;"\n]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t};
+  async function baixarCopia(ls){
+    const cab=['Nome','Contato','Telefone','Telefone 2','E-mail','Instagram','Cidade','Endereço','Tipo','Canal','Etapa','Próxima ação','Observação'];
+    const csv=[cab.join(';'),...ls.map(c=>[c.nome,c.contato,c.telefone,c.telefone2,c.email,c.instagram,c.cidade,c.endereco,c.tipo,c.origem,nomeEtapa(c.etapa),c.proximaAcao,
+      (c.historico||[]).map(h=>h.txt).slice(-3).join(' / ')].map(celCsv).join(';'))].join('\n');
+    if(S.dl)await S.dl.save({filename:`draven-leads-excluidos-${new Date().toISOString().slice(0,10)}.csv`,data:new Blob(['﻿'+csv],{type:'text/csv'})});
+  }
+  function excluir(){
+    const ls=[...st.ids].map(id=>cli(id)).filter(Boolean);if(!ls.length)return;
+    const n=ls.length,pedeTexto=n>=10;
+    abrir(`Excluir ${n} lead${n===1?'':'s'}`,`
+     <div class="notice warn"><b>Isto apaga ${n} lead${n===1?'':'s'} da coluna Novo lead</b>${n<=5?': '+ls.map(c=>esc(c.nome)).join(', '):''}. Não tem como desfazer pelo sistema. Tarefas e pedidos ligados a eles continuam, sem o cliente.</div>
+     <label class="chk"><input type="checkbox" name="copia" checked> Baixar uma cópia antes (planilha que pode ser importada de volta no funil)</label>
+     ${pedeTexto?'<label class="f">Para confirmar, digite <b>EXCLUIR</b><input class="inp" id="sel-conf" name="conf" autocomplete="off" autocapitalize="characters"></label>':''}
+     <p class="err" id="v-err" hidden></p>`,
+    async fd=>{
+      if(pedeTexto&&String(fd.get('conf')||'').trim().toUpperCase()!=='EXCLUIR'){erro('#v-err','Digite EXCLUIR para confirmar.');return false}
+      const btn=document.querySelector('#dlgForm button[type=submit]');
+      if(fd.get('copia')){btn.textContent='Baixando a cópia…';try{await baixarCopia(ls)}catch(e){if(!confirm('Não foi possível baixar a cópia. Excluir mesmo assim?'))return false}}
+      let k=0;
+      for(const c of ls){try{await S.db.doc('clientes/'+c.id).delete()}catch(e){}if(++k%20===0)btn.textContent=`Excluindo ${k}/${n}…`}
+      st.on=false;st.ids.clear();
+      toast(`${k} lead${k===1?'':'s'} excluído${k===1?'':'s'}`);return true;
+    },{submitLabel:`Excluir ${n}`});
+    const b=document.querySelector('#dlgForm button[type=submit]');if(b)b.classList.add('danger');
+  }
+
+  // cliques: botões da barra e, no modo seleção, o card marca/desmarca em vez de abrir a ficha
+  document.addEventListener('click',e=>{
+    const b=e.target.closest&&e.target.closest('[data-sel]');
+    if(b&&b.closest('.sel-bar')){
+      if(b.dataset.sel==='todos'){const vis=cardsVisiveis();if(b.checked)vis.forEach(id=>st.ids.add(id));else st.ids.clear();desenhar();return}
+      e.preventDefault();e.stopPropagation();
+      if(b.dataset.sel==='on'){st.on=true;st.ids.clear();desenhar()}else if(b.dataset.sel==='off')sair();else if(b.dataset.sel==='excluir')excluir();
+      return;
+    }
+    if(!st.on)return;
+    const k=e.target.closest&&e.target.closest('#main .col[data-col="lead"] .card[data-id]');
+    if(k){e.preventDefault();e.stopPropagation();const id=k.dataset.id;st.ids.has(id)?st.ids.delete(id):st.ids.add(id);desenhar()}
+  },true);
+  // no modo seleção, não arrasta os cards da coluna
+  ['pointerdown','mousedown','touchstart'].forEach(t=>document.addEventListener(t,e=>{if(st.on&&e.target.closest&&e.target.closest('#main .col[data-col="lead"] .card'))e.stopPropagation()},{capture:true}));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&st.on&&!document.querySelector('dialog[open]'))sair()});
+  function iniciar(){const m=document.getElementById('main');if(m)new MutationObserver(()=>{if(S.view!=='crm'&&st.on){st.on=false;st.ids.clear()}agendar()}).observe(m,{childList:true,subtree:true});agendar()}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',iniciar);else iniciar();
+  return{estado:st};
+})();
+</script>

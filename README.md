@@ -78,6 +78,9 @@ A equipe toda atende pelo **mesmo número do WhatsApp Business** da empresa, cad
 - **WhatsApp como segunda tela, numa aba só:** a primeira conversa abre o **WhatsApp Web numa janela ao lado do sistema**; as próximas vão para essa mesma janela. Se o WhatsApp cortar a ligação com o sistema (ele faz isso por segurança em alguns navegadores), o sistema **não abre outra aba**: copia a mensagem e mostra o número para você colar na aba do WhatsApp que já está aberta (**Nova conversa** → número → **Ctrl+V**). Se você fechou aquela aba, use **Abrir em nova aba mesmo assim**. Para abrir sempre direto na conversa, numa janela só, use o **app do WhatsApp no computador** (**trocar**, no rodapé da janela de mensagem). No celular, abre no app do WhatsApp.
 - O WhatsApp Web não pode ficar dentro da página do sistema: o próprio WhatsApp bloqueia ser aberto dentro de outro site. Por isso ele fica numa janela ao lado.
 
+## Excluir novos leads (só a gestão)
+No **Funil CRM**, a coluna **Novo lead** tem o botão **Selecionar**: aparece uma caixa em cada card (clicar no card marca ou desmarca), **Todos (N)** marca todos os que estão aparecendo (respeita a busca e os filtros, ex.: só os sem telefone) e **Excluir (N)** apaga os marcados. Pede confirmação (a partir de 10 leads, digitar **EXCLUIR**) e, antes, baixa uma cópia em planilha que pode ser importada de volta pelo **Importar** do funil. Os outros leads e colunas não mudam. **Cancelar** ou Esc sai do modo seleção.
+
 ## Filtro por forma de contato
 No **Funil CRM**, a caixa **Todos os contatos** filtra os leads (no quadro e na lista):
 - **Com WhatsApp:** só quem tem o botão WhatsApp (no telefone 1 ou no telefone 2);
@@ -150,6 +153,7 @@ Pode importar a mesma lista de novo sempre que exportar: só entra o que é novo
 | `versao-claude-ai/sistema-draven.html` | Fonte do sistema (a mesma versão publicada no claude.ai) |
 | `ferramentas/whatsapp-business.html` | WhatsApp Business: número, mensagens prontas e registro dos envios |
 | `ferramentas/visita.html` | Visita agendada (local, endereço, dia e hora) e última ação de cada lead |
+| `ferramentas/selecao.html` | Selecionar e excluir leads da coluna Novo lead |
 | `ferramentas/financeiro.html` | Aba Financeiro (visão geral, canais, conciliação, registrar venda, DRE) |
 | `ferramentas/produtos.html` | Importação de produtos (catálogo 2026 ou CSV) e preço de atacado |
 | `catalogo-2026.csv` | Catálogo de preços Draven 2026 (60 itens, atacado e varejo) |
