@@ -163,6 +163,9 @@ function crmFiltrados(){const q=norm(S.f.qcrm);return S.clientes.filter(c=>filtr
     ('Volta para "Primeiro contato", com a anotação', 'Volta para "Conversando", com a anotação', 1),
     ('Ele entra no funil como <b>Novo lead</b>, com o canal registrado.', 'Ele entra no funil em <b>Primeiro contato</b>, com o canal registrado.', 1),
     ("toast('Contato adicionado ao funil como Novo lead')", "toast('Contato adicionado ao funil em Primeiro contato')", 1),
+    # ---- nome da etapa: Perdido → "Sem retorno" (id perdido igual, dados intactos) ----
+    ("{id:'perdido',nome:'Perdido'}", "{id:'perdido',nome:'Sem retorno'}", 1),
+    ('<div class="t">Marcado como perdido</div>', '<div class="t">Marcado como sem retorno</div>', 1),
 ]
 
 # Abre o WhatsApp Web numa janela ao lado e manda para ela as conversas abertas pelo sistema.

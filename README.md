@@ -97,7 +97,7 @@ Combina com a busca e com os filtros de tipo e canal.
 - **Última ação:** cada card do funil e a lista do CRM mostram a ação mais recente com o lead, quando foi e quem fez: WhatsApp enviado, ligação, visita, troca de etapa, tarefa concluída, orçamento ou pedido. Atualiza sozinho. Clicar em **Ligar** também fica registrado.
 
 ## Etapas do funil
-Primeiro contato → Conversando → Visita agendada → Proposta enviada → Negociação → Cliente ativo → Perdido. (As duas primeiras se chamavam "Novo lead" e "Primeiro contato"; só o nome mudou, os leads continuaram nas mesmas colunas.)
+Primeiro contato → Conversando → Visita agendada → Proposta enviada → Negociação → Cliente ativo → Sem retorno. (Antes se chamavam "Novo lead", "Primeiro contato" e "Perdido"; só o nome mudou, os leads continuaram nas mesmas colunas.)
 
 ## Funil no layout original
 O **Funil CRM** está no layout original do sistema: colunas largas, rolagem para os lados com a barra dourada embaixo do quadro e o card original (com os botões WhatsApp/Ligar, as visitas e a última ação). O quadro de **Tarefas** e o de **Pedidos** cabem na largura da tela.

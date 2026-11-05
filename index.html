@@ -12,9 +12,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="DRAVEN">
 <!-- Gerado por ferramentas/montar.py a partir de versao-claude-ai/sistema-draven.html. Não edite à mão. -->
-<script src="config.js?v=202611051746"></script>
+<script src="config.js?v=202611051813"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="drive-db.js?v=202611051746"></script>
+<script src="drive-db.js?v=202611051813"></script>
 </head>
 <body>
 <style>.btn.ligar{color:#1E3A8A;border-color:#BFDBFE;text-decoration:none}.btn.ligar:hover{border-color:#1E3A8A}.btn.wa{text-decoration:none}</style>
@@ -596,7 +596,7 @@ function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTi
 function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
 
 // ---------- domínio ----------
-const ETAPAS=[{id:'lead',nome:'Primeiro contato'},{id:'contato',nome:'Conversando'},{id:'visita',nome:'Visita agendada'},{id:'proposta',nome:'Proposta enviada'},{id:'negociacao',nome:'Negociação'},{id:'ganho',nome:'Cliente ativo'},{id:'perdido',nome:'Perdido'}];
+const ETAPAS=[{id:'lead',nome:'Primeiro contato'},{id:'contato',nome:'Conversando'},{id:'visita',nome:'Visita agendada'},{id:'proposta',nome:'Proposta enviada'},{id:'negociacao',nome:'Negociação'},{id:'ganho',nome:'Cliente ativo'},{id:'perdido',nome:'Sem retorno'}];
 const ATIVAS=['lead','contato','proposta','negociacao'];
 const TIPOS=['Academia','Equipe/Time','Escolinha de futebol','Loja','Distribuidor','Atleta','Outro'];
 const ORIGENS=['Instagram','WhatsApp','Indicação','Prospecção ativa','Visita à loja','Loja virtual / site','Ligação recebida','E-mail','Feira/Evento','Facebook','TikTok','Google','LinkedIn','Mercado Livre','Outro'];
@@ -1910,7 +1910,7 @@ function vWhatsapp(){
     <div class="li"><div class="grow"><div class="t">Número novo</div><div class="d">Vira lead em "Primeiro contato", canal WhatsApp, com o responsável do número e a próxima ação "Responder mensagem recebida". Tipo de cliente e interesse saem do nome do perfil e da mensagem (ex.: "CT", "academia", "escolinha", "luva 14oz", "kimono", "logo").</div></div></div>
     <div class="li"><div class="grow"><div class="t">Lead ou contato que já está no CRM</div><div class="d">A mensagem entra na linha do tempo e a próxima ação passa a ser responder. Ninguém é cadastrado duas vezes: o telefone é comparado com e sem o nono dígito.</div></div></div>
     <div class="li"><div class="grow"><div class="t">Cliente ativo</div><div class="d">Continua como cliente ativo e ganha a próxima ação "verificar novo pedido".</div></div></div>
-    <div class="li"><div class="grow"><div class="t">Marcado como perdido</div><div class="d">Volta para "Conversando", com a anotação de que retomou a conversa.</div></div></div>
+    <div class="li"><div class="grow"><div class="t">Marcado como sem retorno</div><div class="d">Volta para "Conversando", com a anotação de que retomou a conversa.</div></div></div>
     <div class="li"><div class="grow"><div class="t">Grupos, status e canais</div><div class="d">São ignorados. Só conversas individuais entram no CRM.</div></div></div>
    </div>${S.sample?'<p class="ro">A IA está ativa no servidor: cada lead novo também recebe uma classificação automática, com resumo do pedido e estimativa de potencial.</p>':''}</section>`;
 }
@@ -2718,7 +2718,7 @@ window.DRAVEN_WAB=(function(){
     ganho:'Olá {contato}, obrigado pela parceria! Quando precisar de reposição, é só chamar aqui.',
     perdido:'Olá {contato}, tudo bem? Chegaram novidades no nosso catálogo: {catalogo}\nVale uma olhada!'
   };
-  const NOMES={geral:'Saudação',lead_resp:'1. Falar com o responsável pelas compras',lead:'2. Apresentação e catálogo',contato:'Conversando (catálogo)',visita_pos:'1. Pós-agendamento (logo após marcar)',visita_conf:'2. Confirmação de agendamento',visita_material:'3. Confirmação de material para apresentação',visita_sede:'4. Visita à sede (cliente vem até a Draven)',visita_externa:'5. Visita externa (vamos até a academia)',proposta:'Proposta enviada',negociacao:'Negociação',ganho:'Cliente ativo',perdido:'Perdido (reativar)'};
+  const NOMES={geral:'Saudação',lead_resp:'1. Falar com o responsável pelas compras',lead:'2. Apresentação e catálogo',contato:'Conversando (catálogo)',visita_pos:'1. Pós-agendamento (logo após marcar)',visita_conf:'2. Confirmação de agendamento',visita_material:'3. Confirmação de material para apresentação',visita_sede:'4. Visita à sede (cliente vem até a Draven)',visita_externa:'5. Visita externa (vamos até a academia)',proposta:'Proposta enviada',negociacao:'Negociação',ganho:'Cliente ativo',perdido:'Sem retorno (reativar)'};
   const VISITA=['visita_pos','visita_conf','visita_material','visita_sede','visita_externa'];
   const LEAD=['lead_resp','lead'];
   const ORDEM=['geral',...LEAD,'contato',...VISITA,'proposta','negociacao','ganho','perdido'];
