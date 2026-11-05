@@ -12,9 +12,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="DRAVEN">
 <!-- Gerado por ferramentas/montar.py a partir de versao-claude-ai/sistema-draven.html. Não edite à mão. -->
-<script src="config.js?v=202611050547"></script>
+<script src="config.js?v=202611050552"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="drive-db.js?v=202611050547"></script>
+<script src="drive-db.js?v=202611050552"></script>
 </head>
 <body>
 <style>.btn.ligar{color:#1E3A8A;border-color:#BFDBFE;text-decoration:none}.btn.ligar:hover{border-color:#1E3A8A}.btn.wa{text-decoration:none}</style>
@@ -3195,7 +3195,7 @@ window.DRAVEN_FIN=(function(){
     const aba=ABAS.find(a=>a[0]===S.finTab)||ABAS[0];
     const sub={geral:'Controle financeiro das vendas em todos os canais',canais:'Taxas, comissões e prazos de repasse de cada plataforma',conciliacao:'Conferência entre as vendas e o que caiu no banco',registrar:'Cadastre uma venda de marketplace ou site',dre:'Rentabilidade e margem de contribuição por canal'}[aba[0]];
     return`<div class="head"><div><h1>${esc(aba[1])}</h1><p class="sub">${sub}</p></div>
-     <div class="tools fin-mes"><select class="inp" id="fin-mes" aria-label="Mês">${nomesMes.map(([v,n])=>`<option value="${v}" ${v===S.finMes?'selected':''}>${n}</option>`).join('')}</select>${S.dl?'<button class="btn" data-fin-exportar><i class="fa-solid fa-file-export"></i> Exportar vendas</button>':''}<button class="btn pri" data-fin-tab="registrar"><i class="fa-solid fa-plus"></i> Registrar venda</button></div></div>
+     <div class="tools fin-mes"><select class="inp" id="fin-mes" aria-label="Mês">${nomesMes.map(([v,n])=>`<option value="${v}" ${v===S.finMes?'selected':''}>${n}</option>`).join('')}</select><button class="btn" data-fin-importar><i class="fa-solid fa-file-import"></i> Importar vendas</button><button class="btn pri" data-fin-tab="registrar"><i class="fa-solid fa-plus"></i> Registrar venda</button></div></div>
     <div class="fin">
      <nav class="fin-menu" aria-label="Financeiro"><div class="fin-marca"><i class="fa-solid fa-shield-halved"></i><b>Draven Finance</b></div>
       ${ABAS.map(([id,n,ic])=>`<button type="button" data-fin-tab="${id}" ${id===aba[0]?'aria-current="page"':''}><i class="fa-solid ${ic}"></i> ${n}</button>`).join('')}
@@ -3269,6 +3269,103 @@ window.DRAVEN_FIN=(function(){
       itens:(v.itens||[]).map(i=>`${i.qtd}x ${prodNome(prod(i.produtoId))}`).join(' | '),obs:v.obs||''}));
     return[...fin,...ped].sort((a,b)=>(a.data||0)-(b.data||0));
   }
+  // ---------------- importar vendas (planilha do Mercado Livre, Shopee, site ou modelo próprio) ----------------
+  const ALIAS={
+    data:['data da venda','data de criacao do pedido','data do pedido','data','date','criado em'],
+    canal:['canal','plataforma','marketplace','loja'],
+    numero:['n de venda','numero da venda','id do pedido','n do pedido','n pedido','no pedido','numero do pedido','numero pedido','pedido','order id','venda'],
+    cliente:['cliente academia','cliente','comprador','nome de usuario comprador','nome do comprador','destinatario','razao social'],
+    bruto:['valor bruto','receita por produtos brl','receita por produtos','subtotal do produto','valor total','total do pedido','preco total','valor da venda','valor'],
+    taxaPct:['taxa','taxa %','comissao %','percentual'],
+    taxa:['taxa r','tarifa de venda e impostos','tarifa de venda','taxa de comissao','comissao','taxas'],
+    taxa2:['taxa de servico','taxa de transacao','tarifa fixa'],
+    frete:['frete r','frete','tarifas de envio','custo de envio','taxa de envio'],
+    liquido:['repasse liquido','total brl','valor liquido','liquido','valor a receber','total a receber'],
+    custo:['custo dos produtos','custo'],
+    situacao:['situacao','status','estado'],
+    recebidoEm:['recebido em'],valorRecebido:['valor recebido'],
+    obs:['observacoes','obs','titulo do anuncio','nome do produto','produto','itens'],
+    origem:['origem']};
+  const chave=t=>norm(t).replace(/[^a-z0-9%]+/g,' ').trim();
+  const MESES={janeiro:1,fevereiro:2,marco:3,abril:4,maio:5,junho:6,julho:7,agosto:8,setembro:9,outubro:10,novembro:11,dezembro:12};
+  function lerData(v){
+    const t=String(v||'').trim();if(!t)return null;let m;
+    if((m=t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/))){const a=Number(m[3])<100?2000+Number(m[3]):Number(m[3]);return new Date(a,m[2]-1,m[1],12).getTime()}
+    if((m=t.match(/^(\d{4})-(\d{2})-(\d{2})/)))return new Date(+m[1],m[2]-1,+m[3],12).getTime();
+    if((m=norm(t).match(/(\d{1,2}) de ([a-z]+) de (\d{4})/))&&MESES[m[2]])return new Date(+m[3],MESES[m[2]]-1,+m[1],12).getTime();
+    const d=Date.parse(t);return isFinite(d)?d:null;
+  }
+  const valor=v=>{const t=String(v??'').replace(/[^\d,.-]/g,'');if(!t||t==='-')return null;const x=Number(t.includes(',')?t.replace(/\./g,'').replace(',','.'):t);return isFinite(x)?x:null};
+  function lerPlanilha(txt,canalPadrao){
+    const linhas=String(txt||'').replace(/^﻿/,'').replace(/\r/g,'').split('\n').filter(l=>l.trim());
+    // relatórios de marketplace às vezes têm linhas de título antes do cabeçalho: usa a primeira linha que tem coluna de valor
+    let ini=0;for(let i=0;i<Math.min(linhas.length,15);i++){const h=chave(linhas[i]);if(/(valor|receita|subtotal|total)/.test(h)&&/(data|pedido|venda)/.test(h)){ini=i;break}}
+    if(linhas.length-ini<2)return{erro:'Cole o cabeçalho e pelo menos uma linha de venda.'};
+    const sep=linhas[ini].includes('\t')?'\t':(linhas[ini].split(';').length>linhas[ini].split(',').length?';':',');
+    const parse=l=>{const out=[];let cur='',q=false;for(let i=0;i<l.length;i++){const ch=l[i];if(ch==='"'){if(q&&l[i+1]==='"'){cur+='"';i++}else q=!q}else if(ch===sep&&!q){out.push(cur);cur=''}else cur+=ch}out.push(cur);return out.map(x=>x.trim())};
+    const cab=parse(linhas[ini]).map(chave),map={};
+    for(const[k,al]of Object.entries(ALIAS)){const i=cab.findIndex((h,ix)=>!Object.values(map).includes(ix)&&al.some(a=>h===chave(a)));if(i>=0)map[k]=i}
+    for(const[k,al]of Object.entries(ALIAS))if(map[k]==null){const i=cab.findIndex((h,ix)=>!Object.values(map).includes(ix)&&al.some(a=>h.startsWith(chave(a)+' ')));if(i>=0)map[k]=i}
+    if(map.bruto==null&&map.liquido==null)return{erro:'Não encontrei a coluna de valor da venda (ex.: "Valor bruto", "Receita por produtos", "Subtotal", "Total").'};
+    const rows=[];
+    for(const l of linhas.slice(ini+1)){
+      const r=parse(l),g=k=>map[k]!=null?r[map[k]]:'';
+      if(/^total$/i.test(String(r[0]||'').trim()))continue;                 // linha de total da exportação
+      if(/pedido do sistema/i.test(g('origem')))continue;                  // pedidos do sistema já entram sozinhos
+      const cn=g('canal'),c=canais().find(x=>chave(x.nome)===chave(cn)||chave(x.id)===chave(cn)||(cn&&chave(x.nome).includes(chave(cn))))||canal(canalPadrao);
+      let bruto=valor(g('bruto')),liq=valor(g('liquido'));if(bruto==null&&liq==null)continue;
+      const fretV=Math.abs(valor(g('frete'))||0);
+      let taxa=valor(g('taxa'));const t2=valor(g('taxa2'));if(taxa!=null||t2!=null)taxa=Math.abs(taxa||0)+Math.abs(t2||0);
+      let taxaPct=valor(g('taxaPct'));
+      if(bruto==null)bruto=liq+(taxa||0)+fretV;
+      if(taxa==null)taxa=liq!=null?Math.max(0,bruto-liq-fretV):Math.round(bruto*(taxaPct!=null?taxaPct:Number(c.taxa)||0))/100;
+      if(taxaPct==null)taxaPct=bruto?Math.round(taxa/bruto*1000)/10:0;
+      if(liq==null)liq=bruto-taxa-fretV;
+      const data=lerData(g('data'))||Date.now(),sit=chave(g('situacao'));
+      const rec=/(conciliado|recebido|liberado)/.test(sit)&&!/aguard|pendente/.test(sit);   // "entregue"/"pago" no marketplace não quer dizer que o dinheiro caiu
+      const d={canal:c.id,cliente:g('cliente')||'Cliente',numero:String(g('numero')||'').replace(/^#/,''),data,valorBruto:bruto,taxaPct,taxa,frete:fretV,liquido:liq,custo:Math.abs(valor(g('custo'))||0),
+        obs:g('obs'),previsao:data+(Number(c.prazo)||0)*864e5,status:rec||!Number(c.prazo)?'recebido':'pendente'};
+      if(d.status==='recebido'){d.recebidoEm=lerData(g('recebidoEm'))||d.previsao;d.valorRecebido=valor(g('valorRecebido'))??liq}
+      if(/divergente/.test(sit))d.status='divergente';
+      if(/cancelad|devolvid|reembols/.test(sit))continue;                  // venda cancelada não entra
+      rows.push(d);
+    }
+    return{rows,cols:Object.keys(map)};
+  }
+  let IMPV=null;
+  function preparar(rows){
+    const ja=new Set(S.financeiro.map(l=>l.numero?`${l.canal}|${chave(l.numero)}`:`${l.canal}|${fmtD(l.data)}|${chave(l.cliente)}|${Number(l.valorBruto).toFixed(2)}`));
+    const novos=[],repetidos=[];
+    for(const d of rows){const k=d.numero?`${d.canal}|${chave(d.numero)}`:`${d.canal}|${fmtD(d.data)}|${chave(d.cliente)}|${Number(d.valorBruto).toFixed(2)}`;if(ja.has(k))repetidos.push(d);else{ja.add(k);novos.push(d)}}
+    return{novos,repetidos};
+  }
+  function importarVendas(){
+    IMPV=null;
+    abrir('Importar vendas',`<p class="sub" style="margin:0">Traga as vendas de uma planilha: o relatório de vendas do <b>Mercado Livre</b>, da <b>Shopee</b>, do site, ou uma planilha sua com <b>Data, Cliente, Nº pedido e Valor</b> (também lê Taxa, Frete, Repasse líquido, Custo e Situação). Salve o relatório como <b>CSV</b> antes de importar. Vendas já importadas não se repetem.</p>
+     <label class="f">Canal das vendas (quando a planilha não diz)<select class="inp" id="fi-canal" name="canal">${canais().map(c=>`<option value="${esc(c.id)}" ${c.id==='ml'?'selected':''}>${esc(c.nome)}</option>`).join('')}</select></label>
+     <label class="f">Arquivo CSV<input class="inp" id="fi-arq" type="file" accept=".csv,.txt,text/csv"></label>
+     <label class="f">Ou cole aqui<textarea class="inp mono" id="fi-txt" rows="5" placeholder="Data;Cliente;Nº pedido;Valor bruto;Taxa (%);Frete&#10;05/11/2026;Academia Exemplo;2000012345;4500,00;16,5;35,00"></textarea></label>
+     <div id="fi-prev"></div><p class="err" id="v-err" hidden></p>
+     ${S.dl?'<p class="ro" style="margin:0"><button type="button" class="btn sm ghost" data-fin-exportar><i class="fa-solid fa-file-export"></i> Exportar vendas em planilha</button></p>':''}`,
+    async()=>{
+      if(!IMPV||!IMPV.novos.length){erro('#v-err','Nenhuma venda nova para importar.');return false}
+      const btn=document.querySelector('#dlgForm button[type=submit]'),agora=Date.now();let n=0;
+      for(const d of IMPV.novos){const cl=S.clientes.find(c=>norm(c.nome).trim()===norm(d.cliente).trim());
+        await salvar('financeiro',null,{...d,clienteId:cl?cl.id:null,criadoEm:agora,criadoPor:S.myId,importado:true});if(++n%10===0)btn.textContent=`Importando ${n}/${IMPV.novos.length}…`}
+      toast(`${n} venda${n===1?'':'s'} importada${n===1?'':'s'} no financeiro`);return true;
+    },{submitLabel:'Importar vendas'});
+    const txt=document.getElementById('fi-txt'),can=document.getElementById('fi-canal');
+    const prev=()=>{const box=document.getElementById('fi-prev'),r=lerPlanilha(txt.value,can.value);
+      if(r.erro){IMPV=null;box.innerHTML=txt.value.trim()?`<p class="err">${esc(r.erro)}</p>`:'';return}
+      const p=preparar(r.rows);IMPV=p;
+      box.innerHTML=`<div class="notice"><b>${p.novos.length}</b> venda${p.novos.length===1?'':'s'} nova${p.novos.length===1?'':'s'} · ${money(soma(p.novos,x=>x.valorBruto))} bruto · ${money(soma(p.novos,x=>x.liquido))} líquido${p.repetidos.length?` · ${p.repetidos.length} já importada${p.repetidos.length===1?'':'s'} (ignorada${p.repetidos.length===1?'':'s'})`:''}.</div>
+      ${p.novos.length?`<div class="tbl-wrap" style="max-height:260px;overflow:auto"><table><thead><tr><th>Data</th><th>Canal</th><th>Pedido</th><th>Cliente</th><th class="num">Bruto</th><th class="num">Taxa</th><th class="num">Frete</th><th class="num">Líquido</th><th>Situação</th></tr></thead><tbody>
+      ${p.novos.slice(0,60).map(d=>`<tr><td>${fmtD(d.data)}</td><td>${esc(canal(d.canal).nome)}</td><td class="mono">${esc(d.numero||'—')}</td><td>${esc(d.cliente)}</td><td class="num">${money(d.valorBruto)}</td><td class="num">${money(d.taxa)}</td><td class="num">${money(d.frete)}</td><td class="num"><b>${money(d.liquido)}</b></td><td>${d.status==='recebido'?'<span class="fin-badge success">Conciliado</span>':d.status==='divergente'?'<span class="fin-badge danger">Divergente</span>':`<span class="fin-badge warning">Aguardando ${fmtD(d.previsao)}</span>`}</td></tr>`).join('')}
+      </tbody></table></div>`:''}`};
+    txt.addEventListener('input',prev);can.addEventListener('change',prev);
+    document.getElementById('fi-arq').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{txt.value=fr.result;prev()};fr.readAsText(f)});
+  }
+
   function exportarVendas(){
     const ano=S.finMes.slice(0,4),nomeMes=new Date(S.finMes+'-15').toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
     abrir('Exportar vendas',`<p class="sub" style="margin:0">Planilha (CSV, abre no Excel e no Google Planilhas) com as vendas registradas no Financeiro e os pedidos confirmados ou entregues do sistema.</p>
@@ -3304,7 +3401,7 @@ window.DRAVEN_FIN=(function(){
     S.dl.save({filename:`draven-dre-${S.finMes}.csv`,data:new Blob(['﻿'+csv],{type:'text/csv'})}).catch(()=>{});
   }
   document.addEventListener('click',e=>{
-    const t=e.target.closest&&e.target.closest('[data-fin-tab],[data-fin-receber],[data-fin-desfazer],[data-fin-editar],[data-fin-canais],[data-fin-csv],[data-fin-exportar]');if(!t)return;
+    const t=e.target.closest&&e.target.closest('[data-fin-tab],[data-fin-receber],[data-fin-desfazer],[data-fin-editar],[data-fin-canais],[data-fin-csv],[data-fin-exportar],[data-fin-importar]');if(!t)return;
     e.preventDefault();e.stopPropagation();
     if(t.dataset.finTab){S.finTab=t.dataset.finTab;render();window.scrollTo(0,0)}
     else if(t.dataset.finReceber)receber(t.dataset.finReceber);
@@ -3313,6 +3410,7 @@ window.DRAVEN_FIN=(function(){
     else if('finCanais' in t.dataset)editarCanais();
     else if('finCsv' in t.dataset)exportarDre();
     else if('finExportar' in t.dataset)exportarVendas();
+    else if('finImportar' in t.dataset)importarVendas();
   },true);
   document.addEventListener('change',e=>{
     if(e.target.id==='fin-mes'){S.finMes=e.target.value;render();return}
