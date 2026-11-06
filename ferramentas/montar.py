@@ -336,6 +336,7 @@ QUADROS = (RAIZ / 'ferramentas' / 'quadros.html').read_text(encoding='utf-8')
 PRODUTOS = (RAIZ / 'ferramentas' / 'produtos.html').read_text(encoding='utf-8')
 FINANCEIRO = (RAIZ / 'ferramentas' / 'financeiro.html').read_text(encoding='utf-8')
 SELECAO = (RAIZ / 'ferramentas' / 'selecao.html').read_text(encoding='utf-8')
+SELECAO_ESTOQUE = (RAIZ / 'ferramentas' / 'selecao-estoque.html').read_text(encoding='utf-8')
 DESCRICAO = (RAIZ / 'ferramentas' / 'descricao.html').read_text(encoding='utf-8')
 IMAGENS = (RAIZ / 'ferramentas' / 'imagens.html').read_text(encoding='utf-8')
 _fotos = sorted(f[:-4] for f in os.listdir(RAIZ / 'produtos-img') if f.endswith('.jpg')) if (RAIZ / 'produtos-img').is_dir() else []
@@ -363,5 +364,5 @@ UNIFICAR = UNIFICAR.replace('/*CATALOGO*/{}', _json.dumps(_cat, ensure_ascii=Fal
 import time
 VERSAO = time.strftime('%Y%m%d%H%M')
 CABECA = CABECA.replace('src="config.js"', f'src="config.js?v={VERSAO}"').replace('src="drive-db.js"', f'src="drive-db.js?v={VERSAO}"')
-(RAIZ / 'index.html').write_text(CABECA + WHATSAPP + app.strip() + '\n' + IMPORTAR + VISITA + WAB + QUADROS + PRODUTOS + FINANCEIRO + SELECAO + DESCRICAO + IMAGENS + UNIFICAR + CELULAR + '</body>\n</html>\n', encoding='utf-8')
+(RAIZ / 'index.html').write_text(CABECA + WHATSAPP + app.strip() + '\n' + IMPORTAR + VISITA + WAB + QUADROS + PRODUTOS + FINANCEIRO + SELECAO + DESCRICAO + IMAGENS + UNIFICAR + SELECAO_ESTOQUE + CELULAR + '</body>\n</html>\n', encoding='utf-8')
 print('index.html gerado')

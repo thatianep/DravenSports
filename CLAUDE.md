@@ -11,7 +11,7 @@ Toda alteração continua de onde o sistema parou. **Nada que já existe pode se
 
 ## Como o sistema é montado
 - `index.html` é **gerado**: não editar à mão. Rodar `python3 ferramentas/montar.py` depois de qualquer mudança.
-- Fonte: `versao-claude-ai/sistema-draven.html` (sistema original) + trocas pontuais em `ferramentas/montar.py` (lista `TROCAS`, cada troca confere que o trecho existe) + módulos em `ferramentas/*.html` (WhatsApp Business, visitas, importação de leads e produtos, financeiro, seleção de leads, descrição, imagens e unificação de produtos, quadros, celular).
+- Fonte: `versao-claude-ai/sistema-draven.html` (sistema original) + trocas pontuais em `ferramentas/montar.py` (lista `TROCAS`, cada troca confere que o trecho existe) + módulos em `ferramentas/*.html` (WhatsApp Business, visitas, importação de leads e produtos, financeiro, seleção de leads e de produtos, descrição, imagens e unificação de produtos, quadros, celular).
 - `drive-db.js`: login Google e banco no Google Drive (arquivo `draven-dados.json`), no formato que o sistema espera do claude.ai.
 - `config.js`: ID do cliente OAuth do Google (preenchido pela dona).
 
