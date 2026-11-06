@@ -1,0 +1,90 @@
+<!-- Estoque: unificar com o catálogo (só a gestão).
+     Produtos que são o mesmo item do catálogo (pelo código, mesmo escrito diferente, ou pelo nome + cor) viram um cadastro só:
+     - fica o cadastro com o código do catálogo (ou o mais antigo, que ganha o código);
+     - estoque somado (ajuste em Movimentações) e movimentações antigas passam para o que fica;
+     - pedidos e lotes de produção passam a apontar para o que fica;
+     - campos vazios do que fica são preenchidos com os dados do outro cadastro e do catálogo (nada preenchido é sobrescrito);
+     - antes, baixa uma cópia em CSV de como estava.
+     Entra no index.html pelo ferramentas/montar.py (que preenche CATALOGO), depois do sistema. -->
+<script>
+window.DRAVEN_UNIF=(function(){
+  const CATALOGO=/*CATALOGO*/{};
+  const vazio=v=>v==null||v===''||(typeof v==='number'&&!v);
+  const skuDe=p=>window.DRAVEN_IMG&&DRAVEN_IMG.skuCatalogo?DRAVEN_IMG.skuCatalogo(p):'';
+  // monta o plano: grupos com mais de um cadastro do mesmo item e cadastros únicos que podem ganhar dados do catálogo
+  function plano(){
+    const grupos={};
+    for(const p of S.produtos){const k=skuDe(p);if(k&&CATALOGO[k])(grupos[k]=grupos[k]||[]).push(p)}
+    const juntar=[],completar=[];
+    for(const[k,l]of Object.entries(grupos)){
+      const c=CATALOGO[k];
+      const principal=l.find(p=>String(p.sku||'').trim().toUpperCase()===k)||l.slice().sort((a,b)=>(a.criadoEm||0)-(b.criadoEm||0))[0];
+      const outros=l.filter(p=>p!==principal);
+      // o que o principal ganha: primeiro dos outros cadastros, depois do catálogo
+      const ganha={};
+      const campos=['custo','minimo','descricao','modelo','precoAtacado','preco','categoria','unidade'];
+      for(const o of outros)for(const f of campos)if(vazio(principal[f])&&vazio(ganha[f])&&!vazio(o[f]))ganha[f]=o[f];
+      const img=outros.map(o=>String(o.imagem||'')).find(i=>i.startsWith('drive:'));if(img&&!String(principal.imagem||'').startsWith('drive:'))ganha.imagem=img;
+      const doCat={sku:k,precoAtacado:c.precoAtacado,preco:c.preco,categoria:c.categoria,unidade:c.unidade,modelo:c.modelo};
+      for(const[f,v]of Object.entries(doCat))if(f==='sku'?String(principal.sku||'').trim().toUpperCase()!==k:(vazio(principal[f])&&vazio(ganha[f])&&!vazio(v)))ganha[f]=v;
+      if(!outros.length)delete ganha.modelo;   // cadastro único: só completa código, preços, categoria e unidade
+      if(outros.length)juntar.push({k,principal,outros,ganha,soma:outros.reduce((t,o)=>t+(Number(o.estoque)||0),0)});
+      else if(Object.keys(ganha).length)completar.push({k,principal,ganha});
+    }
+    return{juntar,completar};
+  }
+  const nomeP=p=>`${p.nome}${p.variacao?' · '+p.variacao:''}`;
+  const cel=v=>{const t=String(v??'');return/[;"\n]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t};
+  async function copia(pl){
+    if(!S.dl)return;
+    const ids=new Set();pl.juntar.forEach(g=>[g.principal,...g.outros].forEach(p=>ids.add(p.id)));pl.completar.forEach(g=>ids.add(g.principal.id));
+    const ps=S.produtos.filter(p=>ids.has(p.id));
+    const cab=['id','SKU','Produto','Variacao','Categoria','Unidade','Estoque','Minimo','Custo','Preco atacado','Preco varejo','Ativo','Descricao','Imagem'];
+    const csv=[cab.join(';'),...ps.map(p=>[p.id,p.sku,p.nome,p.variacao,p.categoria,p.unidade,p.estoque,p.minimo,p.custo,p.precoAtacado,p.preco,p.ativo===false?'Não':'Sim',p.descricao,p.imagem].map(cel).join(';'))].join('\n');
+    await S.dl.save({filename:`draven-produtos-antes-de-unificar-${new Date().toISOString().slice(0,10)}.csv`,data:new Blob(['﻿'+csv],{type:'text/csv'})});
+  }
+  async function executar(pl,btn){
+    const trocar=new Map();pl.juntar.forEach(g=>g.outros.forEach(o=>trocar.set(o.id,g.principal.id)));
+    let n=0;const passo=t=>{if(btn)btn.textContent=t};
+    // 1) pedidos e lotes passam a apontar para o cadastro que fica
+    for(const[col,lista]of[['vendas',S.vendas||[]],['producao',S.producao||[]]])for(const v of lista){
+      if(!(v.itens||[]).some(i=>trocar.has(i.produtoId)))continue;
+      await salvar(col,v.id,{itens:v.itens.map(i=>trocar.has(i.produtoId)?{...i,produtoId:trocar.get(i.produtoId)}:i)});
+    }
+    // 2) movimentações antigas passam para o cadastro que fica
+    if(trocar.size){const movs=(await S.db.collection('movimentos').get()).docs;
+      for(const d of movs){const m=d.data();if(trocar.has(m.produtoId))await S.db.doc('movimentos/'+d.id).update({produtoId:trocar.get(m.produtoId),unificadoDe:m.produtoId})}}
+    // 3) dados e estoque no cadastro que fica; os outros cadastros saem
+    for(const g of pl.juntar){
+      passo(`Unificando ${++n}/${pl.juntar.length+pl.completar.length}…`);
+      if(Object.keys(g.ganha).length)await salvar('produtos',g.principal.id,{...g.ganha,atualizadoEm:Date.now()});
+      if(g.soma)await moverEstoque(g.principal.id,g.soma,'ajuste','Unificação de produtos',g.outros.map(o=>o.sku||o.nome).join(', '));
+      for(const o of g.outros)await S.db.doc('produtos/'+o.id).delete();
+    }
+    for(const g of pl.completar){passo(`Unificando ${++n}/${pl.juntar.length+pl.completar.length}…`);await salvar('produtos',g.principal.id,{...g.ganha,atualizadoEm:Date.now()})}
+  }
+  function janela(){
+    if(!pode('excluir')){toast('Só a gestão pode unificar produtos.');return}
+    const pl=plano();
+    if(!pl.juntar.length&&!pl.completar.length){abrir('Unificar com o catálogo','<p class="sub" style="margin:0">Nada para unificar: não há produto repetido do catálogo nem cadastro faltando dados do catálogo.</p>',null,{});return}
+    const rot={sku:'código',precoAtacado:'preço atacado',preco:'preço varejo',categoria:'categoria',unidade:'unidade',modelo:'linha',custo:'custo',minimo:'mínimo',descricao:'descrição',imagem:'foto'};
+    abrir('Unificar com o catálogo',`
+     <p class="sub" style="margin:0">Cadastros que são o mesmo produto do catálogo viram um só. O estoque é somado, pedidos, lotes e movimentações passam para o cadastro que fica, e campos vazios são completados. Nada que já está preenchido é trocado.</p>
+     ${pl.juntar.length?`<h3 style="margin:6px 0 0;font-size:15px">Juntar (${pl.juntar.length})</h3><div class="list">${pl.juntar.map(g=>`<div class="li"><div class="grow"><div class="t">${esc(g.k)} · ${esc(nomeP(g.principal))} <span class="ro">(${g.principal.estoque||0} ${esc(g.principal.unidade||'')})</span></div>
+       <div class="d">recebe: ${g.outros.map(o=>`${esc(nomeP(o))}${o.sku?' ['+esc(o.sku)+']':''} (${o.estoque||0})`).join(' · ')} → estoque fica ${(Number(g.principal.estoque)||0)+g.soma}${Object.keys(g.ganha).length?' · completa: '+Object.keys(g.ganha).map(f=>rot[f]||f).join(', '):''}</div></div></div>`).join('')}</div>`:''}
+     ${pl.completar.length?`<h3 style="margin:6px 0 0;font-size:15px">Completar com dados do catálogo (${pl.completar.length})</h3><div class="list">${pl.completar.slice(0,40).map(g=>`<div class="li"><div class="grow"><div class="t">${esc(nomeP(g.principal))}${g.principal.sku?' ['+esc(g.principal.sku)+']':''}</div><div class="d">completa: ${Object.keys(g.ganha).map(f=>rot[f]||f).join(', ')}</div></div></div>`).join('')}</div>`:''}
+     <label class="chk"><input type="checkbox" name="copia" checked> Baixar antes uma cópia de como os produtos estão</label>
+     <p class="err" id="v-err" hidden></p>`,
+    async fd=>{
+      const btn=document.querySelector('#dlgForm button[type=submit]');
+      try{
+        if(fd.get('copia')){btn.textContent='Baixando a cópia…';try{await copia(pl)}catch(e){if(!confirm('Não foi possível baixar a cópia. Unificar mesmo assim?'))return false}}
+        await executar(pl,btn);
+        toast(`${pl.juntar.length} produto${pl.juntar.length===1?'':'s'} unificado${pl.juntar.length===1?'':'s'}${pl.completar.length?` · ${pl.completar.length} completado${pl.completar.length===1?'':'s'} com o catálogo`:''}`);return true;
+      }catch(e){erro('#v-err','Não foi possível terminar: '+(e.message||'erro')+'. Tente de novo; o que já foi feito não se repete.');return false}
+    },{submitLabel:'Unificar'});
+  }
+  document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-unificar]');if(b){e.preventDefault();e.stopPropagation();janela()}},true);
+  return{plano,temAlgo:()=>{try{const p=plano();return p.juntar.length+p.completar.length}catch(e){return 0}}};
+})();
+</script>

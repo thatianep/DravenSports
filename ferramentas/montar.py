@@ -188,6 +188,7 @@ function crmFiltrados(){const q=norm(S.f.qcrm);return S.clientes.filter(c=>filtr
     ("modelo:String(fd.get('modelo')||'').trim()}:{}),atualizadoEm:Date.now()};", "modelo:String(fd.get('modelo')||'').trim()}:{}),...(fd.has('imagem')?{imagem:String(fd.get('imagem')||'')}:{}),atualizadoEm:Date.now()};", 1),
     ("""<td><b>${esc(p.nome)}</b>${p.variacao?`<div class="ro">${esc(p.variacao)}</div>`:''}""", """<td>${window.DRAVEN_IMG?DRAVEN_IMG.mini(p):''}<b>${esc(p.nome)}</b>${p.variacao?`<div class="ro">${esc(p.variacao)}</div>`:''}""", 1),
     ("${pode('produtos')&&S.produtos.some(p=>!String(p.descricao||'').trim())?'<button class=\"btn\" data-desc-todos>", "${pode('produtos')&&S.produtos.length?'<button class=\"btn\" data-fotos-cat><i class=\"fa-regular fa-images\"></i> Fotos do catálogo</button>':''}${pode('produtos')&&S.produtos.some(p=>!String(p.descricao||'').trim())?'<button class=\"btn\" data-desc-todos>", 1),
+    ("${pode('produtos')&&S.produtos.length?'<button class=\"btn\" data-fotos-cat>", "${pode('excluir')&&window.DRAVEN_UNIF&&DRAVEN_UNIF.temAlgo()?'<button class=\"btn\" data-unificar><i class=\"fa-solid fa-object-group\"></i> Unificar com o catálogo</button>':''}${pode('produtos')&&S.produtos.length?'<button class=\"btn\" data-fotos-cat>", 1),
 ]
 
 # Abre o WhatsApp Web numa janela ao lado e manda para ela as conversas abertas pelo sistema.
@@ -349,8 +350,18 @@ if (RAIZ / 'catalogo-2026.csv').exists():
     for _r in _csv.DictReader(open(RAIZ / 'catalogo-2026.csv', encoding='utf-8'), delimiter=';'):
         _nc[_chave(_r['Nome']) + '|' + _chave(_r['Variação'])] = _r['SKU']
 IMAGENS = IMAGENS.replace('/*NOME_COR*/{}', _json.dumps(_nc, ensure_ascii=False))
+UNIFICAR = (RAIZ / 'ferramentas' / 'unificar.html').read_text(encoding='utf-8')
+_cat = {}
+if (RAIZ / 'catalogo-2026.csv').exists():
+    _linhas = ['The Mist Preta', 'The Mist Vermelha', 'The Eagle', 'Angry', 'Shark', 'Astro', 'Lotus', 'Alpha II', 'Alpha I']
+    for _r in _csv.DictReader(open(RAIZ / 'catalogo-2026.csv', encoding='utf-8'), delimiter=';'):
+        _num = lambda v: float(str(v or '0').replace('.', '').replace(',', '.') or 0)
+        _cat[_r['SKU']] = {'nome': _r['Nome'], 'variacao': _r['Variação'], 'categoria': _r['Categoria'], 'unidade': _r['Unidade'],
+                           'precoAtacado': _num(_r['Preço atacado']), 'preco': _num(_r['Preço varejo']),
+                           'modelo': next((l for l in _linhas if l.lower() in _r['Nome'].lower()), '')}
+UNIFICAR = UNIFICAR.replace('/*CATALOGO*/{}', _json.dumps(_cat, ensure_ascii=False))
 import time
 VERSAO = time.strftime('%Y%m%d%H%M')
 CABECA = CABECA.replace('src="config.js"', f'src="config.js?v={VERSAO}"').replace('src="drive-db.js"', f'src="drive-db.js?v={VERSAO}"')
-(RAIZ / 'index.html').write_text(CABECA + WHATSAPP + app.strip() + '\n' + IMPORTAR + VISITA + WAB + QUADROS + PRODUTOS + FINANCEIRO + SELECAO + DESCRICAO + IMAGENS + CELULAR + '</body>\n</html>\n', encoding='utf-8')
+(RAIZ / 'index.html').write_text(CABECA + WHATSAPP + app.strip() + '\n' + IMPORTAR + VISITA + WAB + QUADROS + PRODUTOS + FINANCEIRO + SELECAO + DESCRICAO + IMAGENS + UNIFICAR + CELULAR + '</body>\n</html>\n', encoding='utf-8')
 print('index.html gerado')

@@ -12,9 +12,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="DRAVEN">
 <!-- Gerado por ferramentas/montar.py a partir de versao-claude-ai/sistema-draven.html. Não edite à mão. -->
-<script src="config.js?v=202611061402"></script>
+<script src="config.js?v=202611061408"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="drive-db.js?v=202611061402"></script>
+<script src="drive-db.js?v=202611061408"></script>
 </head>
 <body>
 <style>.btn.ligar{color:#1E3A8A;border-color:#BFDBFE;text-decoration:none}.btn.ligar:hover{border-color:#1E3A8A}.btn.wa{text-decoration:none}</style>
@@ -997,7 +997,7 @@ function vEstoque(){
   return`<div class="head"><div><h1>Estoque</h1><p class="sub">${S.produtos.length} produto${S.produtos.length===1?'':'s'} · ${n0.format(sum(S.produtos,p=>p.estoque))} unidades${pode('custo')?' · '+money(sum(S.produtos,p=>(p.estoque>0?p.estoque:0)*(p.custo||0)))+' a custo':''}</p></div>
   <div class="tools">${t==='produtos'?`<input class="inp search" id="q-e" data-f="qe" placeholder="Buscar produto ou SKU" value="${esc(S.f.qe||'')}"><select class="inp" id="c-e" data-f="ce"><option value="">Todas as categorias</option>${CATS.map(c=>`<option ${S.f.ce===c?'selected':''}>${c}</option>`).join('')}</select>`:''}
   ${S.dl&&t==='produtos'?'<button class="btn" data-a="csv-estoque">Exportar CSV</button>':''}
-  ${pode('produtos')&&S.produtos.length?'<button class="btn" data-fotos-cat><i class="fa-regular fa-images"></i> Fotos do catálogo</button>':''}${pode('produtos')&&S.produtos.some(p=>!String(p.descricao||'').trim())?'<button class="btn" data-desc-todos><i class="fa-solid fa-align-left"></i> Preencher descrições</button>':''}${pode('excluir')&&S.produtos.length?'<button class="btn danger" data-a="excluir-estoque"><i class="fa-solid fa-trash"></i> Excluir todo o estoque</button>':''}${pode('produtos')?'<button class="btn" data-a="importar-produtos"><i class="fa-solid fa-file-import"></i> Importar produtos</button><button class="btn pri" data-a="novo-produto">Novo produto</button>':''}</div></div>
+  ${pode('excluir')&&window.DRAVEN_UNIF&&DRAVEN_UNIF.temAlgo()?'<button class="btn" data-unificar><i class="fa-solid fa-object-group"></i> Unificar com o catálogo</button>':''}${pode('produtos')&&S.produtos.length?'<button class="btn" data-fotos-cat><i class="fa-regular fa-images"></i> Fotos do catálogo</button>':''}${pode('produtos')&&S.produtos.some(p=>!String(p.descricao||'').trim())?'<button class="btn" data-desc-todos><i class="fa-solid fa-align-left"></i> Preencher descrições</button>':''}${pode('excluir')&&S.produtos.length?'<button class="btn danger" data-a="excluir-estoque"><i class="fa-solid fa-trash"></i> Excluir todo o estoque</button>':''}${pode('produtos')?'<button class="btn" data-a="importar-produtos"><i class="fa-solid fa-file-import"></i> Importar produtos</button><button class="btn pri" data-a="novo-produto">Novo produto</button>':''}</div></div>
   <div class="tabs" role="tablist"><button role="tab" aria-selected="${t==='produtos'}" data-a="est-tab" data-v="produtos">Produtos</button><button role="tab" aria-selected="${t==='mov'}" data-a="est-tab" data-v="mov">Movimentações</button></div>
   <div id="body">${t==='produtos'?estoqueBody():movBody()}</div>`;
 }
@@ -3706,7 +3706,97 @@ window.DRAVEN_IMG=(function(){
     {submitLabel:'Gravar fotos'});
   }
   document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-fotos-cat]');if(b){e.preventDefault();e.stopPropagation();janelaFotos()}},true);
-  return{mini,blocoFicha,fonte,doCatalogo};
+  return{mini,blocoFicha,fonte,doCatalogo,skuCatalogo};
+})();
+</script>
+<!-- Estoque: unificar com o catálogo (só a gestão).
+     Produtos que são o mesmo item do catálogo (pelo código, mesmo escrito diferente, ou pelo nome + cor) viram um cadastro só:
+     - fica o cadastro com o código do catálogo (ou o mais antigo, que ganha o código);
+     - estoque somado (ajuste em Movimentações) e movimentações antigas passam para o que fica;
+     - pedidos e lotes de produção passam a apontar para o que fica;
+     - campos vazios do que fica são preenchidos com os dados do outro cadastro e do catálogo (nada preenchido é sobrescrito);
+     - antes, baixa uma cópia em CSV de como estava.
+     Entra no index.html pelo ferramentas/montar.py (que preenche CATALOGO), depois do sistema. -->
+<script>
+window.DRAVEN_UNIF=(function(){
+  const CATALOGO={"DE-6819": {"nome": "Luva de boxe Angry", "variacao": "Toda preta", "categoria": "Luvas de luta", "unidade": "par", "precoAtacado": 92.0, "preco": 175.0, "modelo": "Angry"}, "DE-6820": {"nome": "Luva de boxe Angry", "variacao": "Preto / Vermelho", "categoria": "Luvas de luta", "unidade": "par", "precoAtacado": 92.0, "preco": 175.0, "modelo": "Angry"}, "DE-6821": {"nome": "Luva de boxe Angry", "variacao": "Preto / Prateado", "categoria": "Luvas de luta", "unidade": "par", "precoAtacado": 92.0, "preco": 175.0, "modelo": "Angry"}, "DE-6823": {"nome": "Luva de boxe Angry", "variacao": "Branco / Preto / Vermelho", "categoria": "Luvas de luta", "unidade": "par", "precoAtacado": 92.0, "preco": 175.0, "modelo": "Angry"}, "DE-6822": {"nome": "Luva de boxe Angry", "variacao": "Branco / Vermelho / Preto", "categoria": "Luvas de luta", "unidade": "par", "precoAtacado": 92.0, "preco": 175.0, "modelo": "Angry"}, "DE-6824": {"nome": "Luva de boxe The Mist Preta", "variacao": "Preto / Dourado / Branco", "categoria": "Luvas de luta", "unidade": "par", "precoAtacado": 102.0, "preco": 185.0, "modelo": "The Mist Preta"}, "DE-6825": {"nome": "Luva de grappling The Mist Preta", "variacao": "Preto / Dourado / Branco", "categoria": "Luvas de luta", "unidade": "par", "precoAtacado": 85.0, "preco": 165.0, "modelo": "The Mist Preta"}, "DE-6829": {"nome": "Luva de MMA The Mist Preta", "variacao": "Preto / Dourado / Branco", "categoria": "Luvas de luta", "unidade": "par", "precoAtacado": 85.0, "preco": 165.0, "modelo": "The Mist Preta"}, "DE-6826": {"nome": "Manopla The Mist Preta", "variacao": "Preto / Dourado / Branco", "categoria": "Equipamentos de treino", "unidade": "par", "precoAtacado": 98.0, "preco": 190.0, "modelo": "The Mist Preta"}, "DE-6828": {"nome": "Capacete The Mist Preta", "variacao": "Preto / Dourado / Branco", "categoria": "Protetores", "unidade": "un", "precoAtacado": 101.0, "preco": 195.0, "modelo": "The Mist Preta"}, "DE-6830": {"nome": "Protetor de canela The Mist Preta", "variacao": "Preto / Dourado / Branco", "categoria": "Protetores", "unidade": "par", "precoAtacado": 138.0, "preco": 235.0, "modelo": "The Mist Preta"}, "DE-6827": {"nome": "Escudo de chute curvo redondo The Mist Preta", "variacao": "Preto / Dourado / Branco", "categoria": "Equipamentos de treino", "unidade": "un", "precoAtacado": 122.0, "preco": 230.0, "modelo": "The Mist Preta"}, "DE-6831": {"nome": "Escudo de chute curvo The Mist Preta", "variacao": "Preto / Dourado / Branco", "categoria": "Equipamentos de treino", "unidade": "un", "precoAtacado": 243.0, "preco": 360.0, "modelo": "The Mist Preta"}, "DE-6832": {"nome": "Escudo de treinamento The Mist Preta", "variacao": "Preto / Dourado / Branco", "categoria": "Equipamentos de treino", "unidade": "un", "precoAtacado": 196.0, "preco": 325.0, "modelo": "The Mist Preta"}, "DE-6833": {"nome": "Manga curta The Mist Preta", "variacao": "Preto / Dourado / Branco", "categoria": "Vestuário", "unidade": "un", "precoAtacado": 65.0, "preco": 120.0, "modelo": "The Mist Preta"}, "DE-6834": {"nome": "Bermuda de boxe The Mist Preta", "variacao": "Preto / Dourado / Branco", "categoria": "Vestuário", "unidade": "un", "precoAtacado": 65.0, "preco": 120.0, "modelo": "The Mist Preta"}, "DE-6935": {"nome": "Luva de boxe The Mist Vermelha", "variacao": "Vermelho / Dourado / Branco", "categoria": "Luvas de luta", "unidade": "par", "precoAtacado": 102.0, "preco": 185.0, "modelo": "The Mist Vermelha"}, "DE-6936": {"nome": "Luva de grappling The Mist Vermelha", "variacao": "Vermelho / Dourado / Branco", "categoria": "Luvas de luta", "unidade": "par", "precoAtacado": 85.0, "preco": 165.0, "modelo": "The Mist Vermelha"}, "DE-6939": {"nome": "Luva de MMA The Mist Vermelha", "variacao": "Vermelho / Dourado / Branco", "categoria": "Luvas de luta", "unidade": "par", "precoAtacado": 85.0, "preco": 165.0, "modelo": "The Mist Vermelha"}, "DE-6940": {"nome": "Manopla The Mist Vermelha", "variacao": "Vermelho / Dourado / Branco", "categoria": "Equipamentos de treino", "unidade": "par", "precoAtacado": 98.0, "preco": 190.0, "modelo": "The Mist Vermelha"}, "DE-6938": {"nome": "Capacete The Mist Vermelha", "variacao": "Vermelho / Dourado / Branco", "categoria": "Protetores", "unidade": "un", "precoAtacado": 101.0, "preco": 195.0, "modelo": "The Mist Vermelha"}, "DE-6937": {"nome": "Protetor de canela The Mist Vermelha", "variacao": "Vermelho / Dourado / Branco", "categoria": "Protetores", "unidade": "par", "precoAtacado": 138.0, "preco": 235.0, "modelo": "The Mist Vermelha"}, "DE-6941": {"nome": "Escudo de chute curvo redondo The Mist Vermelha", "variacao": "Vermelho / Dourado / Branco", "categoria": "Equipamentos de treino", "unidade": "un", "precoAtacado": 122.0, "preco": 230.0, "modelo": "The Mist Vermelha"}, "DE-6942": {"nome": "Escudo de chute curvo The Mist Vermelha", "variacao": "Vermelho / Dourado / Branco", "categoria": "Equipamentos de treino", "unidade": "un", "precoAtacado": 243.0, "preco": 360.0, "modelo": "The Mist Vermelha"}, "DE-6943": {"nome": "Escudo de treinamento The Mist Vermelha", "variacao": "Vermelho / Dourado / Branco", "categoria": "Equipamentos de treino", "unidade": "un", "precoAtacado": 196.0, "preco": 325.0, "modelo": "The Mist Vermelha"}, "DE-6991": {"nome": "Protetor de canela (versão branca)", "variacao": "Branco / Dourado / Preto", "categoria": "Protetores", "unidade": "par", "precoAtacado": 138.0, "preco": 235.0, "modelo": ""}, "DE-7044": {"nome": "Luva de boxe Shark", "variacao": "Marinho", "categoria": "Luvas de luta", "unidade": "par", "precoAtacado": 128.0, "preco": 215.0, "modelo": "Shark"}, "DE-7045": {"nome": "Luva de boxe Shark", "variacao": "Preta", "categoria": "Luvas de luta", "unidade": "par", "precoAtacado": 128.0, "preco": 215.0, "modelo": "Shark"}, "DE-7046": {"nome": "Luva de boxe Shark", "variacao": "Vermelha", "categoria": "Luvas de luta", "unidade": "par", "precoAtacado": 128.0, "preco": 215.0, "modelo": "Shark"}, "DE-7147": {"nome": "Luva de boxe The Eagle", "variacao": "Preto / Dourado", "categoria": "Luvas de luta", "unidade": "par", "precoAtacado": 115.0, "preco": 195.0, "modelo": "The Eagle"}, "DE-7148": {"nome": "Luva de boxe The Eagle", "variacao": "Vermelho / Dourado", "categoria": "Luvas de luta", "unidade": "par", "precoAtacado": 115.0, "preco": 195.0, "modelo": "The Eagle"}, "DE-7149": {"nome": "Luva de boxe The Eagle", "variacao": "Azul marinho / Dourado", "categoria": "Luvas de luta", "unidade": "par", "precoAtacado": 115.0, "preco": 195.0, "modelo": "The Eagle"}, "DE-7232": {"nome": "Pera de velocidade", "variacao": "Preta", "categoria": "Equipamentos de treino", "unidade": "un", "precoAtacado": 0.0, "preco": 0.0, "modelo": ""}, "DE-7233": {"nome": "Pera de velocidade", "variacao": "Vermelha", "categoria": "Equipamentos de treino", "unidade": "un", "precoAtacado": 0.0, "preco": 0.0, "modelo": ""}, "DE-7234": {"nome": "Pera de velocidade", "variacao": "Branca", "categoria": "Equipamentos de treino", "unidade": "un", "precoAtacado": 0.0, "preco": 0.0, "modelo": ""}, "DE-9110": {"nome": "Raquete de foco", "variacao": "Preto / Branco / Dourado", "categoria": "Equipamentos de treino", "unidade": "par", "precoAtacado": 93.0, "preco": 170.0, "modelo": ""}, "DE-9111": {"nome": "Raquete de foco", "variacao": "Branco / Preto / Dourado (faixas)", "categoria": "Equipamentos de treino", "unidade": "par", "precoAtacado": 93.0, "preco": 170.0, "modelo": ""}, "DE-9112": {"nome": "Raquete de foco", "variacao": "Branco / Preto / Dourado (águia)", "categoria": "Equipamentos de treino", "unidade": "par", "precoAtacado": 93.0, "preco": 170.0, "modelo": ""}, "DE-9113": {"nome": "Raquete de foco", "variacao": "Vermelho / Branco / Dourado", "categoria": "Equipamentos de treino", "unidade": "par", "precoAtacado": 93.0, "preco": 170.0, "modelo": ""}, "DE-7441": {"nome": "Bastão de treino", "variacao": "Preto / Branco", "categoria": "Equipamentos de treino", "unidade": "un", "precoAtacado": 93.0, "preco": 170.0, "modelo": ""}, "DE-7442": {"nome": "Bastão de treino", "variacao": "Vermelho / Preto", "categoria": "Equipamentos de treino", "unidade": "un", "precoAtacado": 93.0, "preco": 170.0, "modelo": ""}, "DE-7443": {"nome": "Bastão de treino", "variacao": "Branco / Preto", "categoria": "Equipamentos de treino", "unidade": "un", "precoAtacado": 93.0, "preco": 170.0, "modelo": ""}, "DE-7350": {"nome": "Saco de pancada", "variacao": "Preto", "categoria": "Equipamentos de treino", "unidade": "un", "precoAtacado": 0.0, "preco": 0.0, "modelo": ""}, "DE-8141": {"nome": "Mochila casual", "variacao": "Azul / Preto", "categoria": "Bolsas", "unidade": "un", "precoAtacado": 75.0, "preco": 135.0, "modelo": ""}, "DE-8142": {"nome": "Bolsa duffle", "variacao": "Preta / Marrom", "categoria": "Bolsas", "unidade": "un", "precoAtacado": 120.0, "preco": 198.0, "modelo": ""}, "DE-9011": {"nome": "Luva de goleiro Astro", "variacao": "Preto / Amarelo", "categoria": "Luvas de goleiro", "unidade": "par", "precoAtacado": 29.0, "preco": 75.0, "modelo": "Astro"}, "DE-9012": {"nome": "Luva de goleiro Astro", "variacao": "Azul / Preto", "categoria": "Luvas de goleiro", "unidade": "par", "precoAtacado": 29.0, "preco": 75.0, "modelo": "Astro"}, "DE-9013": {"nome": "Luva de goleiro Astro", "variacao": "Vermelho / Preto", "categoria": "Luvas de goleiro", "unidade": "par", "precoAtacado": 29.0, "preco": 75.0, "modelo": "Astro"}, "DE-9116": {"nome": "Luva de goleiro infantil Lotus", "variacao": "Preto / Cinza / Branco", "categoria": "Luvas de goleiro", "unidade": "par", "precoAtacado": 29.0, "preco": 75.0, "modelo": "Lotus"}, "DE-9117": {"nome": "Luva de goleiro infantil Lotus", "variacao": "Cinza / Lima / Preto", "categoria": "Luvas de goleiro", "unidade": "par", "precoAtacado": 29.0, "preco": 75.0, "modelo": "Lotus"}, "DE-9118": {"nome": "Luva de goleiro infantil Lotus", "variacao": "Preto / Vermelho / Branco", "categoria": "Luvas de goleiro", "unidade": "par", "precoAtacado": 29.0, "preco": 75.0, "modelo": "Lotus"}, "DE-9232": {"nome": "Luva de goleiro Alpha I", "variacao": "Preto / Lima", "categoria": "Luvas de goleiro", "unidade": "par", "precoAtacado": 42.0, "preco": 98.0, "modelo": "Alpha I"}, "DE-9233": {"nome": "Luva de goleiro Alpha I", "variacao": "Preto / Dourado", "categoria": "Luvas de goleiro", "unidade": "par", "precoAtacado": 42.0, "preco": 98.0, "modelo": "Alpha I"}, "DE-9236": {"nome": "Luva de goleiro Alpha I", "variacao": "Azul marinho / Ciano", "categoria": "Luvas de goleiro", "unidade": "par", "precoAtacado": 42.0, "preco": 98.0, "modelo": "Alpha I"}, "DE-9234": {"nome": "Luva de goleiro Alpha I", "variacao": "Preto / Cinza", "categoria": "Luvas de goleiro", "unidade": "par", "precoAtacado": 42.0, "preco": 98.0, "modelo": "Alpha I"}, "DE-9235": {"nome": "Luva de goleiro Alpha I", "variacao": "Preto / Vermelho", "categoria": "Luvas de goleiro", "unidade": "par", "precoAtacado": 42.0, "preco": 98.0, "modelo": "Alpha I"}, "DE-9321": {"nome": "Luva de goleiro Alpha II", "variacao": "Preto / Verde-limão", "categoria": "Luvas de goleiro", "unidade": "par", "precoAtacado": 42.0, "preco": 98.0, "modelo": "Alpha II"}, "DE-9322": {"nome": "Luva de goleiro Alpha II", "variacao": "Preto / Branco", "categoria": "Luvas de goleiro", "unidade": "par", "precoAtacado": 42.0, "preco": 98.0, "modelo": "Alpha II"}, "DE-9323": {"nome": "Luva de goleiro Alpha II", "variacao": "Branco / Preto", "categoria": "Luvas de goleiro", "unidade": "par", "precoAtacado": 42.0, "preco": 98.0, "modelo": "Alpha II"}, "DE-9324": {"nome": "Luva de goleiro Alpha II", "variacao": "Preto / Vermelho", "categoria": "Luvas de goleiro", "unidade": "par", "precoAtacado": 42.0, "preco": 98.0, "modelo": "Alpha II"}};
+  const vazio=v=>v==null||v===''||(typeof v==='number'&&!v);
+  const skuDe=p=>window.DRAVEN_IMG&&DRAVEN_IMG.skuCatalogo?DRAVEN_IMG.skuCatalogo(p):'';
+  // monta o plano: grupos com mais de um cadastro do mesmo item e cadastros únicos que podem ganhar dados do catálogo
+  function plano(){
+    const grupos={};
+    for(const p of S.produtos){const k=skuDe(p);if(k&&CATALOGO[k])(grupos[k]=grupos[k]||[]).push(p)}
+    const juntar=[],completar=[];
+    for(const[k,l]of Object.entries(grupos)){
+      const c=CATALOGO[k];
+      const principal=l.find(p=>String(p.sku||'').trim().toUpperCase()===k)||l.slice().sort((a,b)=>(a.criadoEm||0)-(b.criadoEm||0))[0];
+      const outros=l.filter(p=>p!==principal);
+      // o que o principal ganha: primeiro dos outros cadastros, depois do catálogo
+      const ganha={};
+      const campos=['custo','minimo','descricao','modelo','precoAtacado','preco','categoria','unidade'];
+      for(const o of outros)for(const f of campos)if(vazio(principal[f])&&vazio(ganha[f])&&!vazio(o[f]))ganha[f]=o[f];
+      const img=outros.map(o=>String(o.imagem||'')).find(i=>i.startsWith('drive:'));if(img&&!String(principal.imagem||'').startsWith('drive:'))ganha.imagem=img;
+      const doCat={sku:k,precoAtacado:c.precoAtacado,preco:c.preco,categoria:c.categoria,unidade:c.unidade,modelo:c.modelo};
+      for(const[f,v]of Object.entries(doCat))if(f==='sku'?String(principal.sku||'').trim().toUpperCase()!==k:(vazio(principal[f])&&vazio(ganha[f])&&!vazio(v)))ganha[f]=v;
+      if(!outros.length)delete ganha.modelo;   // cadastro único: só completa código, preços, categoria e unidade
+      if(outros.length)juntar.push({k,principal,outros,ganha,soma:outros.reduce((t,o)=>t+(Number(o.estoque)||0),0)});
+      else if(Object.keys(ganha).length)completar.push({k,principal,ganha});
+    }
+    return{juntar,completar};
+  }
+  const nomeP=p=>`${p.nome}${p.variacao?' · '+p.variacao:''}`;
+  const cel=v=>{const t=String(v??'');return/[;"\n]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t};
+  async function copia(pl){
+    if(!S.dl)return;
+    const ids=new Set();pl.juntar.forEach(g=>[g.principal,...g.outros].forEach(p=>ids.add(p.id)));pl.completar.forEach(g=>ids.add(g.principal.id));
+    const ps=S.produtos.filter(p=>ids.has(p.id));
+    const cab=['id','SKU','Produto','Variacao','Categoria','Unidade','Estoque','Minimo','Custo','Preco atacado','Preco varejo','Ativo','Descricao','Imagem'];
+    const csv=[cab.join(';'),...ps.map(p=>[p.id,p.sku,p.nome,p.variacao,p.categoria,p.unidade,p.estoque,p.minimo,p.custo,p.precoAtacado,p.preco,p.ativo===false?'Não':'Sim',p.descricao,p.imagem].map(cel).join(';'))].join('\n');
+    await S.dl.save({filename:`draven-produtos-antes-de-unificar-${new Date().toISOString().slice(0,10)}.csv`,data:new Blob(['﻿'+csv],{type:'text/csv'})});
+  }
+  async function executar(pl,btn){
+    const trocar=new Map();pl.juntar.forEach(g=>g.outros.forEach(o=>trocar.set(o.id,g.principal.id)));
+    let n=0;const passo=t=>{if(btn)btn.textContent=t};
+    // 1) pedidos e lotes passam a apontar para o cadastro que fica
+    for(const[col,lista]of[['vendas',S.vendas||[]],['producao',S.producao||[]]])for(const v of lista){
+      if(!(v.itens||[]).some(i=>trocar.has(i.produtoId)))continue;
+      await salvar(col,v.id,{itens:v.itens.map(i=>trocar.has(i.produtoId)?{...i,produtoId:trocar.get(i.produtoId)}:i)});
+    }
+    // 2) movimentações antigas passam para o cadastro que fica
+    if(trocar.size){const movs=(await S.db.collection('movimentos').get()).docs;
+      for(const d of movs){const m=d.data();if(trocar.has(m.produtoId))await S.db.doc('movimentos/'+d.id).update({produtoId:trocar.get(m.produtoId),unificadoDe:m.produtoId})}}
+    // 3) dados e estoque no cadastro que fica; os outros cadastros saem
+    for(const g of pl.juntar){
+      passo(`Unificando ${++n}/${pl.juntar.length+pl.completar.length}…`);
+      if(Object.keys(g.ganha).length)await salvar('produtos',g.principal.id,{...g.ganha,atualizadoEm:Date.now()});
+      if(g.soma)await moverEstoque(g.principal.id,g.soma,'ajuste','Unificação de produtos',g.outros.map(o=>o.sku||o.nome).join(', '));
+      for(const o of g.outros)await S.db.doc('produtos/'+o.id).delete();
+    }
+    for(const g of pl.completar){passo(`Unificando ${++n}/${pl.juntar.length+pl.completar.length}…`);await salvar('produtos',g.principal.id,{...g.ganha,atualizadoEm:Date.now()})}
+  }
+  function janela(){
+    if(!pode('excluir')){toast('Só a gestão pode unificar produtos.');return}
+    const pl=plano();
+    if(!pl.juntar.length&&!pl.completar.length){abrir('Unificar com o catálogo','<p class="sub" style="margin:0">Nada para unificar: não há produto repetido do catálogo nem cadastro faltando dados do catálogo.</p>',null,{});return}
+    const rot={sku:'código',precoAtacado:'preço atacado',preco:'preço varejo',categoria:'categoria',unidade:'unidade',modelo:'linha',custo:'custo',minimo:'mínimo',descricao:'descrição',imagem:'foto'};
+    abrir('Unificar com o catálogo',`
+     <p class="sub" style="margin:0">Cadastros que são o mesmo produto do catálogo viram um só. O estoque é somado, pedidos, lotes e movimentações passam para o cadastro que fica, e campos vazios são completados. Nada que já está preenchido é trocado.</p>
+     ${pl.juntar.length?`<h3 style="margin:6px 0 0;font-size:15px">Juntar (${pl.juntar.length})</h3><div class="list">${pl.juntar.map(g=>`<div class="li"><div class="grow"><div class="t">${esc(g.k)} · ${esc(nomeP(g.principal))} <span class="ro">(${g.principal.estoque||0} ${esc(g.principal.unidade||'')})</span></div>
+       <div class="d">recebe: ${g.outros.map(o=>`${esc(nomeP(o))}${o.sku?' ['+esc(o.sku)+']':''} (${o.estoque||0})`).join(' · ')} → estoque fica ${(Number(g.principal.estoque)||0)+g.soma}${Object.keys(g.ganha).length?' · completa: '+Object.keys(g.ganha).map(f=>rot[f]||f).join(', '):''}</div></div></div>`).join('')}</div>`:''}
+     ${pl.completar.length?`<h3 style="margin:6px 0 0;font-size:15px">Completar com dados do catálogo (${pl.completar.length})</h3><div class="list">${pl.completar.slice(0,40).map(g=>`<div class="li"><div class="grow"><div class="t">${esc(nomeP(g.principal))}${g.principal.sku?' ['+esc(g.principal.sku)+']':''}</div><div class="d">completa: ${Object.keys(g.ganha).map(f=>rot[f]||f).join(', ')}</div></div></div>`).join('')}</div>`:''}
+     <label class="chk"><input type="checkbox" name="copia" checked> Baixar antes uma cópia de como os produtos estão</label>
+     <p class="err" id="v-err" hidden></p>`,
+    async fd=>{
+      const btn=document.querySelector('#dlgForm button[type=submit]');
+      try{
+        if(fd.get('copia')){btn.textContent='Baixando a cópia…';try{await copia(pl)}catch(e){if(!confirm('Não foi possível baixar a cópia. Unificar mesmo assim?'))return false}}
+        await executar(pl,btn);
+        toast(`${pl.juntar.length} produto${pl.juntar.length===1?'':'s'} unificado${pl.juntar.length===1?'':'s'}${pl.completar.length?` · ${pl.completar.length} completado${pl.completar.length===1?'':'s'} com o catálogo`:''}`);return true;
+      }catch(e){erro('#v-err','Não foi possível terminar: '+(e.message||'erro')+'. Tente de novo; o que já foi feito não se repete.');return false}
+    },{submitLabel:'Unificar'});
+  }
+  document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-unificar]');if(b){e.preventDefault();e.stopPropagation();janela()}},true);
+  return{plano,temAlgo:()=>{try{const p=plano();return p.juntar.length+p.completar.length}catch(e){return 0}}};
 })();
 </script>
 <!-- Ajustes de celular e tablet. Entra no index.html pelo ferramentas/montar.py, depois do sistema.
