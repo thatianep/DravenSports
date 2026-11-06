@@ -1,0 +1,53 @@
+<!-- Estoque: descrição do produto (nome, modelo/linha, cor, categoria, unidade, código), gerada automaticamente
+     e editável à mão. Campos novos no produto: "modelo" e "descricao" (os campos antigos não mudam).
+     Entra no index.html pelo ferramentas/montar.py, depois do sistema. -->
+<style>
+.desc-prod{font-size:12px;line-height:1.35;margin-top:3px;max-width:520px;white-space:normal}
+</style>
+<script>
+window.DRAVEN_DESC=(function(){
+  // linhas conhecidas do catálogo (a mais específica primeiro)
+  const LINHAS=['The Mist Preta','The Mist Vermelha','The Mist','The Eagle','Angry','Shark','Astro','Lotus','Alpha II','Alpha I'];
+  const sem=s=>String(s||'').trim();
+  function linha(p){
+    if(sem(p.modelo))return sem(p.modelo);
+    const n=sem(p.nome);return LINHAS.find(l=>new RegExp('\\b'+l.replace(/ /g,'\\s+')+'$','i').test(n)||new RegExp('\\b'+l.replace(/ /g,'\\s+')+'\\b','i').test(n))||'';
+  }
+  function tipoDo(nome,lin){
+    let t=sem(nome);if(lin)t=t.replace(new RegExp('\\s*'+lin.replace(/ /g,'\\s+')+'\\s*','i'),' ').trim();
+    return t.replace(/\s+/g,' ');
+  }
+  // texto: "Luva de boxe da linha Angry, cor toda preta. Categoria: Luvas de luta. Venda por par. Código DE-6819."
+  function gerar(p){
+    const lin=sem(p.modelo)||linha(p),tipo=tipoDo(p.nome,lin)||sem(p.nome),cor=sem(p.variacao);
+    const partes=[`${tipo}${lin?` da linha ${lin}`:''}${cor?`, cor ${cor.toLowerCase()}`:''}.`];
+    if(sem(p.categoria))partes.push(`Categoria: ${p.categoria}.`);
+    partes.push(`Venda por ${p.unidade==='par'?'par':'unidade'}.`);
+    if(sem(p.sku))partes.push(`Código ${p.sku}.`);
+    if(p.ativo===false)partes.push('Indisponível no momento.');
+    return partes.join(' ');
+  }
+  // na ficha: "Gerar descrição" usa o que está digitado nos campos
+  function gerarNaFicha(){
+    const f=document.getElementById('dlgForm');if(!f)return;
+    const v=n=>(f.querySelector(`[name="${n}"]`)||{}).value||'';
+    const ativo=f.querySelector('[name="ativo"]');
+    const t=gerar({nome:v('nome'),modelo:v('modelo'),variacao:v('variacao'),categoria:v('categoria'),unidade:v('unidade'),sku:v('sku'),ativo:ativo?ativo.checked:true});
+    const box=document.getElementById('p-desc');if(box){box.value=t;box.focus()}
+  }
+  async function preencherTodos(){
+    if(!pode('produtos')){toast('Seu perfil não pode editar produtos.');return}
+    const faltam=S.produtos.filter(p=>!sem(p.descricao));
+    if(!faltam.length){toast('Todos os produtos já têm descrição.');return}
+    if(!await confirmar(`Preencher a descrição de ${faltam.length} produto${faltam.length===1?'':'s'} sem descrição? Os que já têm descrição não mudam, e dá para editar cada uma depois.`,'Preencher'))return;
+    let n=0;
+    for(const p of faltam){const d={descricao:gerar(p)};if(!sem(p.modelo)&&linha(p))d.modelo=linha(p);try{await salvar('produtos',p.id,d);n++}catch(e){}}
+    toast(`${n} descriç${n===1?'ão preenchida':'ões preenchidas'}`);
+  }
+  document.addEventListener('click',e=>{
+    const g=e.target.closest&&e.target.closest('[data-desc-gerar]');if(g){e.preventDefault();e.stopPropagation();gerarNaFicha();return}
+    const t=e.target.closest&&e.target.closest('[data-desc-todos]');if(t){e.preventDefault();e.stopPropagation();preencherTodos()}
+  },true);
+  return{gerar,linha};
+})();
+</script>

@@ -12,9 +12,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="DRAVEN">
 <!-- Gerado por ferramentas/montar.py a partir de versao-claude-ai/sistema-draven.html. Não edite à mão. -->
-<script src="config.js?v=202611052046"></script>
+<script src="config.js?v=202611061317"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="drive-db.js?v=202611052046"></script>
+<script src="drive-db.js?v=202611061317"></script>
 </head>
 <body>
 <style>.btn.ligar{color:#1E3A8A;border-color:#BFDBFE;text-decoration:none}.btn.ligar:hover{border-color:#1E3A8A}.btn.wa{text-decoration:none}</style>
@@ -997,7 +997,7 @@ function vEstoque(){
   return`<div class="head"><div><h1>Estoque</h1><p class="sub">${S.produtos.length} produto${S.produtos.length===1?'':'s'} · ${n0.format(sum(S.produtos,p=>p.estoque))} unidades${pode('custo')?' · '+money(sum(S.produtos,p=>(p.estoque>0?p.estoque:0)*(p.custo||0)))+' a custo':''}</p></div>
   <div class="tools">${t==='produtos'?`<input class="inp search" id="q-e" data-f="qe" placeholder="Buscar produto ou SKU" value="${esc(S.f.qe||'')}"><select class="inp" id="c-e" data-f="ce"><option value="">Todas as categorias</option>${CATS.map(c=>`<option ${S.f.ce===c?'selected':''}>${c}</option>`).join('')}</select>`:''}
   ${S.dl&&t==='produtos'?'<button class="btn" data-a="csv-estoque">Exportar CSV</button>':''}
-  ${pode('excluir')&&S.produtos.length?'<button class="btn danger" data-a="excluir-estoque"><i class="fa-solid fa-trash"></i> Excluir todo o estoque</button>':''}${pode('produtos')?'<button class="btn" data-a="importar-produtos"><i class="fa-solid fa-file-import"></i> Importar produtos</button><button class="btn pri" data-a="novo-produto">Novo produto</button>':''}</div></div>
+  ${pode('produtos')&&S.produtos.some(p=>!String(p.descricao||'').trim())?'<button class="btn" data-desc-todos><i class="fa-solid fa-align-left"></i> Preencher descrições</button>':''}${pode('excluir')&&S.produtos.length?'<button class="btn danger" data-a="excluir-estoque"><i class="fa-solid fa-trash"></i> Excluir todo o estoque</button>':''}${pode('produtos')?'<button class="btn" data-a="importar-produtos"><i class="fa-solid fa-file-import"></i> Importar produtos</button><button class="btn pri" data-a="novo-produto">Novo produto</button>':''}</div></div>
   <div class="tabs" role="tablist"><button role="tab" aria-selected="${t==='produtos'}" data-a="est-tab" data-v="produtos">Produtos</button><button role="tab" aria-selected="${t==='mov'}" data-a="est-tab" data-v="mov">Movimentações</button></div>
   <div id="body">${t==='produtos'?estoqueBody():movBody()}</div>`;
 }
@@ -1007,10 +1007,10 @@ function estoqueBody(){
   const l=S.produtos.filter(p=>(!S.f.ce||p.categoria===S.f.ce)&&(!q||norm(prodNome(p)+' '+(p.sku||'')).includes(q))).sort((a,b)=>prodNome(a).localeCompare(prodNome(b)));
   return`<div class="tbl-wrap"><table><thead><tr><th>SKU</th><th>Produto</th><th>Categoria</th><th class="num">Em estoque</th><th class="num">Mínimo</th>${custo?'<th class="num">Custo</th>':''}<th class="num">Atacado</th><th class="num">Varejo</th>${custo?'<th class="num">Margem</th>':''}<th></th></tr></thead><tbody>
   ${l.map(p=>{const baixo=(Number(p.minimo)||0)>0&&(Number(p.estoque)||0)<=p.minimo;const mg=p.preco>0&&p.custo>0?((p.preco-p.custo)/p.preco*100):null;
-   return`<tr class="${baixo?'low':''} click" data-a="edit-produto" data-id="${p.id}"><td class="mono">${esc(p.sku||'—')}</td><td><b>${esc(p.nome)}</b>${p.variacao?`<div class="ro">${esc(p.variacao)}</div>`:''}${p.ativo===false?' <span class="pill">Inativo</span>':''}</td><td>${esc(p.categoria||'')}</td>
+   return`<tr class="${baixo?'low':''} click" data-a="edit-produto" data-id="${p.id}"><td class="mono">${esc(p.sku||'—')}</td><td><b>${esc(p.nome)}</b>${p.variacao?`<div class="ro">${esc(p.variacao)}</div>`:''}${p.descricao?`<div class="ro desc-prod">${esc(p.descricao)}</div>`:''}${p.ativo===false?' <span class="pill">Inativo</span>':''}</td><td>${esc(p.categoria||'')}</td>
    <td class="num est">${n0.format(p.estoque||0)} ${esc(p.unidade||'un')}${baixo?' <span class="pill bad">Repor</span>':''}</td><td class="num">${p.minimo?n0.format(p.minimo):'—'}</td>
    ${custo?`<td class="num">${p.custo?money(p.custo):'—'}</td>`:''}<td class="num">${p.precoAtacado?money(p.precoAtacado):'—'}</td><td class="num">${p.preco?money(p.preco):'—'}</td>${custo?`<td class="num">${mg==null?'—':mg.toFixed(0)+'%'}</td>`:''}
-   <td>${pode('produtos')?`<button class="btn sm" data-a="ajustar" data-id="${p.id}">Ajustar</button>`:''}</td></tr>`}).join('')||'<tr><td colspan="10" class="ro">Nenhum produto com esse filtro.</td></tr>'}
+   <td>${pode('produtos')?`${pode('produtos')?`<button class="btn sm" data-a="edit-produto" data-id="${p.id}"><i class="fa-solid fa-pen"></i> Editar</button> `:''}<button class="btn sm" data-a="ajustar" data-id="${p.id}">Ajustar</button>`:''}</td></tr>`}).join('')||'<tr><td colspan="10" class="ro">Nenhum produto com esse filtro.</td></tr>'}
   </tbody></table></div>`;
 }
 function movBody(){
@@ -1025,7 +1025,10 @@ function formProduto(p={}){
   abrir(p.id?esc(prodNome(p)):'Novo produto',`
   <div class="fg">
    <label class="f full">Nome do produto *<input class="inp" id="p-nome" name="nome" required value="${esc(p.nome||'')}" placeholder="Luva de Boxe Draven Pro" ${d}></label>
-   <label class="f">Variação (tamanho, peso, cor)<input class="inp" id="p-var" name="variacao" value="${esc(p.variacao||'')}" placeholder="14oz preta · A2 branco · tam. 9" ${d}></label>
+   <label class="f">Cor / variação (tamanho, peso)<input class="inp" id="p-var" name="variacao" value="${esc(p.variacao||'')}" placeholder="14oz preta · A2 branco · tam. 9" ${d}></label>
+   <label class="f">Modelo / linha<input class="inp" id="p-mod" name="modelo" value="${esc(p.modelo||(window.DRAVEN_DESC?DRAVEN_DESC.linha(p):''))}" placeholder="Angry, The Mist, Shark…" ${d}></label>
+   <label class="f full">Descrição do produto<textarea class="inp" id="p-desc" name="descricao" rows="3" placeholder="Nome, modelo, cor, tamanho, material… (use Gerar descrição para montar automaticamente)" ${d}>${esc(p.descricao||'')}</textarea></label>
+   ${ed?'<div class="full" style="margin-top:-6px"><button type="button" class="btn sm" data-desc-gerar><i class="fa-solid fa-wand-magic-sparkles"></i> Gerar descrição</button></div>':''}
    <label class="f">SKU / código<input class="inp" id="p-sku" name="sku" value="${esc(p.sku||'')}" placeholder="LB-PRO-14-PT" ${d}></label>
    <label class="f">Categoria<select class="inp" id="p-cat" name="categoria" ${d}>${CATS.map(c=>`<option ${p.categoria===c?'selected':''}>${c}</option>`).join('')}</select></label>
    <label class="f">Unidade<select class="inp" id="p-un" name="unidade" ${d}>${UNID.map(u=>`<option ${(p.unidade||(p.id?'un':'par'))===u?'selected':''}>${u}</option>`).join('')}</select></label>
@@ -1037,7 +1040,7 @@ function formProduto(p={}){
    <label class="chk"><input type="checkbox" id="p-ativo" name="ativo" ${p.ativo!==false?'checked':''} ${d}> Ativo para venda</label>
   </div>${p.id?'<p class="ro">Para mudar a quantidade em estoque, use o botão Ajustar na lista. Assim a alteração fica registrada nas movimentações.</p>':''}`,
   ed?async fd=>{
-    const dados={nome:fd.get('nome').trim(),variacao:fd.get('variacao'),sku:fd.get('sku'),categoria:fd.get('categoria'),unidade:fd.get('unidade'),preco:num(fd.get('preco')),precoAtacado:num(fd.get('precoAtacado')),minimo:num(fd.get('minimo')),ativo:!!fd.get('ativo'),atualizadoEm:Date.now()};
+    const dados={nome:fd.get('nome').trim(),variacao:fd.get('variacao'),sku:fd.get('sku'),categoria:fd.get('categoria'),unidade:fd.get('unidade'),preco:num(fd.get('preco')),precoAtacado:num(fd.get('precoAtacado')),minimo:num(fd.get('minimo')),ativo:!!fd.get('ativo'),...(fd.has('descricao')?{descricao:String(fd.get('descricao')||'').trim(),modelo:String(fd.get('modelo')||'').trim()}:{}),atualizadoEm:Date.now()};
     if(custo)dados.custo=num(fd.get('custo'));
     if(p.id){await salvar('produtos',p.id,dados);toast('Produto atualizado');return true}
     const ini=num(fd.get('inicial'));dados.estoque=0;dados.criadoEm=Date.now();
@@ -2305,7 +2308,7 @@ document.addEventListener('change',async e=>{
   if(t.dataset.etapa){moverEtapa(t.dataset.etapa,t.value);return}
   if(t.dataset.tmove){moverTarefa(t.dataset.tmove,t.value);return}
   if(t.dataset.papel!==undefined&&t.dataset.papel){if(t.value)definirPapel(t.dataset.papel,t.value);return}
-  if(t.dataset.f){S.f[t.dataset.f]=t.value;if(t.tagName==='SELECT')render();else atualizarCorpo()}
+  if(t.dataset.f){const mudou=S.f[t.dataset.f]!==t.value;S.f[t.dataset.f]=t.value;if(t.tagName==='SELECT')render();else if(mudou)atualizarCorpo()}
 });
 document.addEventListener('input',e=>{const t=e.target;if(t.id==='cv-txt'){DRAFT[S.convSel]=t.value;return}if(t.dataset.f&&t.tagName==='INPUT'){S.f[t.dataset.f]=t.value;atualizarCorpo()}});
 function atualizarCorpo(){const b=$('#body');if(!b)return;const fn={tarefas:tarefasBody,conversas:convLista,clientes:clientesBody,crm:crmBody,vendas:vendasBody,producao:producaoBody,estoque:()=>S.estTab==='produtos'?estoqueBody():movBody()}[S.view];if(fn)b.innerHTML=fn()}
@@ -3544,6 +3547,59 @@ window.DRAVEN_SEL=(function(){
   function iniciar(){const m=document.getElementById('main');if(m)new MutationObserver(()=>{if(S.view!=='crm'&&st.on){st.on=false;st.ids.clear()}agendar()}).observe(m,{childList:true,subtree:true});agendar()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',iniciar);else iniciar();
   return{estado:st};
+})();
+</script>
+<!-- Estoque: descrição do produto (nome, modelo/linha, cor, categoria, unidade, código), gerada automaticamente
+     e editável à mão. Campos novos no produto: "modelo" e "descricao" (os campos antigos não mudam).
+     Entra no index.html pelo ferramentas/montar.py, depois do sistema. -->
+<style>
+.desc-prod{font-size:12px;line-height:1.35;margin-top:3px;max-width:520px;white-space:normal}
+</style>
+<script>
+window.DRAVEN_DESC=(function(){
+  // linhas conhecidas do catálogo (a mais específica primeiro)
+  const LINHAS=['The Mist Preta','The Mist Vermelha','The Mist','The Eagle','Angry','Shark','Astro','Lotus','Alpha II','Alpha I'];
+  const sem=s=>String(s||'').trim();
+  function linha(p){
+    if(sem(p.modelo))return sem(p.modelo);
+    const n=sem(p.nome);return LINHAS.find(l=>new RegExp('\\b'+l.replace(/ /g,'\\s+')+'$','i').test(n)||new RegExp('\\b'+l.replace(/ /g,'\\s+')+'\\b','i').test(n))||'';
+  }
+  function tipoDo(nome,lin){
+    let t=sem(nome);if(lin)t=t.replace(new RegExp('\\s*'+lin.replace(/ /g,'\\s+')+'\\s*','i'),' ').trim();
+    return t.replace(/\s+/g,' ');
+  }
+  // texto: "Luva de boxe da linha Angry, cor toda preta. Categoria: Luvas de luta. Venda por par. Código DE-6819."
+  function gerar(p){
+    const lin=sem(p.modelo)||linha(p),tipo=tipoDo(p.nome,lin)||sem(p.nome),cor=sem(p.variacao);
+    const partes=[`${tipo}${lin?` da linha ${lin}`:''}${cor?`, cor ${cor.toLowerCase()}`:''}.`];
+    if(sem(p.categoria))partes.push(`Categoria: ${p.categoria}.`);
+    partes.push(`Venda por ${p.unidade==='par'?'par':'unidade'}.`);
+    if(sem(p.sku))partes.push(`Código ${p.sku}.`);
+    if(p.ativo===false)partes.push('Indisponível no momento.');
+    return partes.join(' ');
+  }
+  // na ficha: "Gerar descrição" usa o que está digitado nos campos
+  function gerarNaFicha(){
+    const f=document.getElementById('dlgForm');if(!f)return;
+    const v=n=>(f.querySelector(`[name="${n}"]`)||{}).value||'';
+    const ativo=f.querySelector('[name="ativo"]');
+    const t=gerar({nome:v('nome'),modelo:v('modelo'),variacao:v('variacao'),categoria:v('categoria'),unidade:v('unidade'),sku:v('sku'),ativo:ativo?ativo.checked:true});
+    const box=document.getElementById('p-desc');if(box){box.value=t;box.focus()}
+  }
+  async function preencherTodos(){
+    if(!pode('produtos')){toast('Seu perfil não pode editar produtos.');return}
+    const faltam=S.produtos.filter(p=>!sem(p.descricao));
+    if(!faltam.length){toast('Todos os produtos já têm descrição.');return}
+    if(!await confirmar(`Preencher a descrição de ${faltam.length} produto${faltam.length===1?'':'s'} sem descrição? Os que já têm descrição não mudam, e dá para editar cada uma depois.`,'Preencher'))return;
+    let n=0;
+    for(const p of faltam){const d={descricao:gerar(p)};if(!sem(p.modelo)&&linha(p))d.modelo=linha(p);try{await salvar('produtos',p.id,d);n++}catch(e){}}
+    toast(`${n} descriç${n===1?'ão preenchida':'ões preenchidas'}`);
+  }
+  document.addEventListener('click',e=>{
+    const g=e.target.closest&&e.target.closest('[data-desc-gerar]');if(g){e.preventDefault();e.stopPropagation();gerarNaFicha();return}
+    const t=e.target.closest&&e.target.closest('[data-desc-todos]');if(t){e.preventDefault();e.stopPropagation();preencherTodos()}
+  },true);
+  return{gerar,linha};
 })();
 </script>
 <!-- Ajustes de celular e tablet. Entra no index.html pelo ferramentas/montar.py, depois do sistema.

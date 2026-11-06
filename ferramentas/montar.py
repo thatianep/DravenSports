@@ -166,6 +166,22 @@ function crmFiltrados(){const q=norm(S.f.qcrm);return S.clientes.filter(c=>filtr
     # ---- nome da etapa: Perdido → "Sem retorno" (id perdido igual, dados intactos) ----
     ("{id:'perdido',nome:'Perdido'}", "{id:'perdido',nome:'Sem retorno'}", 1),
     ('<div class="t">Marcado como perdido</div>', '<div class="t">Marcado como sem retorno</div>', 1),
+    # ---- estoque: modelo/linha e descrição do produto (campos novos), botão Editar e Preencher descrições ----
+    ("""<label class="f">Variação (tamanho, peso, cor)<input class="inp" id="p-var" name="variacao" value="${esc(p.variacao||'')}" placeholder="14oz preta · A2 branco · tam. 9" ${d}></label>""",
+     """<label class="f">Cor / variação (tamanho, peso)<input class="inp" id="p-var" name="variacao" value="${esc(p.variacao||'')}" placeholder="14oz preta · A2 branco · tam. 9" ${d}></label>
+   <label class="f">Modelo / linha<input class="inp" id="p-mod" name="modelo" value="${esc(p.modelo||(window.DRAVEN_DESC?DRAVEN_DESC.linha(p):''))}" placeholder="Angry, The Mist, Shark…" ${d}></label>
+   <label class="f full">Descrição do produto<textarea class="inp" id="p-desc" name="descricao" rows="3" placeholder="Nome, modelo, cor, tamanho, material… (use Gerar descrição para montar automaticamente)" ${d}>${esc(p.descricao||'')}</textarea></label>
+   ${ed?'<div class="full" style="margin-top:-6px"><button type="button" class="btn sm" data-desc-gerar><i class="fa-solid fa-wand-magic-sparkles"></i> Gerar descrição</button></div>':''}""", 1),
+    ("preco:num(fd.get('preco')),precoAtacado:num(fd.get('precoAtacado')),minimo:num(fd.get('minimo')),ativo:!!fd.get('ativo'),atualizadoEm:Date.now()};",
+     "preco:num(fd.get('preco')),precoAtacado:num(fd.get('precoAtacado')),minimo:num(fd.get('minimo')),ativo:!!fd.get('ativo'),...(fd.has('descricao')?{descricao:String(fd.get('descricao')||'').trim(),modelo:String(fd.get('modelo')||'').trim()}:{}),atualizadoEm:Date.now()};", 1),
+    ("""<td><b>${esc(p.nome)}</b>${p.variacao?`<div class="ro">${esc(p.variacao)}</div>`:''}""",
+     """<td><b>${esc(p.nome)}</b>${p.variacao?`<div class="ro">${esc(p.variacao)}</div>`:''}${p.descricao?`<div class="ro desc-prod">${esc(p.descricao)}</div>`:''}""", 1),
+    ("""<button class="btn sm" data-a="ajustar" data-id="${p.id}">Ajustar</button>""",
+     """${pode('produtos')?`<button class="btn sm" data-a="edit-produto" data-id="${p.id}"><i class="fa-solid fa-pen"></i> Editar</button> `:''}<button class="btn sm" data-a="ajustar" data-id="${p.id}">Ajustar</button>""", 1),
+    ("${pode('excluir')&&S.produtos.length?'<button class=\"btn danger\" data-a=\"excluir-estoque\">",
+     "${pode('produtos')&&S.produtos.some(p=>!String(p.descricao||'').trim())?'<button class=\"btn\" data-desc-todos><i class=\"fa-solid fa-align-left\"></i> Preencher descrições</button>':''}${pode('excluir')&&S.produtos.length?'<button class=\"btn danger\" data-a=\"excluir-estoque\">", 1),
+    # busca: ao sair do campo não redesenha de novo a lista (o clique no botão da tabela se perdia)
+    ("if(t.dataset.f){S.f[t.dataset.f]=t.value;if(t.tagName==='SELECT')render();else atualizarCorpo()}", "if(t.dataset.f){const mudou=S.f[t.dataset.f]!==t.value;S.f[t.dataset.f]=t.value;if(t.tagName==='SELECT')render();else if(mudou)atualizarCorpo()}", 1),
 ]
 
 # Abre o WhatsApp Web numa janela ao lado e manda para ela as conversas abertas pelo sistema.
@@ -313,8 +329,9 @@ QUADROS = (RAIZ / 'ferramentas' / 'quadros.html').read_text(encoding='utf-8')
 PRODUTOS = (RAIZ / 'ferramentas' / 'produtos.html').read_text(encoding='utf-8')
 FINANCEIRO = (RAIZ / 'ferramentas' / 'financeiro.html').read_text(encoding='utf-8')
 SELECAO = (RAIZ / 'ferramentas' / 'selecao.html').read_text(encoding='utf-8')
+DESCRICAO = (RAIZ / 'ferramentas' / 'descricao.html').read_text(encoding='utf-8')
 import time
 VERSAO = time.strftime('%Y%m%d%H%M')
 CABECA = CABECA.replace('src="config.js"', f'src="config.js?v={VERSAO}"').replace('src="drive-db.js"', f'src="drive-db.js?v={VERSAO}"')
-(RAIZ / 'index.html').write_text(CABECA + WHATSAPP + app.strip() + '\n' + IMPORTAR + VISITA + WAB + QUADROS + PRODUTOS + FINANCEIRO + SELECAO + CELULAR + '</body>\n</html>\n', encoding='utf-8')
+(RAIZ / 'index.html').write_text(CABECA + WHATSAPP + app.strip() + '\n' + IMPORTAR + VISITA + WAB + QUADROS + PRODUTOS + FINANCEIRO + SELECAO + DESCRICAO + CELULAR + '</body>\n</html>\n', encoding='utf-8')
 print('index.html gerado')
