@@ -187,6 +187,7 @@ function crmFiltrados(){const q=norm(S.f.qcrm);return S.clientes.filter(c=>filtr
     ("""<label class="f full">Nome do produto *<input class="inp" id="p-nome\"""", """${window.DRAVEN_IMG?DRAVEN_IMG.blocoFicha(p,d):''}<label class="f full">Nome do produto *<input class="inp" id="p-nome\"""", 1),
     ("modelo:String(fd.get('modelo')||'').trim()}:{}),atualizadoEm:Date.now()};", "modelo:String(fd.get('modelo')||'').trim()}:{}),...(fd.has('imagem')?{imagem:String(fd.get('imagem')||'')}:{}),atualizadoEm:Date.now()};", 1),
     ("""<td><b>${esc(p.nome)}</b>${p.variacao?`<div class="ro">${esc(p.variacao)}</div>`:''}""", """<td>${window.DRAVEN_IMG?DRAVEN_IMG.mini(p):''}<b>${esc(p.nome)}</b>${p.variacao?`<div class="ro">${esc(p.variacao)}</div>`:''}""", 1),
+    ("${pode('produtos')&&S.produtos.some(p=>!String(p.descricao||'').trim())?'<button class=\"btn\" data-desc-todos>", "${pode('produtos')&&S.produtos.length?'<button class=\"btn\" data-fotos-cat><i class=\"fa-regular fa-images\"></i> Fotos do catálogo</button>':''}${pode('produtos')&&S.produtos.some(p=>!String(p.descricao||'').trim())?'<button class=\"btn\" data-desc-todos>", 1),
 ]
 
 # Abre o WhatsApp Web numa janela ao lado e manda para ela as conversas abertas pelo sistema.
@@ -338,6 +339,16 @@ DESCRICAO = (RAIZ / 'ferramentas' / 'descricao.html').read_text(encoding='utf-8'
 IMAGENS = (RAIZ / 'ferramentas' / 'imagens.html').read_text(encoding='utf-8')
 _fotos = sorted(f[:-4] for f in os.listdir(RAIZ / 'produtos-img') if f.endswith('.jpg')) if (RAIZ / 'produtos-img').is_dir() else []
 IMAGENS = IMAGENS.replace('/*FOTOS_CATALOGO*/[]', repr(_fotos).replace("'", '"'))
+# nome + cor do catálogo → código, para achar a foto de produto cadastrado sem o código
+import csv as _csv, json as _json, unicodedata as _ud, re as _re
+def _chave(t):
+    t = _ud.normalize('NFD', str(t or '')).encode('ascii', 'ignore').decode().lower()
+    return _re.sub(r'[^a-z0-9]+', ' ', t).strip()
+_nc = {}
+if (RAIZ / 'catalogo-2026.csv').exists():
+    for _r in _csv.DictReader(open(RAIZ / 'catalogo-2026.csv', encoding='utf-8'), delimiter=';'):
+        _nc[_chave(_r['Nome']) + '|' + _chave(_r['Variação'])] = _r['SKU']
+IMAGENS = IMAGENS.replace('/*NOME_COR*/{}', _json.dumps(_nc, ensure_ascii=False))
 import time
 VERSAO = time.strftime('%Y%m%d%H%M')
 CABECA = CABECA.replace('src="config.js"', f'src="config.js?v={VERSAO}"').replace('src="drive-db.js"', f'src="drive-db.js?v={VERSAO}"')

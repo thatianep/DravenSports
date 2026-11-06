@@ -14,7 +14,17 @@
 <script>
 window.DRAVEN_IMG=(function(){
   const FOTOS_CATALOGO=new Set(/*FOTOS_CATALOGO*/[]);
-  const doCatalogo=p=>p&&p.sku&&FOTOS_CATALOGO.has(String(p.sku).toUpperCase())?`produtos-img/${String(p.sku).toUpperCase()}.jpg`:'';
+  // nome + cor do catálogo → código (para produtos cadastrados à mão, sem o código ou com o código escrito diferente)
+  const NOME_COR=/*NOME_COR*/{};
+  const chave=t=>norm(String(t||'')).replace(/[^a-z0-9]+/g,' ').trim();
+  function skuCatalogo(p){
+    if(!p)return'';
+    const m=String(p.sku||'').toUpperCase().replace(/\s+/g,'').match(/^DE-?(\d{4})$/);
+    if(m&&FOTOS_CATALOGO.has('DE-'+m[1]))return'DE-'+m[1];
+    const k=chave(p.nome)+'|'+chave(p.variacao);
+    return NOME_COR[k]&&FOTOS_CATALOGO.has(NOME_COR[k])?NOME_COR[k]:'';
+  }
+  const doCatalogo=p=>{const k=skuCatalogo(p);return k?`produtos-img/${k}.jpg`:''};
   // qual imagem usar: {src} pronta ou {drive:id} para buscar no Drive
   function fonte(p){
     const im=String((p&&p.imagem)||'');
@@ -79,6 +89,19 @@ window.DRAVEN_IMG=(function(){
     const pid=inp.dataset.pid,msg=document.getElementById('p-img-msg');
     if(pid){try{await salvar('produtos',pid,{imagem:inp.value});if(msg)msg.textContent=b.dataset.img==='remover'?'Foto removida.':'Voltou para a foto do catálogo.'}catch(x){}}
   },true);
-  return{mini,blocoFicha,fonte};
+  // botão "Fotos do catálogo" no Estoque: mostra quem tem foto e grava a foto do catálogo nos produtos que combinam
+  function janelaFotos(){
+    const ps=S.produtos.slice().sort((a,b)=>(a.nome||'').localeCompare(b.nome||''));
+    const comCat=ps.filter(p=>doCatalogo(p)),proprias=ps.filter(p=>String(p.imagem||'').startsWith('drive:')),semFoto=ps.filter(p=>!fonte(p));
+    const gravar=comCat.filter(p=>!p.imagem);
+    abrir('Fotos do catálogo',`<p class="sub" style="margin:0">As fotos foram recortadas do catálogo de preços 2026 e ligadas a cada produto pelo código (Art. DE-…) ou, quando o código falta, pelo nome e cor do catálogo.</p>
+     <div class="mini"><div><small>Com foto do catálogo</small><b>${comCat.length}</b></div><div><small>Com foto enviada</small><b>${proprias.length}</b></div><div><small>Sem foto</small><b class="${semFoto.length?'warn':''}">${semFoto.length}</b></div></div>
+     ${gravar.length?`<p class="ro" style="margin:0">${gravar.length} produto${gravar.length===1?'':'s'} ainda não ${gravar.length===1?'tem':'têm'} a foto gravada no cadastro. Clique em <b>Gravar fotos</b> para fixar a foto do catálogo em cada um.</p>`:''}
+     ${semFoto.length?`<div><small class="ro">Sem foto (envie em Editar → Enviar foto):</small><div class="list">${semFoto.slice(0,40).map(p=>`<div class="li"><span class="mono" style="min-width:72px">${esc(p.sku||'—')}</span><div class="grow"><div class="t">${esc(p.nome)}</div><div class="d">${esc(p.variacao||'')}</div></div></div>`).join('')}</div></div>`:''}`,
+    gravar.length?async()=>{let n=0;for(const p of gravar){try{await salvar('produtos',p.id,{imagem:doCatalogo(p)});n++}catch(e){}}toast(`Foto do catálogo gravada em ${n} produto${n===1?'':'s'}`);return true}:null,
+    {submitLabel:'Gravar fotos'});
+  }
+  document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-fotos-cat]');if(b){e.preventDefault();e.stopPropagation();janelaFotos()}},true);
+  return{mini,blocoFicha,fonte,doCatalogo};
 })();
 </script>

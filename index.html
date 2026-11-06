@@ -12,9 +12,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="DRAVEN">
 <!-- Gerado por ferramentas/montar.py a partir de versao-claude-ai/sistema-draven.html. Não edite à mão. -->
-<script src="config.js?v=202611061325"></script>
+<script src="config.js?v=202611061402"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="drive-db.js?v=202611061325"></script>
+<script src="drive-db.js?v=202611061402"></script>
 </head>
 <body>
 <style>.btn.ligar{color:#1E3A8A;border-color:#BFDBFE;text-decoration:none}.btn.ligar:hover{border-color:#1E3A8A}.btn.wa{text-decoration:none}</style>
@@ -997,7 +997,7 @@ function vEstoque(){
   return`<div class="head"><div><h1>Estoque</h1><p class="sub">${S.produtos.length} produto${S.produtos.length===1?'':'s'} · ${n0.format(sum(S.produtos,p=>p.estoque))} unidades${pode('custo')?' · '+money(sum(S.produtos,p=>(p.estoque>0?p.estoque:0)*(p.custo||0)))+' a custo':''}</p></div>
   <div class="tools">${t==='produtos'?`<input class="inp search" id="q-e" data-f="qe" placeholder="Buscar produto ou SKU" value="${esc(S.f.qe||'')}"><select class="inp" id="c-e" data-f="ce"><option value="">Todas as categorias</option>${CATS.map(c=>`<option ${S.f.ce===c?'selected':''}>${c}</option>`).join('')}</select>`:''}
   ${S.dl&&t==='produtos'?'<button class="btn" data-a="csv-estoque">Exportar CSV</button>':''}
-  ${pode('produtos')&&S.produtos.some(p=>!String(p.descricao||'').trim())?'<button class="btn" data-desc-todos><i class="fa-solid fa-align-left"></i> Preencher descrições</button>':''}${pode('excluir')&&S.produtos.length?'<button class="btn danger" data-a="excluir-estoque"><i class="fa-solid fa-trash"></i> Excluir todo o estoque</button>':''}${pode('produtos')?'<button class="btn" data-a="importar-produtos"><i class="fa-solid fa-file-import"></i> Importar produtos</button><button class="btn pri" data-a="novo-produto">Novo produto</button>':''}</div></div>
+  ${pode('produtos')&&S.produtos.length?'<button class="btn" data-fotos-cat><i class="fa-regular fa-images"></i> Fotos do catálogo</button>':''}${pode('produtos')&&S.produtos.some(p=>!String(p.descricao||'').trim())?'<button class="btn" data-desc-todos><i class="fa-solid fa-align-left"></i> Preencher descrições</button>':''}${pode('excluir')&&S.produtos.length?'<button class="btn danger" data-a="excluir-estoque"><i class="fa-solid fa-trash"></i> Excluir todo o estoque</button>':''}${pode('produtos')?'<button class="btn" data-a="importar-produtos"><i class="fa-solid fa-file-import"></i> Importar produtos</button><button class="btn pri" data-a="novo-produto">Novo produto</button>':''}</div></div>
   <div class="tabs" role="tablist"><button role="tab" aria-selected="${t==='produtos'}" data-a="est-tab" data-v="produtos">Produtos</button><button role="tab" aria-selected="${t==='mov'}" data-a="est-tab" data-v="mov">Movimentações</button></div>
   <div id="body">${t==='produtos'?estoqueBody():movBody()}</div>`;
 }
@@ -3618,7 +3618,17 @@ window.DRAVEN_DESC=(function(){
 <script>
 window.DRAVEN_IMG=(function(){
   const FOTOS_CATALOGO=new Set(["DE-6819", "DE-6820", "DE-6821", "DE-6822", "DE-6823", "DE-6824", "DE-6825", "DE-6826", "DE-6827", "DE-6828", "DE-6829", "DE-6830", "DE-6831", "DE-6832", "DE-6833", "DE-6834", "DE-6935", "DE-6936", "DE-6937", "DE-6938", "DE-6939", "DE-6940", "DE-6941", "DE-6942", "DE-6943", "DE-6991", "DE-7044", "DE-7045", "DE-7046", "DE-7147", "DE-7148", "DE-7149", "DE-7232", "DE-7233", "DE-7234", "DE-7350", "DE-7441", "DE-7442", "DE-7443", "DE-8141", "DE-8142", "DE-9011", "DE-9012", "DE-9013", "DE-9110", "DE-9111", "DE-9112", "DE-9113", "DE-9116", "DE-9117", "DE-9118", "DE-9232", "DE-9233", "DE-9234", "DE-9235", "DE-9236", "DE-9321", "DE-9322", "DE-9323", "DE-9324"]);
-  const doCatalogo=p=>p&&p.sku&&FOTOS_CATALOGO.has(String(p.sku).toUpperCase())?`produtos-img/${String(p.sku).toUpperCase()}.jpg`:'';
+  // nome + cor do catálogo → código (para produtos cadastrados à mão, sem o código ou com o código escrito diferente)
+  const NOME_COR={"luva de boxe angry|toda preta": "DE-6819", "luva de boxe angry|preto vermelho": "DE-6820", "luva de boxe angry|preto prateado": "DE-6821", "luva de boxe angry|branco preto vermelho": "DE-6823", "luva de boxe angry|branco vermelho preto": "DE-6822", "luva de boxe the mist preta|preto dourado branco": "DE-6824", "luva de grappling the mist preta|preto dourado branco": "DE-6825", "luva de mma the mist preta|preto dourado branco": "DE-6829", "manopla the mist preta|preto dourado branco": "DE-6826", "capacete the mist preta|preto dourado branco": "DE-6828", "protetor de canela the mist preta|preto dourado branco": "DE-6830", "escudo de chute curvo redondo the mist preta|preto dourado branco": "DE-6827", "escudo de chute curvo the mist preta|preto dourado branco": "DE-6831", "escudo de treinamento the mist preta|preto dourado branco": "DE-6832", "manga curta the mist preta|preto dourado branco": "DE-6833", "bermuda de boxe the mist preta|preto dourado branco": "DE-6834", "luva de boxe the mist vermelha|vermelho dourado branco": "DE-6935", "luva de grappling the mist vermelha|vermelho dourado branco": "DE-6936", "luva de mma the mist vermelha|vermelho dourado branco": "DE-6939", "manopla the mist vermelha|vermelho dourado branco": "DE-6940", "capacete the mist vermelha|vermelho dourado branco": "DE-6938", "protetor de canela the mist vermelha|vermelho dourado branco": "DE-6937", "escudo de chute curvo redondo the mist vermelha|vermelho dourado branco": "DE-6941", "escudo de chute curvo the mist vermelha|vermelho dourado branco": "DE-6942", "escudo de treinamento the mist vermelha|vermelho dourado branco": "DE-6943", "protetor de canela versao branca|branco dourado preto": "DE-6991", "luva de boxe shark|marinho": "DE-7044", "luva de boxe shark|preta": "DE-7045", "luva de boxe shark|vermelha": "DE-7046", "luva de boxe the eagle|preto dourado": "DE-7147", "luva de boxe the eagle|vermelho dourado": "DE-7148", "luva de boxe the eagle|azul marinho dourado": "DE-7149", "pera de velocidade|preta": "DE-7232", "pera de velocidade|vermelha": "DE-7233", "pera de velocidade|branca": "DE-7234", "raquete de foco|preto branco dourado": "DE-9110", "raquete de foco|branco preto dourado faixas": "DE-9111", "raquete de foco|branco preto dourado aguia": "DE-9112", "raquete de foco|vermelho branco dourado": "DE-9113", "bastao de treino|preto branco": "DE-7441", "bastao de treino|vermelho preto": "DE-7442", "bastao de treino|branco preto": "DE-7443", "saco de pancada|preto": "DE-7350", "mochila casual|azul preto": "DE-8141", "bolsa duffle|preta marrom": "DE-8142", "luva de goleiro astro|preto amarelo": "DE-9011", "luva de goleiro astro|azul preto": "DE-9012", "luva de goleiro astro|vermelho preto": "DE-9013", "luva de goleiro infantil lotus|preto cinza branco": "DE-9116", "luva de goleiro infantil lotus|cinza lima preto": "DE-9117", "luva de goleiro infantil lotus|preto vermelho branco": "DE-9118", "luva de goleiro alpha i|preto lima": "DE-9232", "luva de goleiro alpha i|preto dourado": "DE-9233", "luva de goleiro alpha i|azul marinho ciano": "DE-9236", "luva de goleiro alpha i|preto cinza": "DE-9234", "luva de goleiro alpha i|preto vermelho": "DE-9235", "luva de goleiro alpha ii|preto verde limao": "DE-9321", "luva de goleiro alpha ii|preto branco": "DE-9322", "luva de goleiro alpha ii|branco preto": "DE-9323", "luva de goleiro alpha ii|preto vermelho": "DE-9324"};
+  const chave=t=>norm(String(t||'')).replace(/[^a-z0-9]+/g,' ').trim();
+  function skuCatalogo(p){
+    if(!p)return'';
+    const m=String(p.sku||'').toUpperCase().replace(/\s+/g,'').match(/^DE-?(\d{4})$/);
+    if(m&&FOTOS_CATALOGO.has('DE-'+m[1]))return'DE-'+m[1];
+    const k=chave(p.nome)+'|'+chave(p.variacao);
+    return NOME_COR[k]&&FOTOS_CATALOGO.has(NOME_COR[k])?NOME_COR[k]:'';
+  }
+  const doCatalogo=p=>{const k=skuCatalogo(p);return k?`produtos-img/${k}.jpg`:''};
   // qual imagem usar: {src} pronta ou {drive:id} para buscar no Drive
   function fonte(p){
     const im=String((p&&p.imagem)||'');
@@ -3683,7 +3693,20 @@ window.DRAVEN_IMG=(function(){
     const pid=inp.dataset.pid,msg=document.getElementById('p-img-msg');
     if(pid){try{await salvar('produtos',pid,{imagem:inp.value});if(msg)msg.textContent=b.dataset.img==='remover'?'Foto removida.':'Voltou para a foto do catálogo.'}catch(x){}}
   },true);
-  return{mini,blocoFicha,fonte};
+  // botão "Fotos do catálogo" no Estoque: mostra quem tem foto e grava a foto do catálogo nos produtos que combinam
+  function janelaFotos(){
+    const ps=S.produtos.slice().sort((a,b)=>(a.nome||'').localeCompare(b.nome||''));
+    const comCat=ps.filter(p=>doCatalogo(p)),proprias=ps.filter(p=>String(p.imagem||'').startsWith('drive:')),semFoto=ps.filter(p=>!fonte(p));
+    const gravar=comCat.filter(p=>!p.imagem);
+    abrir('Fotos do catálogo',`<p class="sub" style="margin:0">As fotos foram recortadas do catálogo de preços 2026 e ligadas a cada produto pelo código (Art. DE-…) ou, quando o código falta, pelo nome e cor do catálogo.</p>
+     <div class="mini"><div><small>Com foto do catálogo</small><b>${comCat.length}</b></div><div><small>Com foto enviada</small><b>${proprias.length}</b></div><div><small>Sem foto</small><b class="${semFoto.length?'warn':''}">${semFoto.length}</b></div></div>
+     ${gravar.length?`<p class="ro" style="margin:0">${gravar.length} produto${gravar.length===1?'':'s'} ainda não ${gravar.length===1?'tem':'têm'} a foto gravada no cadastro. Clique em <b>Gravar fotos</b> para fixar a foto do catálogo em cada um.</p>`:''}
+     ${semFoto.length?`<div><small class="ro">Sem foto (envie em Editar → Enviar foto):</small><div class="list">${semFoto.slice(0,40).map(p=>`<div class="li"><span class="mono" style="min-width:72px">${esc(p.sku||'—')}</span><div class="grow"><div class="t">${esc(p.nome)}</div><div class="d">${esc(p.variacao||'')}</div></div></div>`).join('')}</div></div>`:''}`,
+    gravar.length?async()=>{let n=0;for(const p of gravar){try{await salvar('produtos',p.id,{imagem:doCatalogo(p)});n++}catch(e){}}toast(`Foto do catálogo gravada em ${n} produto${n===1?'':'s'}`);return true}:null,
+    {submitLabel:'Gravar fotos'});
+  }
+  document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-fotos-cat]');if(b){e.preventDefault();e.stopPropagation();janelaFotos()}},true);
+  return{mini,blocoFicha,fonte,doCatalogo};
 })();
 </script>
 <!-- Ajustes de celular e tablet. Entra no index.html pelo ferramentas/montar.py, depois do sistema.
