@@ -1,0 +1,127 @@
+<!-- Estoque: vários tamanhos no mesmo produto, cada um com a sua quantidade.
+     Campo novo no produto: tamanhos = [{t:'12oz', q:3}, ...]. O campo "estoque" continua sendo o total do produto;
+     o que não está em nenhum tamanho aparece como "sem tamanho". Toda mudança de quantidade passa por moverEstoque
+     (fica em Movimentações, com o tamanho). Pedidos e lotes ganham a escolha do tamanho em cada item (campo novo "tamanho").
+     Entra no index.html pelo ferramentas/montar.py, depois do sistema. -->
+<style>
+.tam-box{border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:8px}
+.tam-box h4{margin:0;font-size:14px}
+.tam-linha{display:grid;grid-template-columns:minmax(0,1fr) 110px 34px;gap:6px;align-items:center}
+.tam-linha .ro{font-size:13px}
+.tam-sug{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tam-sug .btn{padding:4px 9px;font-size:12px}
+.tam-res{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.tam-res span{font-size:11.5px;border:1px solid var(--line);border-radius:999px;padding:1px 8px;background:var(--surface-2);white-space:nowrap}
+.tam-res span.zero{opacity:.55}
+.item .tam-item{grid-column:1/-1}
+@media (max-width:620px){.tbl-wrap td:has(.tam-res){flex-wrap:wrap}.tbl-wrap td .tam-res{flex-basis:100%;justify-content:flex-end}}
+</style>
+<script>
+window.DRAVEN_TAM=(function(){
+  const N=v=>Number(v)||0;
+  const grade=p=>Array.isArray(p&&p.tamanhos)?p.tamanhos.filter(x=>x&&String(x.t||'').trim()).map(x=>({t:String(x.t).trim(),q:N(x.q)})):[];
+  const semTam=p=>N(p&&p.estoque)-grade(p).reduce((t,x)=>t+x.q,0);
+  const saldo=(p,t)=>t?((grade(p).find(x=>x.t===t)||{}).q||0):semTam(p);
+  const SUG={'Luvas de luta':['8oz','10oz','12oz','14oz','16oz'],'Kimonos e faixas':['A0','A1','A2','A3','A4'],'Luvas de goleiro':['6','7','8','9','10','11'],'Vestuário':['PP','P','M','G','GG'],'Proteção':['P','M','G','GG']};
+  const SUG_PADRAO=['P','M','G','GG'];
+
+  // resumo na lista do estoque: 12oz: 3 · 14oz: 5 · sem tamanho: 2
+  function resumo(p){
+    const g=grade(p);if(!g.length)return'';const s=semTam(p);
+    return`<div class="tam-res">${g.map(x=>`<span class="${x.q?'':'zero'}">${esc(x.t)}: <b>${n0.format(x.q)}</b></span>`).join('')}${s?`<span>sem tamanho: <b>${n0.format(s)}</b></span>`:''}</div>`;
+  }
+  const resumoLinha=p=>grade(p).length?`<div style="margin:-6px 0 8px">${resumo(p)}</div>`:'';
+
+  // bloco da ficha do produto
+  const linha=(t,q,d)=>`<div class="tam-linha" data-tam-l><input class="inp" data-tam="t" value="${esc(t)}" placeholder="Tamanho (ex.: 12oz, A2, M)" aria-label="Tamanho" ${d}><input class="inp" data-tam="q" inputmode="numeric" value="${q}" aria-label="Quantidade em estoque" ${d}>${d?'<span></span>':'<button type="button" class="btn ghost sm" data-tam-a="del" aria-label="Remover tamanho">✕</button>'}</div>`;
+  function blocoFicha(p,d){
+    const g=grade(p),s=p.id?semTam(p):0;
+    const mostrarSem=p.id&&(s!==0||(!g.length&&N(p.estoque)>0));
+    return`<div class="full tam-box" id="tam-box" data-pid="${esc(p.id||'')}">
+      <h4><i class="fa-solid fa-ruler-horizontal"></i> Tamanhos e quantidade em estoque</h4>
+      <p class="ro" style="margin:0;font-size:12.5px">Cadastre cada tamanho do produto com a quantidade que tem. ${p.id?'Mudar as quantidades aqui registra um ajuste em Movimentações. ':''}O estoque do produto é a soma.</p>
+      <div id="tam-linhas">${g.map(x=>linha(x.t,x.q,d)).join('')}</div>
+      ${mostrarSem?`<div class="tam-linha"><span class="ro">Sem tamanho definido${g.length?'':' (distribua nos tamanhos)'}</span><input class="inp" id="tam-sem" inputmode="numeric" value="${s}" aria-label="Quantidade sem tamanho definido" ${d}><span></span></div>`:''}
+      ${d?'':`<div class="tam-sug"><button type="button" class="btn sm" data-tam-a="add"><i class="fa-solid fa-plus"></i> Adicionar tamanho</button><span class="ro" style="font-size:12px">Sugestões:</span><span id="tam-sug"></span></div>`}
+      <div class="ro" id="tam-total" style="font-size:12.5px"></div>
+    </div>`;
+  }
+  function lerFicha(){
+    const box=document.getElementById('tam-box');if(!box)return null;
+    const linhas=[...box.querySelectorAll('[data-tam-l]')].map(l=>({t:l.querySelector('[data-tam=t]').value.trim(),q:num(l.querySelector('[data-tam=q]').value)}));
+    const sem=box.querySelector('#tam-sem');
+    return{linhas,sem:sem?num(sem.value):null};
+  }
+  function validar(){
+    const f=lerFicha();if(!f)return'';
+    const nomes=new Set();
+    for(const l of f.linhas){
+      if(!l.t&&l.q)return'Informe o nome do tamanho que tem quantidade.';
+      if(l.q<0)return'A quantidade de um tamanho não pode ser negativa.';
+      const k=l.t.toLowerCase();if(l.t&&nomes.has(k))return`O tamanho ${l.t} aparece duas vezes.`;nomes.add(k);
+    }
+    return'';
+  }
+  // grava a grade: cada diferença vira uma movimentação com o tamanho
+  async function salvarGrade(id,novo){
+    const f=lerFicha();if(!f)return;const p=prod(id);if(!p)return;
+    const alvo=f.linhas.filter(l=>l.t);
+    const velho=grade(p);
+    const tipo=novo?'inicial':'ajuste',origem=novo?'Cadastro':'Grade de tamanhos';
+    const nomeVelho=t=>(velho.find(x=>x.t.toLowerCase()===t.toLowerCase())||{}).t;
+    // tamanhos que saíram (ou mudaram de nome) zeram primeiro
+    for(const v of velho)if(!alvo.some(a=>a.t.toLowerCase()===v.t.toLowerCase())&&v.q)await moverEstoque(id,-v.q,tipo,origem,'',v.t);
+    for(const a of alvo){const tv=nomeVelho(a.t)||a.t;const delta=a.q-saldo(prod(id)||p,tv);if(delta)await moverEstoque(id,delta,tipo,origem,'',tv)}
+    if(f.sem!=null){const delta=f.sem-semTam(prod(id)||p);if(delta)await moverEstoque(id,delta,tipo,origem,'')}
+    // ordem e nomes como ficaram na ficha
+    const atual=grade(prod(id)||p);
+    const nova=alvo.map(a=>{const tv=nomeVelho(a.t)||a.t;return{t:a.t,q:(atual.find(x=>x.t===tv)||{q:a.q}).q}});
+    const mudou=JSON.stringify(nova)!==JSON.stringify(grade(prod(id)||p));
+    if(mudou||(velho.length&&!nova.length))await salvar('produtos',id,{tamanhos:nova});
+  }
+  function atualizarFicha(){
+    const box=document.getElementById('tam-box');if(!box)return;
+    const f=lerFicha();const soma=f.linhas.reduce((t,l)=>t+(l.q||0),0)+(f.sem||0);
+    const tot=document.getElementById('tam-total');
+    if(tot)tot.innerHTML=f.linhas.length?`Total do produto: <b>${n0.format(soma)}</b>`:'';
+    const sug=document.getElementById('tam-sug');
+    if(sug){const cat=(document.querySelector('#dlgForm [name="categoria"]')||{}).value||'';const tem=new Set(f.linhas.map(l=>l.t.toLowerCase()));
+      const lista=(SUG[cat]||SUG_PADRAO).filter(t=>!tem.has(t.toLowerCase()));
+      const html=lista.map(t=>`<button type="button" class="btn sm ghost" data-tam-a="sug" data-t="${esc(t)}">${esc(t)}</button>`).join(' ')+(lista.length>1?` <button type="button" class="btn sm ghost" data-tam-a="todos">Todos</button>`:'');
+      if(sug.dataset.h!==html){sug.innerHTML=html;sug.dataset.h=html}}
+    // produto novo com tamanhos: o estoque inicial vem da grade
+    const ini=document.querySelector('#dlgForm #p-ini');if(ini){const lab=ini.closest('label');if(lab)lab.style.display=f.linhas.length?'none':''}
+  }
+  const addLinha=(t,foco)=>{const box=document.getElementById('tam-linhas');if(!box)return;box.insertAdjacentHTML('beforeend',linha(t||'',0,''));if(foco){const l=box.lastElementChild.querySelector(t?'[data-tam=q]':'[data-tam=t]');l&&l.focus()}atualizarFicha()};
+  document.addEventListener('click',e=>{
+    const b=e.target.closest&&e.target.closest('[data-tam-a]');if(!b)return;
+    e.preventDefault();e.stopPropagation();
+    const a=b.dataset.tamA;
+    if(a==='add')addLinha('',true);
+    else if(a==='sug')addLinha(b.dataset.t,true);
+    else if(a==='todos')[...document.querySelectorAll('#tam-sug [data-tam-a="sug"]')].forEach(x=>addLinha(x.dataset.t,false));
+    else if(a==='del'){b.closest('[data-tam-l]').remove();atualizarFicha()}
+  },true);
+  document.addEventListener('input',e=>{if(e.target.closest&&e.target.closest('#tam-box'))atualizarFicha()});
+  document.addEventListener('change',e=>{if(e.target.matches&&e.target.matches('#dlgForm [name="categoria"]'))atualizarFicha()});
+  new MutationObserver(()=>{const box=document.getElementById('tam-box');if(box&&!box.dataset.pronto){box.dataset.pronto='1';atualizarFicha()}}).observe(document.documentElement,{childList:true,subtree:true});
+
+  // Ajustar estoque: escolher o tamanho
+  function selAjuste(p){
+    const g=grade(p);if(!g.length)return'';
+    return`<label class="f">Tamanho<select class="inp" id="a-tam" name="tamanho">${g.map(x=>`<option value="${esc(x.t)}">${esc(x.t)} (tem ${n0.format(x.q)})</option>`).join('')}<option value="">Sem tamanho (tem ${n0.format(semTam(p))})</option></select></label>`;
+  }
+  // itens de pedidos e lotes: escolher o tamanho do produto
+  const opcoesItem=(p,sel)=>`<option value="">Tamanho: escolha…</option>`+grade(p).map(x=>`<option value="${esc(x.t)}" ${x.t===sel?'selected':''}>Tamanho ${esc(x.t)} · ${n0.format(x.q)} em estoque</option>`).join('')+(sel&&!grade(p).some(x=>x.t===sel)?`<option value="${esc(sel)}" selected>Tamanho ${esc(sel)}</option>`:'');
+  function selItem(it,disabled){
+    const p=prod(it.produtoId);const tem=grade(p).length||it.tamanho;
+    return`<select class="inp tam-item" data-it="tamanho" aria-label="Tamanho" ${tem?'':'hidden'} ${disabled||''}>${opcoesItem(p,it.tamanho||'')}</select>`;
+  }
+  document.addEventListener('change',e=>{
+    if(!(e.target.dataset&&e.target.dataset.it==='produtoId'))return;
+    const r=e.target.closest('.item');const s=r&&r.querySelector('[data-it=tamanho]');if(!s)return;
+    const p=prod(e.target.value);s.innerHTML=opcoesItem(p,'');s.hidden=!grade(p).length;
+  });
+  return{grade,semTam,saldo,resumo,resumoLinha,blocoFicha,validar,salvarGrade,selAjuste,selItem};
+})();
+</script>

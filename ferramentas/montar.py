@@ -189,6 +189,39 @@ function crmFiltrados(){const q=norm(S.f.qcrm);return S.clientes.filter(c=>filtr
     ("""<td><b>${esc(p.nome)}</b>${p.variacao?`<div class="ro">${esc(p.variacao)}</div>`:''}""", """<td>${window.DRAVEN_IMG?DRAVEN_IMG.mini(p):''}<b>${esc(p.nome)}</b>${p.variacao?`<div class="ro">${esc(p.variacao)}</div>`:''}""", 1),
     ("${pode('produtos')&&S.produtos.some(p=>!String(p.descricao||'').trim())?'<button class=\"btn\" data-desc-todos>", "${pode('produtos')&&S.produtos.length?'<button class=\"btn\" data-fotos-cat><i class=\"fa-regular fa-images\"></i> Fotos do catálogo</button>':''}${pode('produtos')&&S.produtos.some(p=>!String(p.descricao||'').trim())?'<button class=\"btn\" data-desc-todos>", 1),
     ("${pode('produtos')&&S.produtos.length?'<button class=\"btn\" data-fotos-cat>", "${pode('excluir')&&window.DRAVEN_UNIF&&DRAVEN_UNIF.temAlgo()?'<button class=\"btn\" data-unificar><i class=\"fa-solid fa-object-group\"></i> Unificar com o catálogo</button>':''}${pode('produtos')&&S.produtos.length?'<button class=\"btn\" data-fotos-cat>", 1),
+    # ---- estoque: vários tamanhos no mesmo produto (campo novo "tamanhos"; itens e movimentações ganham "tamanho") ----
+    ("async function moverEstoque(produtoId,delta,tipo,origem,ref){", "async function moverEstoque(produtoId,delta,tipo,origem,ref,tamanho){", 1),
+    ("""  let atual=Number(p.estoque)||0;
+  try{const g=await ref_.get();if(g.exists)atual=Number(g.data().estoque)||0}catch(x){}
+  const novo=atual+delta;
+  await ref_.update({estoque:novo});
+  p.estoque=novo; // reflete já na memória para movimentos em sequência
+  await col('movimentos').doc().set({produtoId,delta,saldo:novo,tipo,origem:origem||'',ref:ref||'',em:Date.now(),por:S.myId||null});""", """  let atual=Number(p.estoque)||0,tg=p.tamanhos;
+  try{const g=await ref_.get();if(g.exists){atual=Number(g.data().estoque)||0;tg=g.data().tamanhos}}catch(x){}
+  const novo=atual+delta;
+  if(tamanho){tg=Array.isArray(tg)?tg.map(x=>({...x})):[];let it=tg.find(x=>x.t===tamanho);if(!it){it={t:tamanho,q:0};tg.push(it)}it.q=(Number(it.q)||0)+delta;
+    await ref_.update({estoque:novo,tamanhos:tg});p.tamanhos=tg}
+  else await ref_.update({estoque:novo});
+  p.estoque=novo; // reflete já na memória para movimentos em sequência
+  await col('movimentos').doc().set({produtoId,delta,saldo:novo,tipo,origem:origem||'',ref:ref||'',em:Date.now(),por:S.myId||null,...(tamanho?{tamanho}:{})});""", 1),
+    ("""<label class="chk"><input type="checkbox" id="p-ativo\"""", """${window.DRAVEN_TAM?DRAVEN_TAM.blocoFicha(p,d):''}<label class="chk"><input type="checkbox" id="p-ativo\"""", 1),
+    ("    if(custo)dados.custo=num(fd.get('custo'));\n    if(p.id){await salvar('produtos',p.id,dados);toast('Produto atualizado');return true}", "    if(custo)dados.custo=num(fd.get('custo'));\n    {const m=window.DRAVEN_TAM&&DRAVEN_TAM.validar();if(m){toast(m);return false}}\n    if(p.id){await salvar('produtos',p.id,dados);if(window.DRAVEN_TAM)await DRAVEN_TAM.salvarGrade(p.id);toast('Produto atualizado');return true}", 1),
+    ("    if(ini){S.produtos.push({id,...dados});await moverEstoque(id,ini,'inicial','Cadastro','')}\n    toast('Produto cadastrado')", "    if(ini){S.produtos.push({id,...dados});await moverEstoque(id,ini,'inicial','Cadastro','')}\n    if(window.DRAVEN_TAM){if(!prod(id))S.produtos.push({id,...dados});await DRAVEN_TAM.salvarGrade(id,true)}\n    toast('Produto cadastrado')", 1),
+    ("""<b>${esc(p.nome)}</b>${p.variacao?`<div class="ro">${esc(p.variacao)}</div>`:''}${p.descricao""", """<b>${esc(p.nome)}</b>${p.variacao?`<div class="ro">${esc(p.variacao)}</div>`:''}${window.DRAVEN_TAM?DRAVEN_TAM.resumo(p):''}${p.descricao""", 1),
+    ("""<p class="sub">Saldo atual: <b>${n0.format(p.estoque||0)} ${esc(p.unidade||'un')}</b></p>""", """<p class="sub">Saldo atual: <b>${n0.format(p.estoque||0)} ${esc(p.unidade||'un')}</b></p>${window.DRAVEN_TAM?DRAVEN_TAM.resumoLinha(p):''}""", 1),
+    ("""<option value="ajuste">Corrigir para a contagem física</option></select></label>""", """<option value="ajuste">Corrigir para a contagem física</option></select></label>${window.DRAVEN_TAM?DRAVEN_TAM.selAjuste(p):''}""", 1),
+    ("const delta=t==='entrada'?q:t==='saida'?-q:q-(Number(p.estoque)||0);", "const tam=fd.get('tamanho');const delta=t==='entrada'?q:t==='saida'?-q:q-(tam!=null&&window.DRAVEN_TAM?DRAVEN_TAM.saldo(p,tam):(Number(p.estoque)||0));", 1),
+    ("await moverEstoque(p.id,delta,t==='ajuste'?'ajuste':t,fd.get('motivo')||'Ajuste manual','');", "await moverEstoque(p.id,delta,t==='ajuste'?'ajuste':t,fd.get('motivo')||'Ajuste manual','',tam||'');", 1),
+    ("""aria-label="Remover item">✕</button>`}</div>`;""", """aria-label="Remover item">✕</button>`}${window.DRAVEN_TAM?DRAVEN_TAM.selItem(it,disabled):''}</div>`;""", 1),
+    ("valor:num($('[data-it=valor]',r).value)}))}", "valor:num($('[data-it=valor]',r).value),...(($('[data-it=tamanho]',r)||{}).value?{tamanho:$('[data-it=tamanho]',r).value}:{})}))}", 1),
+    ("await moverEstoque(i.produtoId,-i.qtd,'saida','Venda',v.numero);", "await moverEstoque(i.produtoId,-i.qtd,'saida','Venda',v.numero,i.tamanho);", 1),
+    ("await moverEstoque(i.produtoId,i.qtd,'estorno','Cancelamento de venda',v.numero);", "await moverEstoque(i.produtoId,i.qtd,'estorno','Cancelamento de venda',v.numero,i.tamanho);", 1),
+    ("await moverEstoque(i.produtoId,i.qtd,'entrada','Produção',c.numero);", "await moverEstoque(i.produtoId,i.qtd,'entrada','Produção',c.numero,i.tamanho);", 1),
+    ("await moverEstoque(i.produtoId,-i.qtd,'estorno','Cancelamento de lote',c.numero);", "await moverEstoque(i.produtoId,-i.qtd,'estorno','Cancelamento de lote',c.numero,i.tamanho);", 1),
+    ("`• ${i.qtd}x ${prodNome(prod(i.produtoId))} — ${money(i.valor)}`", "`• ${i.qtd}x ${prodNome(prod(i.produtoId))}${i.tamanho?' · Tam. '+i.tamanho:''} — ${money(i.valor)}`", 1),
+    ("(v.itens||[]).map(i=>`${i.qtd}x ${prodNome(prod(i.produtoId))}`).join(' | ')", "(v.itens||[]).map(i=>`${i.qtd}x ${prodNome(prod(i.produtoId))}${i.tamanho?' · Tam. '+i.tamanho:''}`).join(' | ')", 1),
+    ("<td>${esc(prodNome(prod(m.produtoId)))}</td>", "<td>${esc(prodNome(prod(m.produtoId)))}${m.tamanho?` <span class=\"pill\">Tam. ${esc(m.tamanho)}</span>`:''}</td>", 1),
+    ("(c.itens||[]).map(i=>prodNome(prod(i.produtoId))).join(', ')", "(c.itens||[]).map(i=>prodNome(prod(i.produtoId))+(i.tamanho?' · Tam. '+i.tamanho:'')).join(', ')", 1),
 ]
 
 # Abre o WhatsApp Web numa janela ao lado e manda para ela as conversas abertas pelo sistema.
@@ -337,6 +370,7 @@ PRODUTOS = (RAIZ / 'ferramentas' / 'produtos.html').read_text(encoding='utf-8')
 FINANCEIRO = (RAIZ / 'ferramentas' / 'financeiro.html').read_text(encoding='utf-8')
 SELECAO = (RAIZ / 'ferramentas' / 'selecao.html').read_text(encoding='utf-8')
 SELECAO_ESTOQUE = (RAIZ / 'ferramentas' / 'selecao-estoque.html').read_text(encoding='utf-8')
+TAMANHOS = (RAIZ / 'ferramentas' / 'tamanhos.html').read_text(encoding='utf-8')
 DESCRICAO = (RAIZ / 'ferramentas' / 'descricao.html').read_text(encoding='utf-8')
 IMAGENS = (RAIZ / 'ferramentas' / 'imagens.html').read_text(encoding='utf-8')
 _fotos = sorted(f[:-4] for f in os.listdir(RAIZ / 'produtos-img') if f.endswith('.jpg')) if (RAIZ / 'produtos-img').is_dir() else []
@@ -364,5 +398,5 @@ UNIFICAR = UNIFICAR.replace('/*CATALOGO*/{}', _json.dumps(_cat, ensure_ascii=Fal
 import time
 VERSAO = time.strftime('%Y%m%d%H%M')
 CABECA = CABECA.replace('src="config.js"', f'src="config.js?v={VERSAO}"').replace('src="drive-db.js"', f'src="drive-db.js?v={VERSAO}"')
-(RAIZ / 'index.html').write_text(CABECA + WHATSAPP + app.strip() + '\n' + IMPORTAR + VISITA + WAB + QUADROS + PRODUTOS + FINANCEIRO + SELECAO + DESCRICAO + IMAGENS + UNIFICAR + SELECAO_ESTOQUE + CELULAR + '</body>\n</html>\n', encoding='utf-8')
+(RAIZ / 'index.html').write_text(CABECA + WHATSAPP + app.strip() + '\n' + IMPORTAR + VISITA + WAB + QUADROS + PRODUTOS + FINANCEIRO + SELECAO + DESCRICAO + IMAGENS + UNIFICAR + SELECAO_ESTOQUE + TAMANHOS + CELULAR + '</body>\n</html>\n', encoding='utf-8')
 print('index.html gerado')
