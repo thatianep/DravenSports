@@ -4,6 +4,7 @@ Uso (na raiz do repositório):  python3 ferramentas/montar.py
 Lê versao-claude-ai/sistema-draven.html, troca o que só existe no claude.ai e grava index.html.
 """
 from pathlib import Path
+import os
 
 RAIZ = Path(__file__).resolve().parent.parent
 app = (RAIZ / 'versao-claude-ai' / 'sistema-draven.html').read_text(encoding='utf-8')
@@ -182,6 +183,10 @@ function crmFiltrados(){const q=norm(S.f.qcrm);return S.clientes.filter(c=>filtr
      "${pode('produtos')&&S.produtos.some(p=>!String(p.descricao||'').trim())?'<button class=\"btn\" data-desc-todos><i class=\"fa-solid fa-align-left\"></i> Preencher descrições</button>':''}${pode('excluir')&&S.produtos.length?'<button class=\"btn danger\" data-a=\"excluir-estoque\">", 1),
     # busca: ao sair do campo não redesenha de novo a lista (o clique no botão da tabela se perdia)
     ("if(t.dataset.f){S.f[t.dataset.f]=t.value;if(t.tagName==='SELECT')render();else atualizarCorpo()}", "if(t.dataset.f){const mudou=S.f[t.dataset.f]!==t.value;S.f[t.dataset.f]=t.value;if(t.tagName==='SELECT')render();else if(mudou)atualizarCorpo()}", 1),
+    # ---- estoque: imagens dos produtos (campo novo "imagem"; fotos do catálogo em produtos-img/) ----
+    ("""<label class="f full">Nome do produto *<input class="inp" id="p-nome\"""", """${window.DRAVEN_IMG?DRAVEN_IMG.blocoFicha(p,d):''}<label class="f full">Nome do produto *<input class="inp" id="p-nome\"""", 1),
+    ("modelo:String(fd.get('modelo')||'').trim()}:{}),atualizadoEm:Date.now()};", "modelo:String(fd.get('modelo')||'').trim()}:{}),...(fd.has('imagem')?{imagem:String(fd.get('imagem')||'')}:{}),atualizadoEm:Date.now()};", 1),
+    ("""<td><b>${esc(p.nome)}</b>${p.variacao?`<div class="ro">${esc(p.variacao)}</div>`:''}""", """<td>${window.DRAVEN_IMG?DRAVEN_IMG.mini(p):''}<b>${esc(p.nome)}</b>${p.variacao?`<div class="ro">${esc(p.variacao)}</div>`:''}""", 1),
 ]
 
 # Abre o WhatsApp Web numa janela ao lado e manda para ela as conversas abertas pelo sistema.
@@ -330,8 +335,11 @@ PRODUTOS = (RAIZ / 'ferramentas' / 'produtos.html').read_text(encoding='utf-8')
 FINANCEIRO = (RAIZ / 'ferramentas' / 'financeiro.html').read_text(encoding='utf-8')
 SELECAO = (RAIZ / 'ferramentas' / 'selecao.html').read_text(encoding='utf-8')
 DESCRICAO = (RAIZ / 'ferramentas' / 'descricao.html').read_text(encoding='utf-8')
+IMAGENS = (RAIZ / 'ferramentas' / 'imagens.html').read_text(encoding='utf-8')
+_fotos = sorted(f[:-4] for f in os.listdir(RAIZ / 'produtos-img') if f.endswith('.jpg')) if (RAIZ / 'produtos-img').is_dir() else []
+IMAGENS = IMAGENS.replace('/*FOTOS_CATALOGO*/[]', repr(_fotos).replace("'", '"'))
 import time
 VERSAO = time.strftime('%Y%m%d%H%M')
 CABECA = CABECA.replace('src="config.js"', f'src="config.js?v={VERSAO}"').replace('src="drive-db.js"', f'src="drive-db.js?v={VERSAO}"')
-(RAIZ / 'index.html').write_text(CABECA + WHATSAPP + app.strip() + '\n' + IMPORTAR + VISITA + WAB + QUADROS + PRODUTOS + FINANCEIRO + SELECAO + DESCRICAO + CELULAR + '</body>\n</html>\n', encoding='utf-8')
+(RAIZ / 'index.html').write_text(CABECA + WHATSAPP + app.strip() + '\n' + IMPORTAR + VISITA + WAB + QUADROS + PRODUTOS + FINANCEIRO + SELECAO + DESCRICAO + IMAGENS + CELULAR + '</body>\n</html>\n', encoding='utf-8')
 print('index.html gerado')

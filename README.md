@@ -125,6 +125,7 @@ Aba **Financeiro** no menu, no layout "Draven Finance", com o mês escolhido no 
 - **Atualizar o estoque por planilha:** exporte o estoque (**Exportar CSV**), preencha a coluna **Estoque** com a contagem e importe em **Importar produtos**. Com a opção **Atualizar o estoque com as quantidades da planilha** marcada, cada produto fica com a quantidade da planilha: o sistema lança um ajuste com a diferença (aparece em **Movimentações** como "Importação de planilha"). Colunas que não estão na planilha (ex.: preço de atacado, ativo) não mudam nada.
 - **Excluir todo o estoque** (só a gestão): apaga todos os produtos e o histórico de movimentações. Pede para digitar **EXCLUIR** e, antes, baixa uma cópia em planilha (produtos e movimentações). A cópia de produtos pode ser importada de volta em **Importar produtos**.
 - **Descrição do produto:** cada produto tem **Modelo / linha** (Angry, The Mist Preta, Shark…) e **Descrição**. O botão **Preencher descrições** (no topo do Estoque, aparece enquanto houver produto sem descrição) monta a descrição de todos a partir do nome, linha, cor, categoria, unidade e código, por exemplo "Luva de boxe da linha Angry, cor toda preta. Categoria: Luvas de luta. Venda por par. Código DE-6819."; quem já tem descrição não muda. Para mudar à mão, use **Editar** na linha do produto; na ficha, **Gerar descrição** refaz o texto com o que estiver nos campos. A descrição aparece embaixo do nome na lista do estoque.
+- **Imagens dos produtos:** os 60 itens do catálogo 2026 já têm foto (recortada do PDF do catálogo, em `produtos-img/<SKU>.jpg`), que aparece sozinha pelo código: miniatura na lista do estoque e foto grande na ficha. Na ficha (**Editar**), **Enviar/Trocar foto** manda uma foto nova (reduzida para 900 px) para a pasta **DRAVEN | Plataforma Comercial → Imagens dos produtos** do Google Drive; **Remover foto** deixa o produto sem foto; **Voltar para a foto do catálogo** desfaz a troca. Para um catálogo novo, `python3 ferramentas/fotos_catalogo.py catalogo.pdf produtos-img` recorta as fotos de novo.
 - Cada produto tem agora **Preço atacado** e **Preço varejo**; a tabela do estoque mostra as duas colunas. Novas categorias: **Equipamentos de treino** e **Bolsas**.
 
 ## Importar listas de leads
@@ -157,6 +158,9 @@ Pode importar a mesma lista de novo sempre que exportar: só entra o que é novo
 | `versao-claude-ai/sistema-draven.html` | Fonte do sistema (a mesma versão publicada no claude.ai) |
 | `ferramentas/whatsapp-business.html` | WhatsApp Business: número, mensagens prontas e registro dos envios |
 | `ferramentas/visita.html` | Visita agendada (local, endereço, dia e hora) e última ação de cada lead |
+| `ferramentas/imagens.html` | Imagens dos produtos (catálogo e envio para o Drive) |
+| `produtos-img/` | Fotos dos produtos do catálogo 2026, por SKU |
+| `ferramentas/fotos_catalogo.py` | Recorta as fotos dos produtos de um catálogo em PDF |
 | `ferramentas/descricao.html` | Descrição e modelo/linha dos produtos (gerar e editar) |
 | `ferramentas/selecao.html` | Selecionar e excluir leads da coluna Novo lead |
 | `ferramentas/financeiro.html` | Aba Financeiro (visão geral, canais, conciliação, registrar venda, DRE) |

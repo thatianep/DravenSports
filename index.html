@@ -12,9 +12,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="DRAVEN">
 <!-- Gerado por ferramentas/montar.py a partir de versao-claude-ai/sistema-draven.html. Não edite à mão. -->
-<script src="config.js?v=202611061317"></script>
+<script src="config.js?v=202611061325"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="drive-db.js?v=202611061317"></script>
+<script src="drive-db.js?v=202611061325"></script>
 </head>
 <body>
 <style>.btn.ligar{color:#1E3A8A;border-color:#BFDBFE;text-decoration:none}.btn.ligar:hover{border-color:#1E3A8A}.btn.wa{text-decoration:none}</style>
@@ -1007,7 +1007,7 @@ function estoqueBody(){
   const l=S.produtos.filter(p=>(!S.f.ce||p.categoria===S.f.ce)&&(!q||norm(prodNome(p)+' '+(p.sku||'')).includes(q))).sort((a,b)=>prodNome(a).localeCompare(prodNome(b)));
   return`<div class="tbl-wrap"><table><thead><tr><th>SKU</th><th>Produto</th><th>Categoria</th><th class="num">Em estoque</th><th class="num">Mínimo</th>${custo?'<th class="num">Custo</th>':''}<th class="num">Atacado</th><th class="num">Varejo</th>${custo?'<th class="num">Margem</th>':''}<th></th></tr></thead><tbody>
   ${l.map(p=>{const baixo=(Number(p.minimo)||0)>0&&(Number(p.estoque)||0)<=p.minimo;const mg=p.preco>0&&p.custo>0?((p.preco-p.custo)/p.preco*100):null;
-   return`<tr class="${baixo?'low':''} click" data-a="edit-produto" data-id="${p.id}"><td class="mono">${esc(p.sku||'—')}</td><td><b>${esc(p.nome)}</b>${p.variacao?`<div class="ro">${esc(p.variacao)}</div>`:''}${p.descricao?`<div class="ro desc-prod">${esc(p.descricao)}</div>`:''}${p.ativo===false?' <span class="pill">Inativo</span>':''}</td><td>${esc(p.categoria||'')}</td>
+   return`<tr class="${baixo?'low':''} click" data-a="edit-produto" data-id="${p.id}"><td class="mono">${esc(p.sku||'—')}</td><td>${window.DRAVEN_IMG?DRAVEN_IMG.mini(p):''}<b>${esc(p.nome)}</b>${p.variacao?`<div class="ro">${esc(p.variacao)}</div>`:''}${p.descricao?`<div class="ro desc-prod">${esc(p.descricao)}</div>`:''}${p.ativo===false?' <span class="pill">Inativo</span>':''}</td><td>${esc(p.categoria||'')}</td>
    <td class="num est">${n0.format(p.estoque||0)} ${esc(p.unidade||'un')}${baixo?' <span class="pill bad">Repor</span>':''}</td><td class="num">${p.minimo?n0.format(p.minimo):'—'}</td>
    ${custo?`<td class="num">${p.custo?money(p.custo):'—'}</td>`:''}<td class="num">${p.precoAtacado?money(p.precoAtacado):'—'}</td><td class="num">${p.preco?money(p.preco):'—'}</td>${custo?`<td class="num">${mg==null?'—':mg.toFixed(0)+'%'}</td>`:''}
    <td>${pode('produtos')?`${pode('produtos')?`<button class="btn sm" data-a="edit-produto" data-id="${p.id}"><i class="fa-solid fa-pen"></i> Editar</button> `:''}<button class="btn sm" data-a="ajustar" data-id="${p.id}">Ajustar</button>`:''}</td></tr>`}).join('')||'<tr><td colspan="10" class="ro">Nenhum produto com esse filtro.</td></tr>'}
@@ -1024,7 +1024,7 @@ function formProduto(p={}){
   const ed=pode('produtos');const d=ed?'':'disabled';const custo=pode('custo');
   abrir(p.id?esc(prodNome(p)):'Novo produto',`
   <div class="fg">
-   <label class="f full">Nome do produto *<input class="inp" id="p-nome" name="nome" required value="${esc(p.nome||'')}" placeholder="Luva de Boxe Draven Pro" ${d}></label>
+   ${window.DRAVEN_IMG?DRAVEN_IMG.blocoFicha(p,d):''}<label class="f full">Nome do produto *<input class="inp" id="p-nome" name="nome" required value="${esc(p.nome||'')}" placeholder="Luva de Boxe Draven Pro" ${d}></label>
    <label class="f">Cor / variação (tamanho, peso)<input class="inp" id="p-var" name="variacao" value="${esc(p.variacao||'')}" placeholder="14oz preta · A2 branco · tam. 9" ${d}></label>
    <label class="f">Modelo / linha<input class="inp" id="p-mod" name="modelo" value="${esc(p.modelo||(window.DRAVEN_DESC?DRAVEN_DESC.linha(p):''))}" placeholder="Angry, The Mist, Shark…" ${d}></label>
    <label class="f full">Descrição do produto<textarea class="inp" id="p-desc" name="descricao" rows="3" placeholder="Nome, modelo, cor, tamanho, material… (use Gerar descrição para montar automaticamente)" ${d}>${esc(p.descricao||'')}</textarea></label>
@@ -1040,7 +1040,7 @@ function formProduto(p={}){
    <label class="chk"><input type="checkbox" id="p-ativo" name="ativo" ${p.ativo!==false?'checked':''} ${d}> Ativo para venda</label>
   </div>${p.id?'<p class="ro">Para mudar a quantidade em estoque, use o botão Ajustar na lista. Assim a alteração fica registrada nas movimentações.</p>':''}`,
   ed?async fd=>{
-    const dados={nome:fd.get('nome').trim(),variacao:fd.get('variacao'),sku:fd.get('sku'),categoria:fd.get('categoria'),unidade:fd.get('unidade'),preco:num(fd.get('preco')),precoAtacado:num(fd.get('precoAtacado')),minimo:num(fd.get('minimo')),ativo:!!fd.get('ativo'),...(fd.has('descricao')?{descricao:String(fd.get('descricao')||'').trim(),modelo:String(fd.get('modelo')||'').trim()}:{}),atualizadoEm:Date.now()};
+    const dados={nome:fd.get('nome').trim(),variacao:fd.get('variacao'),sku:fd.get('sku'),categoria:fd.get('categoria'),unidade:fd.get('unidade'),preco:num(fd.get('preco')),precoAtacado:num(fd.get('precoAtacado')),minimo:num(fd.get('minimo')),ativo:!!fd.get('ativo'),...(fd.has('descricao')?{descricao:String(fd.get('descricao')||'').trim(),modelo:String(fd.get('modelo')||'').trim()}:{}),...(fd.has('imagem')?{imagem:String(fd.get('imagem')||'')}:{}),atualizadoEm:Date.now()};
     if(custo)dados.custo=num(fd.get('custo'));
     if(p.id){await salvar('produtos',p.id,dados);toast('Produto atualizado');return true}
     const ini=num(fd.get('inicial'));dados.estoque=0;dados.criadoEm=Date.now();
@@ -3600,6 +3600,90 @@ window.DRAVEN_DESC=(function(){
     const t=e.target.closest&&e.target.closest('[data-desc-todos]');if(t){e.preventDefault();e.stopPropagation();preencherTodos()}
   },true);
   return{gerar,linha};
+})();
+</script>
+<!-- Estoque: imagens dos produtos.
+     - Fotos do catálogo 2026 publicadas com o site em produtos-img/<SKU>.jpg (aparecem sozinhas pelo código).
+     - Foto enviada na ficha: vai para o Google Drive (subpasta "Imagens dos produtos") e fica no campo novo "imagem"
+       como "drive:<id>". "-" = sem foto. Vazio = usa a foto do catálogo, se houver.
+     Entra no index.html pelo ferramentas/montar.py (que preenche a lista FOTOS_CATALOGO), depois do sistema. -->
+<style>
+.prod-mini{width:44px;height:44px;border-radius:8px;object-fit:contain;background:#fff;border:1px solid var(--line);float:left;margin:0 10px 0 0}
+.prod-mini.vazia{display:grid;place-items:center;color:var(--muted);font-size:16px;background:var(--surface-2)}
+.img-ficha{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.img-ficha .img-grande{width:150px;height:150px;border-radius:12px;border:1px solid var(--line);background:#fff;object-fit:contain;display:grid;place-items:center;color:var(--muted);font-size:13px;text-align:center}
+.img-ficha .tools{flex-direction:column;align-items:flex-start}
+@media (max-width:620px){.prod-mini{width:40px;height:40px}}
+</style>
+<script>
+window.DRAVEN_IMG=(function(){
+  const FOTOS_CATALOGO=new Set(["DE-6819", "DE-6820", "DE-6821", "DE-6822", "DE-6823", "DE-6824", "DE-6825", "DE-6826", "DE-6827", "DE-6828", "DE-6829", "DE-6830", "DE-6831", "DE-6832", "DE-6833", "DE-6834", "DE-6935", "DE-6936", "DE-6937", "DE-6938", "DE-6939", "DE-6940", "DE-6941", "DE-6942", "DE-6943", "DE-6991", "DE-7044", "DE-7045", "DE-7046", "DE-7147", "DE-7148", "DE-7149", "DE-7232", "DE-7233", "DE-7234", "DE-7350", "DE-7441", "DE-7442", "DE-7443", "DE-8141", "DE-8142", "DE-9011", "DE-9012", "DE-9013", "DE-9110", "DE-9111", "DE-9112", "DE-9113", "DE-9116", "DE-9117", "DE-9118", "DE-9232", "DE-9233", "DE-9234", "DE-9235", "DE-9236", "DE-9321", "DE-9322", "DE-9323", "DE-9324"]);
+  const doCatalogo=p=>p&&p.sku&&FOTOS_CATALOGO.has(String(p.sku).toUpperCase())?`produtos-img/${String(p.sku).toUpperCase()}.jpg`:'';
+  // qual imagem usar: {src} pronta ou {drive:id} para buscar no Drive
+  function fonte(p){
+    const im=String((p&&p.imagem)||'');
+    if(im==='-')return null;
+    if(im.startsWith('drive:'))return{drive:im.slice(6)};
+    if(im)return{src:im};
+    const c=doCatalogo(p);return c?{src:c}:null;
+  }
+  function tag(p,cls){
+    const f=fonte(p);
+    if(!f)return`<span class="${cls} vazia" aria-hidden="true"><i class="fa-regular fa-image"></i></span>`;
+    if(f.drive)return`<img class="${cls}" data-img-drive="${esc(f.drive)}" alt="" loading="lazy">`;
+    return`<img class="${cls}" src="${esc(f.src)}" alt="" loading="lazy">`;
+  }
+  const mini=p=>tag(p,'prod-mini');
+  // imagens do Drive: busca com o login do Google e coloca na tela
+  function preencherDrive(raiz){
+    (raiz||document).querySelectorAll('img[data-img-drive]:not([src])').forEach(el=>{
+      if(!window.DRAVEN_GH||!DRAVEN_GH.imagens)return;
+      DRAVEN_GH.imagens.url(el.dataset.imgDrive).then(u=>{el.src=u}).catch(()=>{el.replaceWith(Object.assign(document.createElement('span'),{className:el.className+' vazia',innerHTML:'<i class="fa-regular fa-image"></i>'}))});
+    });
+  }
+  let marcado=false;
+  new MutationObserver(()=>{if(!marcado){marcado=true;requestAnimationFrame(()=>{marcado=false;preencherDrive()})}}).observe(document.documentElement,{childList:true,subtree:true});
+
+  // bloco da ficha do produto: foto grande + Enviar / Remover / Foto do catálogo
+  function blocoFicha(p,d){
+    const pode_=!d;
+    return`<div class="full img-ficha"><input type="hidden" name="imagem" id="p-img" value="${esc(p.imagem||'')}" data-pid="${esc(p.id||'')}">
+      <div id="p-img-box">${tag(p,'img-grande')}</div>
+      ${pode_?`<div class="tools"><label class="btn sm" style="cursor:pointer"><i class="fa-solid fa-camera"></i> ${fonte(p)?'Trocar foto':'Enviar foto'}<input type="file" accept="image/*" id="p-img-arq" hidden></label>
+        ${fonte(p)?'<button type="button" class="btn sm ghost" data-img="remover"><i class="fa-solid fa-xmark"></i> Remover foto</button>':''}
+        ${doCatalogo(p)&&p.imagem?'<button type="button" class="btn sm ghost" data-img="catalogo"><i class="fa-solid fa-book-open"></i> Voltar para a foto do catálogo</button>':''}
+        <span class="ro" id="p-img-msg" style="font-size:12px"></span></div>`:''}
+    </div>`;
+  }
+  const atualizarBox=v=>{const sku=(document.querySelector('#dlgForm [name="sku"]')||{}).value||'';const box=document.getElementById('p-img-box');if(box)box.innerHTML=tag({imagem:v,sku},'img-grande')};
+  // reduz para no máximo 900 px antes de enviar
+  function reduzir(arquivo){
+    return new Promise((ok,ko)=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,900/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
+      const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);c.toBlob(b=>b?ok(b):ko(new Error('imagem inválida')),'image/jpeg',.85)};im.onerror=()=>ko(new Error('Não consegui ler essa imagem.'));im.src=fr.result};fr.onerror=ko;fr.readAsDataURL(arquivo)});
+  }
+  document.addEventListener('change',async e=>{
+    if(e.target.id!=='p-img-arq'||!e.target.files[0])return;
+    const msg=document.getElementById('p-img-msg'),inp=document.getElementById('p-img');
+    try{
+      msg.textContent='Enviando foto…';
+      const blob=await reduzir(e.target.files[0]);
+      const sku=(document.querySelector('#dlgForm [name="sku"]')||{}).value||'produto';
+      const id=await DRAVEN_GH.imagens.enviar(blob,`${sku||'produto'} - ${new Date().toISOString().slice(0,10)}.jpg`);
+      inp.value='drive:'+id;atualizarBox(inp.value);
+      // produto já cadastrado: grava na hora; produto novo: grava ao salvar a ficha
+      const pid=inp.dataset.pid;if(pid){await salvar('produtos',pid,{imagem:inp.value});msg.textContent='Foto salva.'}else msg.textContent='Foto pronta: clique em Salvar.';
+    }catch(x){msg.textContent=x.message||'Não foi possível enviar a foto.'}
+    e.target.value='';
+  });
+  document.addEventListener('click',async e=>{
+    const b=e.target.closest&&e.target.closest('[data-img]');if(!b)return;
+    e.preventDefault();e.stopPropagation();
+    const inp=document.getElementById('p-img');if(!inp)return;
+    inp.value=b.dataset.img==='remover'?'-':'';atualizarBox(inp.value);
+    const pid=inp.dataset.pid,msg=document.getElementById('p-img-msg');
+    if(pid){try{await salvar('produtos',pid,{imagem:inp.value});if(msg)msg.textContent=b.dataset.img==='remover'?'Foto removida.':'Voltou para a foto do catálogo.'}catch(x){}}
+  },true);
+  return{mini,blocoFicha,fonte};
 })();
 </script>
 <!-- Ajustes de celular e tablet. Entra no index.html pelo ferramentas/montar.py, depois do sistema.

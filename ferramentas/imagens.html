@@ -1,0 +1,84 @@
+<!-- Estoque: imagens dos produtos.
+     - Fotos do catálogo 2026 publicadas com o site em produtos-img/<SKU>.jpg (aparecem sozinhas pelo código).
+     - Foto enviada na ficha: vai para o Google Drive (subpasta "Imagens dos produtos") e fica no campo novo "imagem"
+       como "drive:<id>". "-" = sem foto. Vazio = usa a foto do catálogo, se houver.
+     Entra no index.html pelo ferramentas/montar.py (que preenche a lista FOTOS_CATALOGO), depois do sistema. -->
+<style>
+.prod-mini{width:44px;height:44px;border-radius:8px;object-fit:contain;background:#fff;border:1px solid var(--line);float:left;margin:0 10px 0 0}
+.prod-mini.vazia{display:grid;place-items:center;color:var(--muted);font-size:16px;background:var(--surface-2)}
+.img-ficha{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.img-ficha .img-grande{width:150px;height:150px;border-radius:12px;border:1px solid var(--line);background:#fff;object-fit:contain;display:grid;place-items:center;color:var(--muted);font-size:13px;text-align:center}
+.img-ficha .tools{flex-direction:column;align-items:flex-start}
+@media (max-width:620px){.prod-mini{width:40px;height:40px}}
+</style>
+<script>
+window.DRAVEN_IMG=(function(){
+  const FOTOS_CATALOGO=new Set(/*FOTOS_CATALOGO*/[]);
+  const doCatalogo=p=>p&&p.sku&&FOTOS_CATALOGO.has(String(p.sku).toUpperCase())?`produtos-img/${String(p.sku).toUpperCase()}.jpg`:'';
+  // qual imagem usar: {src} pronta ou {drive:id} para buscar no Drive
+  function fonte(p){
+    const im=String((p&&p.imagem)||'');
+    if(im==='-')return null;
+    if(im.startsWith('drive:'))return{drive:im.slice(6)};
+    if(im)return{src:im};
+    const c=doCatalogo(p);return c?{src:c}:null;
+  }
+  function tag(p,cls){
+    const f=fonte(p);
+    if(!f)return`<span class="${cls} vazia" aria-hidden="true"><i class="fa-regular fa-image"></i></span>`;
+    if(f.drive)return`<img class="${cls}" data-img-drive="${esc(f.drive)}" alt="" loading="lazy">`;
+    return`<img class="${cls}" src="${esc(f.src)}" alt="" loading="lazy">`;
+  }
+  const mini=p=>tag(p,'prod-mini');
+  // imagens do Drive: busca com o login do Google e coloca na tela
+  function preencherDrive(raiz){
+    (raiz||document).querySelectorAll('img[data-img-drive]:not([src])').forEach(el=>{
+      if(!window.DRAVEN_GH||!DRAVEN_GH.imagens)return;
+      DRAVEN_GH.imagens.url(el.dataset.imgDrive).then(u=>{el.src=u}).catch(()=>{el.replaceWith(Object.assign(document.createElement('span'),{className:el.className+' vazia',innerHTML:'<i class="fa-regular fa-image"></i>'}))});
+    });
+  }
+  let marcado=false;
+  new MutationObserver(()=>{if(!marcado){marcado=true;requestAnimationFrame(()=>{marcado=false;preencherDrive()})}}).observe(document.documentElement,{childList:true,subtree:true});
+
+  // bloco da ficha do produto: foto grande + Enviar / Remover / Foto do catálogo
+  function blocoFicha(p,d){
+    const pode_=!d;
+    return`<div class="full img-ficha"><input type="hidden" name="imagem" id="p-img" value="${esc(p.imagem||'')}" data-pid="${esc(p.id||'')}">
+      <div id="p-img-box">${tag(p,'img-grande')}</div>
+      ${pode_?`<div class="tools"><label class="btn sm" style="cursor:pointer"><i class="fa-solid fa-camera"></i> ${fonte(p)?'Trocar foto':'Enviar foto'}<input type="file" accept="image/*" id="p-img-arq" hidden></label>
+        ${fonte(p)?'<button type="button" class="btn sm ghost" data-img="remover"><i class="fa-solid fa-xmark"></i> Remover foto</button>':''}
+        ${doCatalogo(p)&&p.imagem?'<button type="button" class="btn sm ghost" data-img="catalogo"><i class="fa-solid fa-book-open"></i> Voltar para a foto do catálogo</button>':''}
+        <span class="ro" id="p-img-msg" style="font-size:12px"></span></div>`:''}
+    </div>`;
+  }
+  const atualizarBox=v=>{const sku=(document.querySelector('#dlgForm [name="sku"]')||{}).value||'';const box=document.getElementById('p-img-box');if(box)box.innerHTML=tag({imagem:v,sku},'img-grande')};
+  // reduz para no máximo 900 px antes de enviar
+  function reduzir(arquivo){
+    return new Promise((ok,ko)=>{const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,900/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
+      const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);c.toBlob(b=>b?ok(b):ko(new Error('imagem inválida')),'image/jpeg',.85)};im.onerror=()=>ko(new Error('Não consegui ler essa imagem.'));im.src=fr.result};fr.onerror=ko;fr.readAsDataURL(arquivo)});
+  }
+  document.addEventListener('change',async e=>{
+    if(e.target.id!=='p-img-arq'||!e.target.files[0])return;
+    const msg=document.getElementById('p-img-msg'),inp=document.getElementById('p-img');
+    try{
+      msg.textContent='Enviando foto…';
+      const blob=await reduzir(e.target.files[0]);
+      const sku=(document.querySelector('#dlgForm [name="sku"]')||{}).value||'produto';
+      const id=await DRAVEN_GH.imagens.enviar(blob,`${sku||'produto'} - ${new Date().toISOString().slice(0,10)}.jpg`);
+      inp.value='drive:'+id;atualizarBox(inp.value);
+      // produto já cadastrado: grava na hora; produto novo: grava ao salvar a ficha
+      const pid=inp.dataset.pid;if(pid){await salvar('produtos',pid,{imagem:inp.value});msg.textContent='Foto salva.'}else msg.textContent='Foto pronta: clique em Salvar.';
+    }catch(x){msg.textContent=x.message||'Não foi possível enviar a foto.'}
+    e.target.value='';
+  });
+  document.addEventListener('click',async e=>{
+    const b=e.target.closest&&e.target.closest('[data-img]');if(!b)return;
+    e.preventDefault();e.stopPropagation();
+    const inp=document.getElementById('p-img');if(!inp)return;
+    inp.value=b.dataset.img==='remover'?'-':'';atualizarBox(inp.value);
+    const pid=inp.dataset.pid,msg=document.getElementById('p-img-msg');
+    if(pid){try{await salvar('produtos',pid,{imagem:inp.value});if(msg)msg.textContent=b.dataset.img==='remover'?'Foto removida.':'Voltou para a foto do catálogo.'}catch(x){}}
+  },true);
+  return{mini,blocoFicha,fonte};
+})();
+</script>

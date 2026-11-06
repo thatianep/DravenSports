@@ -442,7 +442,30 @@
       await g(`${API}/files/${pastaBase()}/permissions/${p.id}?supportsAllDrives=true`, { method: 'DELETE' });
     }
   };
-  window.DRAVEN_GH = { sair: () => sair(true), sincronizar, equipe };
+  // ---------------- imagens dos produtos (subpasta "Imagens dos produtos" da pasta da base) ----------------
+  let pastaImg = null;
+  const urlsImg = new Map();
+  const imagens = {
+    async enviar(blob, nome) {
+      if (!arq || !arq.canEdit) throw new Error('Sem permissão para enviar imagens.');
+      if (!pastaImg) {
+        const pai = arq.pasta;
+        const q = `name = 'Imagens dos produtos' and mimeType = '${FOLDER}' and trashed = false${pai ? ` and '${pai}' in parents` : ''}`;
+        const r = await gj(`${API}/files?q=${enc(q)}&fields=files(id)&pageSize=1&includeItemsFromAllDrives=true${ALL}`);
+        pastaImg = r.files && r.files[0] ? r.files[0].id
+          : (await gj(`${API}/files?fields=id${ALL}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'Imagens dos produtos', mimeType: FOLDER, parents: pai ? [pai] : undefined }) })).id;
+      }
+      const f = await upload({ name: nome, parents: [pastaImg], mimeType: blob.type || 'image/jpeg' }, blob, blob.type || 'image/jpeg');
+      return f.id;
+    },
+    async url(id) {
+      if (urlsImg.has(id)) return urlsImg.get(id);
+      const p = (async () => URL.createObjectURL(await (await g(`${API}/files/${id}?alt=media${ALL}`)).blob()))();
+      urlsImg.set(id, p); p.catch(() => urlsImg.delete(id));
+      return p;
+    }
+  };
+  window.DRAVEN_GH = { sair: () => sair(true), sincronizar, equipe, imagens };
 
   // o sistema pede as peças por aqui, como no claude.ai
   const PECAS = { db, user, downloads, mcp, permissions, sample: null };
